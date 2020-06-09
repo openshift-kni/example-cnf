@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -ex
+
+if [ -z NETWORK_NAME_LIST ]; then
+    echo "NETWORK_NAME_LIST is empty, exiting.."
+    exit 1
+fi
+
+PCI=""
+IFS=',' read -r -a NETWORK_ARRAY <<< "$NETWORK_NAME_LIST"
+
+for item in "${NETWORK_ARRAY[@]}"; do
+    IFS='/' read -r -a RES_ARRAY <<< "$item"
+    NAME="PCIDEVICE_OPENSHIFT_IO_${RES_ARRAY[1]^^}"
+    if [ -z ${!NAME} ]; then
+        echo "Could not find ${NAME} with PCI address, exiting"
+        exit 1
+    fi
+    IFS=',' read -r -a PCI_ARRAY <<< "${!NAME}"
+    for pci_item in "${PCI_ARRAY[@]}"; do
+        PCI+=" -w ${pci_item} "
+    done
+done
+
+echo "testpmd $PCI $@" > run.sh
+chmod +x run.sh
+sleep infinity
