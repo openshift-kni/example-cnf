@@ -23,6 +23,15 @@ for item in "${NETWORK_ARRAY[@]}"; do
     done
 done
 
-echo "testpmd $PCI $@" > run.sh
-chmod +x run.sh
+LCORES=$(taskset -pc 1 | cut -d: -f2)
+if [ -z $LCORES ]; then
+    echo "Could not find cores using taskset, exiting"
+    exit 1
+fi
+
+RUN="/usr/local/bin/testpmd-run"
+echo "testpmd -l $LCORES $PCI $@ --stats-period 10" > $RUN
+chmod +x $RUN
+
+testpmd-run &
 sleep infinity
