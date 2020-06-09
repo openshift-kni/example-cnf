@@ -1,4 +1,5 @@
 ---
 image: quay.io/krsacme/testpmd-container-app:latest
+#image: zenghui/centos-dpdk
 network_defintions: ""
 network_resources: {}

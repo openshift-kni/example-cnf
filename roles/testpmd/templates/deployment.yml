@@ -20,13 +20,11 @@ spec:
       - name: testpmd
         command: ["testpmd-wrapper"]
         args:
-        - "-l {{ lcores }}"
         - "--socket-mem {{ socket_memory }}"
         - "-n {{ memory_channels }}"
-        - "--proc-type auto "
+        - "--proc-type auto"
         - "--file-prefix pg"
         - "--"
-        - "--disable-hw-vlan"
         - "--disable-rss"
         - "--nb-cores={{ forwarding_cores }}"
         - "--rxq={{ rx_queues }}"
@@ -36,7 +34,8 @@ spec:
         - "--auto-start"
         image: "{{ image }}"
         securityContext:
-          privileged: true
+          capabilities:
+            add: ["IPC_LOCK"]
         resources:
           limits:
             hugepages-1Gi: {{ hugepage_1gb_count }}
