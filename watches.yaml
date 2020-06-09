@@ -1,0 +1,5 @@
+---
+- version: v1
+  group: nfv.refarch.com
+  kind: TestPMD
+  role: testpmd

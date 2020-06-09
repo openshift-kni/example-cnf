@@ -1,0 +1,20 @@
+---
+- set_fact:
+    network_resources: {}
+    network_name_list: []
+
+- name: Check if networks parameter is empty
+  fail:
+    msg: "networks parameter is empty"
+  when: networks|length == 0
+
+- include_tasks: network-parse.yaml
+  loop: "{{ networks }}"
+  loop_control:
+    loop_var: network_name
+
+- name: Create TestPMD deployment
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'deployment.yml') }}"
+

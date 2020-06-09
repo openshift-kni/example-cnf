@@ -1,0 +1,18 @@
+# Helper file, this playbook is not used inside the operator
+# This playbook is useful to runnin locally for easy development
+# Command: ansible-playbook -i playbook.yaml -vv
+---
+- hosts: localhost
+  gather_facts: no
+  vars:
+    meta:
+      name: testpmd1
+      namespace: testpmd-app
+  tasks:
+  - include_role:
+      name: testpmd
+    vars:
+      networks: ["vfdpdk1"]
+      size: 1
+      # optional
+      vfdpdk1_count: 1

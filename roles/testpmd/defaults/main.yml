@@ -1,0 +1,4 @@
+---
+image: quay.io/krsacme/testpmd-container-app:latest
+network_defintions: ""
+network_resources: {}

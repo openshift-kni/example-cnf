@@ -1,0 +1,22 @@
+---
+size: 1
+
+hugepage_1gb_count: 4
+memory: 8Gi
+cpu: 6
+
+forward_mode: io
+
+lcores: "0"
+memory_channels: 4
+socket_memory: 1024
+forwarding_cores: 1
+
+rx_queues: 1
+rx_descriptors: 1024
+tx_queues: 1
+tx_descriptors: 1024
+
+# pci devices for "-w" parameter should be obtained from this networks
+# testpmd application entrypoint script should get pci and then run testpmd
+networks: []

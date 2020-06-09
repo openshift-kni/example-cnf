@@ -1,0 +1,12 @@
+apiVersion: nfv.refarch.com/v1
+kind: TestPMD
+metadata:
+  name: testpmd1
+spec:
+  size: 1
+  lcores: 1
+  forwardingCores: 1
+  networks:
+    - vfdpdk1: 2
+    - vfdpdk2
+

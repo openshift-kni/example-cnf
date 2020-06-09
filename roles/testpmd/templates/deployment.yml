@@ -1,0 +1,72 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: "{{ meta.name }}-app"
+  namespace: "{{ meta.namespace }}"
+spec:
+  replicas: {{ size | int }}
+  selector:
+    matchLabels:
+      app: testpmd
+  template:
+    metadata:
+      annotations:
+        k8s.v1.cni.cncf.io/networks: "{{ network_name_list|join(',') }}"
+      labels:
+        app: testpmd
+    spec:
+      serviceAccountName: testpmd-operator
+      containers:
+      - name: testpmd
+        command: ["testpmd-wrapper"]
+        args:
+        - "-l {{ lcores }}"
+        - "--socket-mem {{ socket_memory }}"
+        - "-n {{ memory_channels }}"
+        - "--proc-type auto "
+        - "--file-prefix pg"
+        - "--"
+        - "--disable-hw-vlan"
+        - "--disable-rss"
+        - "--nb-cores={{ forwarding_cores }}"
+        - "--rxq={{ rx_queues }}"
+        - "--txq={{ tx_queues }}"
+        - "--rxd={{ rx_descriptors }}"
+        - "--txd={{ tx_descriptors }}"
+        - "--auto-start"
+        image: "{{ image }}"
+        securityContext:
+          privileged: true
+        resources:
+          limits:
+            hugepages-1Gi: {{ hugepage_1gb_count }}
+            memory: {{ memory }}
+            cpu: {{ cpu }}
+{% for key, value in network_resources.items() %}
+            {{ key }}: {{ value }}
+{% endfor %}
+          requests:
+            hugepages-1Gi: {{ hugepage_1gb_count }}
+            memory: {{ memory }}
+            cpu: {{ cpu }}
+{% for key, value in network_resources.items() %}
+            {{ key }}: {{ value }}
+{% endfor %}
+        volumeMounts:
+        - name: hugepage
+          mountPath: /dev/hugepages
+        - name: podnetinfo
+          mountPath: /etc/podnetinfo
+        env:
+        - name: NETWORK_NAME_LIST
+          value: "{{ network_resources.keys()|list|join(',') }}" 
+      volumes:
+      - name: hugepage
+        emptyDir:
+          medium: HugePages
+      - name: podnetinfo
+        downwardAPI:
+          items:
+            - path: "annotations"
+              fieldRef:
+                fieldPath: metadata.annotations        
