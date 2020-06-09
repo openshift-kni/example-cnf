@@ -3,6 +3,11 @@
     network_resources: {}
     network_name_list: []
 
+- name: Validate the CPUs and forwarding cores
+  fail:
+    msg: "{{ forwarding_cores }} should be lesser than {{ cpus }}"
+  when: forwarding_cores >= cpu
+
 - name: Check if networks parameter is empty
   fail:
     msg: "networks parameter is empty"

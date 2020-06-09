@@ -4,9 +4,11 @@ metadata:
   name: testpmd1
 spec:
   size: 1
-  lcores: 1
-  forwardingCores: 1
+  cpu: 8
+  forwardingCores: 6
+  rx_queues: 2
+  tx_queues: 2
   networks:
-    - vfdpdk1: 2
+    - vfdpdk1
     - vfdpdk2
 

@@ -12,7 +12,7 @@
   - include_role:
       name: testpmd
     vars:
-      networks: ["vfdpdk1"]
+      networks: ["vfdpdk1", "vfdpdk2"]
       size: 1
       # optional
       vfdpdk1_count: 1

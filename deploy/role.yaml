@@ -79,10 +79,11 @@ rules:
   - update
   - watch
 - apiGroups:
-  - security.openshift.io
-  resourceNames:
-  - privileged
+  - k8s.cni.cncf.io
   resources:
-  - securitycontextconstraints
+  - network-attachment-definitions
   verbs:
-  - use
+  - get
+  - list
+  - watch
+
