@@ -6,8 +6,11 @@ spec:
   size: 1
   cpu: 8
   forwardingCores: 6
-  rx_queues: 2
-  tx_queues: 2
+  rxQueues: 2
+  txQueues: 2
+  ethpeerMaclist:
+    - 3c:fd:fe:79:2a:a0
+    - 3c:fd:fe:79:2a:a1
   networks:
     - vfdpdk1
     - vfdpdk2

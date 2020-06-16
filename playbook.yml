@@ -13,6 +13,9 @@
       name: testpmd
     vars:
       networks: ["vfdpdk1", "vfdpdk2"]
+      ethpeer_maclist:
+        - 3c:fd:fe:79:2a:a0
+        - 3c:fd:fe:79:2a:a1
       size: 1
       # optional
       vfdpdk1_count: 1

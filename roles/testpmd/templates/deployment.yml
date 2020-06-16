@@ -32,6 +32,10 @@ spec:
         - "--rxd={{ rx_descriptors }}"
         - "--txd={{ tx_descriptors }}"
         - "--auto-start"
+{% for mac in ethpeer_maclist %}
+        - "--eth-peer={{ loop.index -1 }},{{ mac }}"
+{% endfor %}
+        - "--forward-mode={{ forward_mode }}"
         image: "{{ image }}"
         securityContext:
           capabilities:
