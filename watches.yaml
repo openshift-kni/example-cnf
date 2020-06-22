@@ -1,5 +1,5 @@
 ---
 - version: v1
-  group: nfv.refarch.com
+  group: examplecnf.openshift.io
   kind: TestPMD
   role: testpmd

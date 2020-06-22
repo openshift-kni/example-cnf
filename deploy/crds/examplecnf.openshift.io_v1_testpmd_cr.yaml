@@ -1,4 +1,4 @@
-apiVersion: nfv.refarch.com/v1
+apiVersion: examplecnf.openshift.io/v1
 kind: TestPMD
 metadata:
   name: testpmd1

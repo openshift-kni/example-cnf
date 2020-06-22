@@ -11,7 +11,11 @@ spec:
   template:
     metadata:
       annotations:
-        k8s.v1.cni.cncf.io/networks: "{{ network_name_list|join(',') }}"
+        k8s.v1.cni.cncf.io/networks: '[
+{% for network in network_name_list %}
+          {"name": "{{ network }}", "mac": "20:04:0f:f1:88:0{{ loop.index }}"}{% if loop.index < network_name_list|length %},{% endif %}
+{% endfor %}
+        ]'
       labels:
         app: testpmd
     spec:

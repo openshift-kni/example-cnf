@@ -67,7 +67,7 @@ rules:
   verbs:
   - get
 - apiGroups:
-  - nfv.refarch.com
+  - examplecnf.openshift.io
   resources:
   - '*'
   verbs:

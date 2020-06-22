@@ -5,7 +5,7 @@
    - community.kubernetes
 
   vars:
-    image: nfv.refarch.com/testpmd-operator:testing
+    image: examplecnf.openshift.io/testpmd-operator:testing
 
   tasks:
     # using command so we don't need to install any dependencies
@@ -29,7 +29,7 @@
    - community.kubernetes
 
   vars:
-    image: nfv.refarch.com/testpmd-operator:testing
+    image: examplecnf.openshift.io/testpmd-operator:testing
     operator_template: "{{ '/'.join([template_dir, 'operator.yaml.j2']) }}"
 
   tasks:

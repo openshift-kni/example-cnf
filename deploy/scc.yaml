@@ -24,6 +24,6 @@ seLinuxContext:
 seccompProfiles:
   - "*"
 users:
-  - system:serviceaccount:testpmd-app:testpmd-operator
+  - system:serviceaccount:example-cnf:testpmd-operator
 volumes:
   - "*"

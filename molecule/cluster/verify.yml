@@ -8,10 +8,10 @@
     - community.kubernetes
 
   vars:
-    custom_resource: "{{ lookup('template', '/'.join([deploy_dir, 'crds/nfv.refarch.com_v1_testpmd_cr.yaml'])) | from_yaml }}"
+    custom_resource: "{{ lookup('template', '/'.join([deploy_dir, 'crds/examplecnf.openshift.io_v1_testpmd_cr.yaml'])) | from_yaml }}"
 
   tasks:
-    - name: Create the nfv.refarch.com/v1.TestPMD and wait for reconciliation to complete
+    - name: Create the examplecnf.openshift.io/v1.TestPMD and wait for reconciliation to complete
       k8s:
         state: present
         namespace: '{{ namespace }}'

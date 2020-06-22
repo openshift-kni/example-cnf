@@ -7,11 +7,12 @@
   vars:
     meta:
       name: testpmd1
-      namespace: testpmd-app
+      namespace: example-cnf
   tasks:
   - include_role:
       name: testpmd
     vars:
+      image: quay.io/krsacme/testpmd-container-app:nostart
       networks: ["vfdpdk1", "vfdpdk2"]
       ethpeer_maclist:
         - 3c:fd:fe:79:2a:a0

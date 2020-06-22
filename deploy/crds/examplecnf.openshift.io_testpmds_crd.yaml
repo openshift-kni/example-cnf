@@ -1,9 +1,9 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: testpmds.nfv.refarch.com
+  name: testpmds.examplecnf.openshift.io
 spec:
-  group: nfv.refarch.com
+  group: examplecnf.openshift.io
   names:
     kind: TestPMD
     listKind: TestPMDList
