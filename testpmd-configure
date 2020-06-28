@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+# Copyright 2017 The Kubernetes Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import os
+import subprocess
+from kubernetes import client, config
+from kubernetes.client.rest import ApiException
+import random, string
+
+def main():
+    data = get_mac_pci_mapping()
+    if data:
+        create_cr(data)
+
+
+def get_mac_pci_mapping():
+    data = []
+    networks = os.environ['NETWORK_NAME_LIST']
+    network_list = networks.split(',')
+    pci_all = []
+    for net in network_list:
+        pci_env = "PCIDEVICE_" + net.replace('/', '_').replace('.', '_').upper()
+        pcis = os.environ[pci_env]
+        print("pcis = %s" % pcis)
+        pci_list = pcis.split(',')
+        pci_all.extend(pci_list)
+
+    retry = 5
+    while retry > 0:
+        data = get_mac_of_pci(pci_all)
+        retry -= 1
+        print(pci_all)
+        print(data)
+        if len(data) == len(pci_all):
+            break
+
+    for item in data:
+        for net in network_list:
+            pci_env = "PCIDEVICE_" + net.replace('/', '_').replace('.', '_').upper()
+            pcis = os.environ[pci_env]
+            if item['pci'] in pcis:
+                item['network'] = net
+    print(data)
+    return data
+
+
+def get_mac_of_pci(pcis):
+    mac_file = '/tmp/macaddr.txt'
+    if os.path.exists(mac_file):
+        os.remove(mac_file)
+    params = ['macaddr']
+    for pci in pcis:
+        params.extend(['-w', pci])
+    print("Macaddr fetch command: %s" % ' '.join(params))
+    try:
+        subprocess.check_output(params)
+    except Exception as e:
+        print("ERROR: failed to run check_ouput: %s" % e)
+        return
+    if os.path.exists(mac_file):
+        content = ''
+        info = {}
+        with open(mac_file) as f:
+            content = f.read()
+        lines = content.split('\n')
+        data = []
+        for line in lines:
+            info = line.split(',')
+            if len(line.split(',')) != 2:
+                continue
+            info = {}
+            info['pci'] = line.split(',')[0]
+            info['mac'] = line.split(',')[1]
+            print(info)
+            data.append(info)
+        return data
+
+
+def create_cr(data):
+    group = "examplecnf.openshift.io"
+    version = "v1"
+    namespace = "example-cnf"
+    # TODO: Use that of LB's CR
+    plural = "testpmds"
+
+    config.load_incluster_config()
+    customApi = client.CustomObjectsApi()
+
+    hostname = os.environ['HOSTNAME']
+    nodename = os.environ['NODE_NAME']
+
+    cr = { 'apiVersion': group + '/' + version,
+           'metadata': {
+               'name': 'TODO',
+               'namespace': namespace
+            },
+           'kind': 'TestPMD',
+           'spec': {}}
+
+    for item in data:
+        body = cr
+        body['spec'].update(item)
+        body['spec']['hostname'] = hostname
+        body['spec']['nodename'] = nodename
+        name_random = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+        body['metadata']['name'] = hostname + "-" + name_random.lower()
+        try:
+            resp = customApi.create_namespaced_custom_object(group, version, namespace, plural, body)
+            print("Response: %s\n" % resp)
+        except ApiException as e:
+            print("Exception when creating CR: %s\n" % e)
+
+
+if __name__ == '__main__':
+    main()

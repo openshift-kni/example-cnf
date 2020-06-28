@@ -23,15 +23,18 @@ for item in "${NETWORK_ARRAY[@]}"; do
     done
 done
 
-LCORES=$(taskset -pc 1 | cut -d: -f2)
+LCORES=$(cat /sys/fs/cgroup/cpuset/cpuset.cpus)
 if [ -z $LCORES ]; then
-    echo "Could not find cores using taskset, exiting"
+    echo "Could not find cores, existing.."
     exit 1
 fi
 
 RUN="/usr/local/bin/testpmd-run"
 echo "testpmd -l $LCORES $PCI $@ --stats-period 10" > $RUN
 chmod +x $RUN
+
+# Update the mac address with CR
+testpmd-configure
 
 testpmd-run &
 sleep infinity

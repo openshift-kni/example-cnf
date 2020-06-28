@@ -24,13 +24,28 @@ RUN sed -i -e 's/EAL_IGB_UIO=y/EAL_IGB_UIO=n/' \
       -e 's/LIBRTE_PMD_KNI=y/LIBRTE_PMD_KNI=n/' $DPDK_DIR/config/common_linux && \
     sed -i 's/\(CONFIG_RTE_LIBRTE_MLX5_PMD=\)n/\1y/g' $DPDK_DIR/config/common_base
 
+# PATCH
+COPY v3-bus-pci-fix-VF-bus-error-for-memory-access.diff ./v3-bus-pci-fix-VF-bus-error-for-memory-access.diff
+RUN cd ${DPDK_DIR} && git apply /v3-bus-pci-fix-VF-bus-error-for-memory-access.diff
+
 # Build it
 RUN cd ${DPDK_DIR} && \
-    make install T=${RTE_TARGET} DESTDIR=${RTE_SDK}
+    make install T=${RTE_TARGET} DESTDIR=${RTE_SDK} -j 8
 
 # Build TestPmd
 RUN cd ${DPDK_DIR}/app/test-pmd && \
     make && \
-    cp testpmd /usr/local/bin/
+    cp testpmd /usr/local/bin
 
-COPY testpmd-wrapper /usr/local/bin/
+# macaddr DPDK application
+COPY macaddr ${DPDK_DIR}/examples/macaddr/
+
+RUN cd ${DPDK_DIR}/examples/macaddr && \
+    make && \
+    cp ${DPDK_DIR}/examples/macaddr/build/app/macaddr /usr/local/bin
+
+RUN yum install -y python3 && pip3 install kubernetes
+COPY testpmd-configure /usr/local/bin
+
+COPY testpmd-wrapper /usr/local/bin
+
