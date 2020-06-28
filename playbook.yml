@@ -20,3 +20,5 @@
       size: 1
       # optional
       vfdpdk1_count: 1
+      vfdpdk1_mac: "20:04:0f:f1:88:01"
+      vfdpdk2_mac: "20:04:0f:f1:88:02"

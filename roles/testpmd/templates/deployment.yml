@@ -13,7 +13,13 @@ spec:
       annotations:
         k8s.v1.cni.cncf.io/networks: '[
 {% for network in network_name_list %}
-          {"name": "{{ network }}", "mac": "20:04:0f:f1:88:0{{ loop.index }}"}{% if loop.index < network_name_list|length %},{% endif %}
+          {
+            "name": "{{ network }}",
+{% if vars[network ~ '_mac']|default() %}
+            "mac": "{{ vars[network ~ '_mac'] }}",
+{% endif %}
+            "namespace": "{{ meta.namespace }}"
+          }{% if loop.index < network_name_list|length %},{% endif %}
 {% endfor %}
         ]'
       labels:
@@ -62,18 +68,14 @@ spec:
         volumeMounts:
         - name: hugepage
           mountPath: /dev/hugepages
-        - name: podnetinfo
-          mountPath: /etc/podnetinfo
         env:
         - name: NETWORK_NAME_LIST
           value: "{{ network_resources.keys()|list|join(',') }}" 
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
       volumes:
       - name: hugepage
         emptyDir:
           medium: HugePages
-      - name: podnetinfo
-        downwardAPI:
-          items:
-            - path: "annotations"
-              fieldRef:
-                fieldPath: metadata.annotations        

@@ -3,7 +3,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: testpmd-operator
-  namespace: example-cnf
 spec:
   replicas: 1
   selector:
