@@ -46,14 +46,17 @@ def get_mac_pci_mapping():
         if len(data) == len(pci_all):
             break
 
-    for item in data:
-        for net in network_list:
-            pci_env = "PCIDEVICE_" + net.replace('/', '_').replace('.', '_').upper()
-            pcis = os.environ[pci_env]
+    nw_data = []
+    for net in network_list:
+        pci_env = "PCIDEVICE_" + net.replace('/', '_').replace('.', '_').upper()
+        pcis = os.environ[pci_env]
+        nw_item = {'name': net, 'ifaces': []}
+        for item in data:
             if item['pci'] in pcis:
-                item['network'] = net
-    print(data)
-    return data
+                nw_item['ifaces'].append(item)
+        nw_data.append(nw_item)
+    print(nw_data)
+    return nw_data
 
 
 def get_mac_of_pci(pcis):
@@ -103,24 +106,24 @@ def create_cr(data):
 
     cr = { 'apiVersion': group + '/' + version,
            'metadata': {
-               'name': 'TODO',
+               'name': 'INVALID',
                'namespace': namespace
             },
            'kind': 'TestPMD',
            'spec': {}}
 
-    for item in data:
-        body = cr
-        body['spec'].update(item)
-        body['spec']['hostname'] = hostname
-        body['spec']['nodename'] = nodename
-        name_random = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
-        body['metadata']['name'] = hostname + "-" + name_random.lower()
-        try:
-            resp = customApi.create_namespaced_custom_object(group, version, namespace, plural, body)
-            print("Response: %s\n" % resp)
-        except ApiException as e:
-            print("Exception when creating CR: %s\n" % e)
+    body = cr
+    body['spec']['networks'] = data
+    body['spec']['hostname'] = hostname
+    body['spec']['nodename'] = nodename
+    name_random = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+    body['metadata']['name'] = nodename + "-" + name_random
+
+    try:
+        resp = customApi.create_namespaced_custom_object(group, version, namespace, plural, body)
+        print("Response: %s\n" % resp)
+    except ApiException as e:
+        print("Exception when creating CR: %s\n" % e)
 
 
 if __name__ == '__main__':
