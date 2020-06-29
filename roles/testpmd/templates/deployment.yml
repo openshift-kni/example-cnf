@@ -47,6 +47,7 @@ spec:
 {% endfor %}
         - "--forward-mode={{ forward_mode }}"
         image: "{{ image }}"
+        imagePullPolicy: Always
         securityContext:
           capabilities:
             add: ["IPC_LOCK"]
