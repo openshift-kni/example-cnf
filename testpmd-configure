@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import os
+import sys
 import subprocess
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
@@ -21,8 +22,10 @@ import random, string
 
 def main():
     data = get_mac_pci_mapping()
-    if data:
-        create_cr(data)
+    if not data:
+        print("ERROR: Invalid data")
+        sys.exit(1)
+    create_cr(data)
 
 
 def get_mac_pci_mapping():
@@ -50,10 +53,10 @@ def get_mac_pci_mapping():
     for net in network_list:
         pci_env = "PCIDEVICE_" + net.replace('/', '_').replace('.', '_').upper()
         pcis = os.environ[pci_env]
-        nw_item = {'name': net, 'ifaces': []}
+        nw_item = {'name': net, 'devices': []}
         for item in data:
             if item['pci'] in pcis:
-                nw_item['ifaces'].append(item)
+                nw_item['devices'].append(item)
         nw_data.append(nw_item)
     print(nw_data)
     return nw_data
@@ -96,10 +99,10 @@ def create_cr(data):
     version = "v1"
     namespace = "example-cnf"
     # TODO: Use that of LB's CR
-    plural = "testpmds"
+    plural = "testpmdmacs"
 
     config.load_incluster_config()
-    customApi = client.CustomObjectsApi()
+    custom_api = client.CustomObjectsApi()
 
     hostname = os.environ['HOSTNAME']
     nodename = os.environ['NODE_NAME']
@@ -109,21 +112,43 @@ def create_cr(data):
                'name': 'INVALID',
                'namespace': namespace
             },
-           'kind': 'TestPMD',
+           'kind': 'TestPMDMac',
            'spec': {}}
 
     body = cr
-    body['spec']['networks'] = data
+    body['spec']['resources'] = data
     body['spec']['hostname'] = hostname
     body['spec']['nodename'] = nodename
-    name_random = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
-    body['metadata']['name'] = nodename + "-" + name_random
+    #name_random = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+    name = nodename
+    body['metadata']['name'] = name
+
+    # TODO: Check possibility of adding ownership to the object
+
+    exists = False
+    try:
+        custom_api.get_namespaced_custom_object(group, version, namespace, plural, name)
+        exists = True
+        print("TestPMDMac CR exists with name %s", name)
+    except ApiException as e:
+        if e.status != 404:
+            print("Exception when calling CustomObjectsApi->get_namespaced_custom_object: %s\n" % e)
+            sys.exit(1)
+
+    if exists:
+        try:
+            custom_api.delete_namespaced_custom_object(group, version, namespace, plural, name)
+            print("Deleted TestPMDMac CR with name %s", name)
+        except ApiException as e:
+            print("Exception on Deleting CR: %s\n" % e)
+            sys.exit(1)
 
     try:
-        resp = customApi.create_namespaced_custom_object(group, version, namespace, plural, body)
-        print("Response: %s\n" % resp)
+        resp = custom_api.create_namespaced_custom_object(group, version, namespace, plural, body)
+        print("TestPMDMac CR created with name %s", name)
     except ApiException as e:
-        print("Exception when creating CR: %s\n" % e)
+        print("Exception on Creating CR: %s\n" % e)
+        sys.exit(1)
 
 
 if __name__ == '__main__':
