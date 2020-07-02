@@ -12,13 +12,15 @@
   - include_role:
       name: testpmd
     vars:
-      image: quay.io/krsacme/testpmd-container-app:nostart
-      networks: ["vfdpdk1", "vfdpdk2"]
+      #image: quay.io/krsacme/testpmd-container-app:nostart
       ethpeer_maclist:
         - 3c:fd:fe:79:2a:a0
         - 3c:fd:fe:79:2a:a1
       size: 1
-      # optional
-      vfdpdk1_count: 1
-      vfdpdk1_mac: "20:04:0f:f1:88:01"
-      vfdpdk2_mac: "20:04:0f:f1:88:02"
+      networks:
+        - name: vfdpdk1
+          mac: 20:04:0f:f1:88:01
+          count: 1
+        - name: vfdpdk2
+          mac: 20:04:0f:f1:88:02
+          count: 1

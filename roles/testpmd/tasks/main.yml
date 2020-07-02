@@ -16,7 +16,7 @@
 - include_tasks: network-parse.yaml
   loop: "{{ networks }}"
   loop_control:
-    loop_var: network_name
+    loop_var: network_item
 
 - name: Create TestPMD deployment
   k8s:

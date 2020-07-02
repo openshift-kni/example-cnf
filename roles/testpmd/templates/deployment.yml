@@ -12,11 +12,11 @@ spec:
     metadata:
       annotations:
         k8s.v1.cni.cncf.io/networks: '[
-{% for network in network_name_list %}
+{% for network in networks %}
           {
-            "name": "{{ network }}",
-{% if vars[network ~ '_mac']|default() %}
-            "mac": "{{ vars[network ~ '_mac'] }}",
+            "name": "{{ network.name }}",
+{% if network.mac|default() %}
+            "mac": "{{ network.mac }}",
 {% endif %}
             "namespace": "{{ meta.namespace }}"
           }{% if loop.index < network_name_list|length %},{% endif %}

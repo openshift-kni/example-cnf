@@ -1,0 +1,45 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: testpmdmacs.examplecnf.openshift.io
+spec:
+  group: examplecnf.openshift.io
+  versions:
+  - name: v1
+    served: true
+    storage: true
+  scope: Namespaced
+  names:
+    kind: TestPMDMac
+    listKind: TestPMDMacList
+    plural: testpmdmacs
+    singular: testpmdmac
+  scope: Namespaced
+  preserveUnknownFields: false
+  validation:
+    openAPIV3Schema:
+      type: object
+      properties:
+        spec:
+          type: object
+          properties:
+            hostname:
+              type: string
+            nodename:
+              type: string
+            resources:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  devices:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        pci:
+                          type: string
+                        mac:
+                          type: string
