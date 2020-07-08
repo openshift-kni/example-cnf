@@ -11,8 +11,17 @@ Preparation
 
 * Baremetal Node Configuration (Kernel args and IOMMU)
 ```
-# TODO
+go get github.com/openshift-kni/performance-addon-operators
+cd $GOPATH/src/github.com/openshift-kni/performance-addon-operators
+CLUSTER=manual make cluster-deploy
+make cluster-label-worker-cnf
+CLUSTER=manual make cluster-wait-for-mcp
 
+cd $HOME
+git clone https://github.com/krsacme/ocp-templates-nfv.git
+cd ~/ocp-templates-nfv
+# Configure CPUs
+oc apply -f performance_profile.yaml
 ```
 
 * Configure static CPU manager for Kubelet configuration
@@ -29,20 +38,20 @@ oc -n openshift-machine-api apply -f cpumanager-kubeletconfig.yaml
 ```
 go get github.com/openshift/sriov-network-operator
 export KUBECONFIG=/home/kni/dev-scripts/ocp/vnf/auth/kubeconfig
+cd $GOPATH/src/github.com/openshift/sriov-network-operator
 make deploy-setup
 
+# Wait till sriovoperatorconfig creating
 # Disable webhook (to disable PF whitelisting)
 oc -n openshift-sriov-network-operator patch sriovoperatorconfig default --type=merge -p '{"spec":{"enableOperatorWebhook":false}}'
 ```
+
 * Create SR-IOV networks & policy, modify the ``policy1.yaml`` file as per the cluster interface names
 ```
+cd $HOME
 git clone https://github.com/krsacme/ocp-templates-nfv.git
 cd ocp-templates-nfv
-
-oc apply -f sriov/policy1.yaml
-oc apply -f sriov/policy2.yaml
-oc apply -f sriov/network1.yaml
-oc apply -f sriov/network2.yaml
+oc kustomize sriov/ | oc apply -f -
 ```
 
 TestPMD operator deployment
