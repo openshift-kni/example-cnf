@@ -2,6 +2,7 @@ apiVersion: examplecnf.openshift.io/v1
 kind: TestPMD
 metadata:
   name: testpmd1
+  namespace: example-cnf
 spec:
   size: 1
   cpu: 8

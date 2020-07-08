@@ -3,6 +3,10 @@
     network_resources: {}
     network_name_list: []
 
+- copy:
+    dest: "/tmp/vars"
+    content: "{{ vars }}"
+
 - name: Validate the CPUs and forwarding cores
   fail:
     msg: "{{ forwarding_cores }} should be lesser than {{ cpus }}"

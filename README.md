@@ -49,12 +49,8 @@ TestPMD operator deployment
 ---------------------------
 
 ```
-oc -n example-cnf apply -f deploy/crds/examplecnf.openshift.io_testpmds_crd.yaml
-oc -n example-cnf apply -f deploy/service_account.yaml
-oc -n example-cnf apply -f deploy/role.yaml
-oc -n example-cnf apply -f deploy/role_binding.yaml
-oc -n example-cnf apply -f deploy/operator.yaml
-oc -n example-cnf apply -f deploy/scc.yaml
+make cluster-deploy
 
+# Modify the CR as per the need
 oc -n example-cnf apply -f deploy/crds/examplecnf.openshift.io_v1_testpmd_cr.yaml
 ```
