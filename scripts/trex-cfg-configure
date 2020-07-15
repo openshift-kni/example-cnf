@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+
+import os
+import yaml
+import sys
+
+trex_cfg_template = [{
+    "port_limit": 2,
+    "version": 2,
+    "interfaces": [],
+    "port_info": [],
+    "c": 0,
+    "platform": {
+        "master_thread_id": 0,
+        "latency_thread_id": 0,
+        "dual_if": [{
+            "socket": 0,
+            "threads": []
+        }]
+    }
+}]
+
+port_obj_l2_template = {
+    "dest_mac": "",
+    "src_mac": ""
+}
+
+CFG_FILE = "/etc/trex_cfg.yaml"
+
+def main():
+    cfg = trex_cfg_template.copy()
+
+    # Ports allocated to TRex
+    pci_list = get_pci()
+    cfg[0]['interfaces'].extend(pci_list)
+    cfg[0]['port_limit'] = len(pci_list)
+
+    core_list = cores()
+    cfg[0]['c'] = len(core_list) - 2
+    cfg[0]['platform']['master_thread_id'] = core_list[0]
+    cfg[0]['platform']['latency_thread_id'] = core_list[1]
+    cfg[0]['platform']['dual_if'][0]['threads'] = core_list[2:]
+
+    print(trex_cfg_template)
+    with open(CFG_FILE, "w") as f:
+        yaml.safe_dump(cfg, f)
+
+def cores():
+    core_string = sys.argv[1]
+    core_list = []
+    for item in core_string.split(','):
+        if '-' in item:
+            range_parts = item.split('-')
+            for c in range(int(range_parts[0]), int(range_parts[1]) + 1):
+                core_list.append(c)
+        else:
+            core_list.append(int(item))
+    return core_list
+
+def get_pci():
+    networks = os.environ['NETWORK_NAME_LIST']
+    network_list = networks.split(',')
+    pci_all = []
+    for net in network_list:
+        pci_env = "PCIDEVICE_" + net.replace('/', '_').replace('.', '_').upper()
+        pcis = os.environ[pci_env]
+        print("pcis = %s" % pcis)
+        pci_list = pcis.split(',')
+        pci_all.extend(pci_list)
+    return pci_all
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -ex
+
+if [ -z NETWORK_NAME_LIST ]; then
+    echo "NETWORK_NAME_LIST is empty, exiting.."
+    exit 1
+fi
+
+CORES=$(taskset -pc 1 | cut -d: -f2)
+
+# Write TRex cfg file
+trex-cfg-configure $CORES
+
+# Read the number of cores from the trex cfg
+# It is required as input via -c arg (for binary_search scripts of trafficgen)
+CORE_COUNT=$(grep ' c: ' /etc/trex_cfg.yaml | cut -d: -f2 | xargs)
+
+SERVER="/usr/local/bin/trex-server"
+echo "#/bin/bash"> $SERVER
+echo "set -ex" >> $SERVER
+echo "cd $TREX_DIR" >> $SERVER
+echo "./_t-rex-64 -i --no-hw-flow-stat -c $CORE_COUNT" >> $SERVER
+chmod +x $SERVER
+
+#$SERVER &
+
+#binary-search-run
+
+sleep infinity

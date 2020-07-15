@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -ex
+
+DUT_MAC_LIST=""
+
+FRAME_SIZE=64
+LOSS_PERCENT=0.00
+NUM_FLOWS=1
+VALIDATION_SECS=30
+SEARCH_SECS=30
+
+$TRAFFICGENDIR/binary-search.py         \
+        --traffic-generator trex-txrx   \
+        --frame-size $FRAME_SIZE        \
+        --max-loss-pct $LOSS_PERCENT    \
+        --send-teaching-warmup          \
+        --dst-macs $DUT_MAC_LIST        \
+        --num-flows $NUM_FLOWS          \
+        --use-src-ip-flows 1            \
+        --use-dst-ip-flows 1            \
+        --use-src-mac-flows 0           \
+        --use-dst-mac-flows 0           \
+        --use-src-port-flows 1          \
+        --use-dst-port-flows 1          \
+        --search-runtime $SEARCH_SECS   \
+        --validation-runtime $VALIDATION_SECS
+
+# DPDK
+# --rate {{ trex_rate }}
+
+# VLAN
+# --vlan-ids {{ trex_instance_sriov_vlans|join(',') }}
