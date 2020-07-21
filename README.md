@@ -24,16 +24,6 @@ cd ~/ocp-templates-nfv
 oc apply -f performance_profile.yaml
 ```
 
-* Configure static CPU manager for Kubelet configuration
-```
-NODENAME=worker-0
-oc label node $NODENAME cpumanager=true
-oc label machineconfigpool worker custom-kubelet=cpumanager-enabled
-git clone https://github.com/krsacme/ocp-templates-nfv.git
-cd ocp-templates-nfv
-oc -n openshift-machine-api apply -f cpumanager-kubeletconfig.yaml
-```
-
 * Deploy ``sriov-network-operator`` (simplest way is to deploy via source)
 ```
 go get github.com/openshift/sriov-network-operator
