@@ -17,13 +17,8 @@ trex-cfg-configure $CORES
 CORE_COUNT=$(grep ' c: ' /etc/trex_cfg.yaml | cut -d: -f2 | xargs)
 
 SERVER="/usr/local/bin/trex-server"
-echo "#/bin/bash"> $SERVER
-echo "set -ex" >> $SERVER
-echo "cd $TREX_DIR" >> $SERVER
-echo "./_t-rex-64 -i --no-hw-flow-stat -c $CORE_COUNT" >> $SERVER
 chmod +x $SERVER
-
-#$SERVER &
+$SERVER $CORE_COUNT &
 
 #binary-search-run
 

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -x
+CORE_COUNT=$1
+
+cd $TREX_DIR
+n=0
+until [ "$n" -ge 5 ]
+do
+   ./_t-rex-64 -i --no-hw-flow-stat -c $CORE_COUNT
+   n=$((n+1)) 
+   sleep 5
+done
+echo "Failed to start TRex Server on 5 retries..."

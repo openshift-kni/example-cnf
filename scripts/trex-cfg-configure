@@ -3,6 +3,8 @@
 import os
 import yaml
 import sys
+from kubernetes import client, config
+from kubernetes.client.rest import ApiException
 
 trex_cfg_template = [{
     "port_limit": 2,
@@ -41,6 +43,32 @@ def main():
     cfg[0]['platform']['latency_thread_id'] = core_list[1]
     cfg[0]['platform']['dual_if'][0]['threads'] = core_list[2:]
 
+    src_mac = get_src_mac()
+    if not src_mac:
+        print("ERROR: Source mac address is not available, exiting...")
+        sys.exit(1)
+
+    dst_mac = get_dst_mac()
+    if not dst_mac:
+        print("ERROR: Destination mac address is not available, exiting...")
+        sys.exit(1)
+
+    if len(dst_mac) != len(src_mac):
+        print("ERROR: Source (%s) and Destination (%s) mac list size is "
+            "different, exiting..." % (','.join(src_mac), ','.join(dst_mac)))
+        sys.exit(1)
+
+    if len(pci_list) != len(src_mac):
+        print("ERROR: PCI device list (%s) and Source mac (%s) mac list size is "
+            "different, exiting..." % (','.join(pci_list), ','.join(dst_mac)))
+        sys.exit(1)
+
+    for idx in range(len(pci_list)):
+        port_obj = port_obj_l2_template.copy()
+        port_obj['src_mac'] = src_mac[idx]
+        port_obj['dest_mac'] = dst_mac[idx]
+        cfg[0]['port_info'].append(port_obj)
+
     print(trex_cfg_template)
     with open(CFG_FILE, "w") as f:
         yaml.safe_dump(cfg, f)
@@ -68,6 +96,43 @@ def get_pci():
         pci_list = pcis.split(',')
         pci_all.extend(pci_list)
     return pci_all
+
+def get_src_mac():
+    podinfo = "/etc/podnetinfo/annotations"
+    obj = []
+    macs = []
+    with open(podinfo) as f:
+        for line in f:
+            name, var = line.partition("=")[::2]
+            if name == "k8s.v1.cni.cncf.io/networks":
+                obj = yaml.safe_load(yaml.safe_load(var))
+    for item in obj:
+        print(item)
+        if 'mac' in item:
+            macs.append(item['mac'])
+        else:
+            print("TODO: Implement mac fetching DPDK application")
+    return macs
+
+def get_dst_mac():
+    group = "examplecnf.openshift.io"
+    version = "v1"
+    namespace = "example-cnf"
+    plural = "testpmdmacs"
+
+    config.load_incluster_config()
+    custom_api = client.CustomObjectsApi()
+    try:
+        response = custom_api.list_namespaced_custom_object(group, version, namespace, plural)
+    except ApiException as e:
+        return []
+
+    macs = []
+    for item in response['items']:
+        print(item['spec']['nodename'])
+        for resource in item['spec']['resources']:
+            macs.append(resource['devices'][0]['mac'])
+    return macs
 
 if __name__ == "__main__":
     main()

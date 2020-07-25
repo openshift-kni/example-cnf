@@ -2,7 +2,7 @@
 
 set -ex
 
-DUT_MAC_LIST=""
+DUT_MAC_LIST=$(grep  'dest_mac:' /etc/trex_cfg.yaml | sed -n 's/.*dest_mac: \(.*\)$/\1/p' | paste -sd ',' -)
 
 FRAME_SIZE=64
 LOSS_PERCENT=0.00
@@ -10,7 +10,7 @@ NUM_FLOWS=1
 VALIDATION_SECS=30
 SEARCH_SECS=30
 
-$TRAFFICGENDIR/binary-search.py         \
+$TRAFFICGEN_DIR/binary-search.py         \
         --traffic-generator trex-txrx   \
         --frame-size $FRAME_SIZE        \
         --max-loss-pct $LOSS_PERCENT    \
