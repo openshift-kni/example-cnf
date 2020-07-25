@@ -46,7 +46,14 @@ oc kustomize sriov/ | oc apply -f -
 
 TestPMD operator deployment
 ---------------------------
+Ensure the node on which the TestPMD application should run has a
+label ``app: testpmd``, by executing below command:
+```
+oc label node worker-1 app=testpmd
+```
 
+
+Deploy the operator
 ```
 make cluster-deploy
 
