@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+
+from trex.stl.api import *
+
+import time
+import json
+import os
+
+class STLS1(object):
+    """
+    Create flow stat stream of UDP packet.
+    Can specify using tunables following params:
+      Packet length (fsize)
+      Packet group id (pg_id)
+      Packet type(pkt_type)
+      Number of streams (num_streams)
+    """
+    def __init__ (self):
+        self.fsize = 64
+        self.pg_id = 0
+        self.pkt_type = "ether"
+        self.num_streams = 1
+
+    def create_stream (self):
+        size = self.fsize - 4; # HW will add 4 bytes ethernet CRC                                                               
+
+        pkt_types = {"ether" :
+                      Ether() / IP(src = "16.0.0.1", dst = "48.0.0.1") / UDP(dport = 12, sport = 1025)                          
+                      , "vlan":
+                      Ether() / Dot1Q(vlan=11) / IP(src = "16.0.0.1", dst = "48.0.0.1") / UDP(dport = 12, sport = 1025)         
+                      , "qinq":
+                      Ether(type=0x88A8) / Dot1Q(vlan=19) / Dot1Q(vlan=11) / IP(src = "16.0.0.1", dst = "48.0.0.1") / UDP(dport = 12, sport = 1025)
+        }
+
+        if self.pkt_type not in pkt_types.keys():
+            print ("Wrong pkt_type given. Allowed values are " + format(pkt_types.keys()))                                      
+            return []
+
+        pad = max(0, size - len(self.pkt_type)) * 'x'
+        pkt = STLPktBuilder(pkt = pkt_types[self.pkt_type]/pad)
+
+        streams = []
+        for pg_id_add in range(0, self.num_streams):
+            streams.append(STLStream(packet = pkt, mode = STLTXCont(pps=1), flow_stats = STLFlowStats(pg_id = self.pg_id + pg_id_add)))
+
+        return streams
+
+def print_stats(stat, ports):
+    in_pack = 0
+    out_pack = 0
+    for i in ports:
+        in_pack += stat[i]['ipackets']
+        out_pack += stat[i]['opackets']
+    print("out(%s) > in(%s)" % (stat[i]['opackets'], stat[i]['ipackets']))
+
+
+def simple_burst (port_a, port_b, pkt_size, rate, duration=-1):
+   
+    # create client
+    c = STLClient()
+    passed = True
+
+    try:
+        # turn this on for some information
+        #c.set_verbose("debug")
+
+        obj = STLS1()
+        s1 = obj.create_stream()
+ 
+        # connect to server
+        c.connect()
+
+        # prepare our ports
+        c.reset(ports = [port_a, port_b])
+
+        # add both streams to ports
+        c.add_streams(s1, ports = [port_a])
+        c.add_streams(s1, ports = [port_b])
+
+        # clear the stats before injecting
+        c.clear_stats()
+
+        # here we multiply the traffic lineaer to whatever given in rate
+        print("Running {:} on ports {:}, {:} for 10 seconds...".format(rate, port_a, port_b))
+        c.start(ports = [port_a, port_b], 
+            mult = rate, 
+            duration = duration, 
+            core_mask = STLClient.CORE_MASK_PIN
+        )
+
+        if duration == -1:
+            # Infinite
+            while True:
+                print_stats(c.get_stats(), ports = [port_a, port_b])
+                time.sleep(5)
+        else:
+            # block until done
+            c.wait_on_traffic(ports = [port_a, port_b])
+
+        # read the stats after the test
+        stats = c.get_stats()
+
+        print(json.dumps(stats[port_a], indent = 4, separators=(',', ': '), sort_keys = True))
+        print(json.dumps(stats[port_b], indent = 4, separators=(',', ': '), sort_keys = True))
+
+        lost_a = stats[port_a]["opackets"] - stats[port_b]["ipackets"]
+        lost_b = stats[port_b]["opackets"] - stats[port_a]["ipackets"]
+
+        print("\npackets lost from {0} --> {1}:   {2} pkts".format(port_a, port_b, lost_a))
+        print("packets lost from {0} --> {1}:   {2} pkts".format(port_b, port_a, lost_b))
+
+        if c.get_warnings():
+            print("\n\n*** test had warnings ****\n\n")
+            for w in c.get_warnings():
+                print(w)
+
+        if (lost_a == 0) and (lost_b == 0) and not c.get_warnings():
+            passed = True
+        else:
+            passed = False
+
+    except STLError as e:
+        passed = False
+        print(e)
+
+    finally:
+        c.disconnect()
+
+    if passed:
+        print("\nTest has passed :-)\n")
+    else:
+        print("\nTest has failed :-(\n")
+
+# run the tests
+packet_size = os.getenv("PACKET_SIZE") or 64
+packet_rate = os.getenv("PACKET_RATE") or "10pps"
+duration = os.getenv("DURATION") or -1
+simple_burst(0, 1, packet_size, packet_rate, duration)

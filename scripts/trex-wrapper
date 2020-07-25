@@ -20,6 +20,10 @@ SERVER="/usr/local/bin/trex-server"
 chmod +x $SERVER
 $SERVER $CORE_COUNT &
 
-#binary-search-run
+# TODO: Make mode configurable, binary search or continuous packet 
+#run-binary-search
 
-sleep infinity
+run-trex
+
+echo "Complete..."
+#sleep infinity

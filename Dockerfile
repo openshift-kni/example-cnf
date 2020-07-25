@@ -22,6 +22,7 @@ RUN ./b configure --no-mlx --no-bxnt && ./b build
 
 WORKDIR /opt/trex/trex-core/scripts
 
+ENV PYTHONPATH="/opt/trex/trex-core/scripts/automation/trex_control_plane/interactive"
 ENV TREX_DIR="/opt/trex/current"
 ENV TRAFFICGEN_DIR="/opt/trafficgen"
 
