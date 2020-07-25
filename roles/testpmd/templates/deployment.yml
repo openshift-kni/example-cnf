@@ -26,6 +26,8 @@ spec:
         app: testpmd
     spec:
       serviceAccountName: testpmd-operator
+      nodeSelector:
+        app: testpmd
       containers:
       - name: testpmd
         command: ["testpmd-wrapper"]
