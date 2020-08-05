@@ -1,39 +1,41 @@
 #!/usr/bin/env python3
 
+# https://github.com/secdev/scapy/blob/master/scapy/layers/l2.py#L164
+
 from trex.stl.api import *
 
 import time
 import json
-import os
+from datetime import datetime
+import sys
+
 
 class STLS1(object):
-    """
-    Create flow stat stream of UDP packet.
-    Can specify using tunables following params:
-      Packet length (fsize)
-      Packet group id (pg_id)
-      Packet type(pkt_type)
-      Number of streams (num_streams)
-    """
-    def __init__ (self):
+
+    def __init__ (self, ports):
         self.fsize = 64
         self.pg_id = 0
         self.pkt_type = "ether"
         self.num_streams = 1
+        self.ipack = [0] * len(ports)
+        self.opack = [0] * len(ports)
+        self.miss = []
 
     def create_stream (self):
-        size = self.fsize - 4; # HW will add 4 bytes ethernet CRC                                                               
+        size = self.fsize - 4; # HW will add 4 bytes ethernet CRC
 
-        pkt_types = {"ether" :
-                      Ether() / IP(src = "16.0.0.1", dst = "48.0.0.1") / UDP(dport = 12, sport = 1025)                          
-                      , "vlan":
-                      Ether() / Dot1Q(vlan=11) / IP(src = "16.0.0.1", dst = "48.0.0.1") / UDP(dport = 12, sport = 1025)         
-                      , "qinq":
-                      Ether(type=0x88A8) / Dot1Q(vlan=19) / Dot1Q(vlan=11) / IP(src = "16.0.0.1", dst = "48.0.0.1") / UDP(dport = 12, sport = 1025)
+        ethr = Ether(dst="01:02:03:04:05:06") / IP(src = "16.0.0.1", dst = "48.0.0.1") / UDP(dport = 12, sport = 1025)
+        vlan = Ether() / Dot1Q(vlan=11) / IP(src = "16.0.0.1", dst = "48.0.0.1") / UDP(dport = 12, sport = 1025)
+        qinq = Ether(type=0x88A8) / Dot1Q(vlan=19) / Dot1Q(vlan=11) / IP(src = "16.0.0.1", dst = "48.0.0.1") / UDP(dport = 12, sport = 1025)
+
+        pkt_types = {
+            "ether": ethr,
+            "vlan": vlan,
+            "qinq": qinq
         }
 
         if self.pkt_type not in pkt_types.keys():
-            print ("Wrong pkt_type given. Allowed values are " + format(pkt_types.keys()))                                      
+            print ("Wrong pkt_type given. Allowed values are " + format(pkt_types.keys()))
             return []
 
         pad = max(0, size - len(self.pkt_type)) * 'x'
@@ -45,17 +47,24 @@ class STLS1(object):
 
         return streams
 
-def print_stats(stat, ports):
-    in_pack = 0
-    out_pack = 0
-    for i in ports:
-        in_pack += stat[i]['ipackets']
-        out_pack += stat[i]['opackets']
-    print("out(%s) > in(%s)" % (stat[i]['opackets'], stat[i]['ipackets']))
-
+    def stats(self, stat, ports):
+        for i in ports:
+            ipack = stat[i]['ipackets'] - self.ipack[i]
+            opack = stat[i]['opackets'] - self.opack[i]
+            self.ipack[i] = stat[i]['ipackets']
+            self.opack[i] = stat[i]['opackets']
+        if ipack >= opack:
+            print("MATCH: out(%s) > in(%s)" % (opack, ipack), file = sys.stdout)
+            if self.miss and not self.miss[-1].get('end'):
+                self.miss[-1]['end'] = datetime.now()
+                print("Loss recovery: %s" % (self.miss[-1]['end'] - self.miss[-1]['start']))
+        else:
+            print("MISS:  out(%s) > in(%s)" % (opack, ipack), file = sys.stdout)
+            if self.miss and not self.miss[-1].get('end'):
+                self.miss.append({'start': datetime.now()})
 
 def simple_burst (port_a, port_b, pkt_size, rate, duration=-1):
-   
+
     # create client
     c = STLClient()
     passed = True
@@ -64,9 +73,9 @@ def simple_burst (port_a, port_b, pkt_size, rate, duration=-1):
         # turn this on for some information
         #c.set_verbose("debug")
 
-        obj = STLS1()
+        obj = STLS1(ports = [port_a, port_b])
         s1 = obj.create_stream()
- 
+
         # connect to server
         c.connect()
 
@@ -82,16 +91,16 @@ def simple_burst (port_a, port_b, pkt_size, rate, duration=-1):
 
         # here we multiply the traffic lineaer to whatever given in rate
         print("Running {:} on ports {:}, {:} for 10 seconds...".format(rate, port_a, port_b))
-        c.start(ports = [port_a, port_b], 
-            mult = rate, 
-            duration = duration, 
+        c.start(ports = [port_a, port_b],
+            mult = rate,
+            duration = duration,
             core_mask = STLClient.CORE_MASK_PIN
         )
 
         if duration == -1:
             # Infinite
             while True:
-                print_stats(c.get_stats(), ports = [port_a, port_b])
+                obj.stats(c.get_stats(), ports = [port_a, port_b])
                 time.sleep(5)
         else:
             # block until done
