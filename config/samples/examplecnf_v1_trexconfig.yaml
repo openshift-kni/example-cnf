@@ -1,0 +1,6 @@
+apiVersion: examplecnf.openshift.io/v1
+kind: TRexConfig
+metadata:
+  name: trexconfig-sample
+spec:
+  foo: bar

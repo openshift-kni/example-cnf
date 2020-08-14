@@ -1,0 +1,45 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+    operators.operatorframework.io/builder: operator-sdk-v1.0.0+git
+    operators.operatorframework.io/project_layout: ansible.sdk.operatorframework.io/v1
+  name: trex-operator.vX.Y.Z
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions: {}
+  description: TRex Operator manages a packet generator application based on TRex
+  displayName: TRex Operator
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: true
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - trex
+  - cnf
+  - nfv
+  links:
+  - name: Trex Operator
+    url: https://trex-operator.domain
+  maintainers:
+  - email: skramaja@redhat.com
+    name: Saravanan KR
+  maturity: alpha
+  provider:
+    name: Red Hat
+  version: 0.0.0

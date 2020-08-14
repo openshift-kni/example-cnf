@@ -1,0 +1,24 @@
+# permissions for end users to edit trexconfigs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: trexconfig-editor-role
+rules:
+- apiGroups:
+  - examplecnf.openshift.io
+  resources:
+  - trexconfigs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - examplecnf.openshift.io
+  resources:
+  - trexconfigs/status
+  verbs:
+  - get

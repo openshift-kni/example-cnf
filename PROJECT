@@ -1,0 +1,8 @@
+domain: openshift.io
+layout: ansible.sdk.operatorframework.io/v1
+projectName: trex-operator
+resources:
+- group: examplecnf
+  kind: TRexConfig
+  version: v1
+version: 3-alpha
