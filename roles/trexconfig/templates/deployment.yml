@@ -1,0 +1,69 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: "{{ meta.name }}-app"
+  namespace: "{{ meta.namespace }}"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trex
+  template:
+    metadata:
+      annotations:
+        k8s.v1.cni.cncf.io/networks: '[
+{% for network in networks %}
+          {
+            "name": "{{ network.name }}",
+{% if network.mac|default() %}
+            "mac": "{{ network.mac }}",
+{% endif %}
+            "namespace": "{{ meta.namespace }}"
+          }{% if loop.index < network_name_list|length %},{% endif %}
+{% endfor %}
+        ]'
+      labels:
+        app: trex
+    spec:
+      serviceAccountName: trex-operator
+      nodeSelector:
+        app: trex
+      containers:
+      - name: trex
+        command: ["trex-wrapper"]
+        image: "{{ image }}"
+        imagePullPolicy: Always
+        securityContext:
+          capabilities:
+            add: ["IPC_LOCK"]
+        resources:
+          limits:
+            hugepages-1Gi: {{ hugepage_1gb_count }}
+            memory: {{ memory }}
+            cpu: {{ cpu }}
+{% for key, value in network_resources.items() %}
+            {{ key }}: {{ value }}
+{% endfor %}
+          requests:
+            hugepages-1Gi: {{ hugepage_1gb_count }}
+            memory: {{ memory }}
+            cpu: {{ cpu }}
+{% for key, value in network_resources.items() %}
+            {{ key }}: {{ value }}
+{% endfor %}
+        volumeMounts:
+        - name: hugepage
+          mountPath: /dev/hugepages
+        env:
+        - name: NETWORK_NAME_LIST
+          value: "{{ network_resources.keys()|list|join(',') }}" 
+        - name: DUT_MAC_LIST
+          value: "{{ ','.join(dut_maclist) }}"
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+      volumes:
+      - name: hugepage
+        emptyDir:
+          medium: HugePages

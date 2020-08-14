@@ -1,2 +1,3 @@
 ---
-# defaults file for TRexConfig
+image: quay.io/krsacme/trex-container-app:latest
+network_resources: {}
