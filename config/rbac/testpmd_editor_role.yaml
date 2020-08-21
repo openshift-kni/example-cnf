@@ -1,0 +1,24 @@
+# permissions for end users to edit testpmds.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: testpmd-editor-role
+rules:
+- apiGroups:
+  - examplecnf.openshift.io
+  resources:
+  - testpmds
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - examplecnf.openshift.io
+  resources:
+  - testpmds/status
+  verbs:
+  - get

@@ -1,0 +1,6 @@
+apiVersion: examplecnf.openshift.io/v1
+kind: TestPMD
+metadata:
+  name: testpmd-sample
+spec:
+  foo: bar

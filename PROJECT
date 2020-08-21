@@ -1,0 +1,11 @@
+domain: openshift.io
+layout: ansible.sdk.operatorframework.io/v1
+projectName: testpmd-operator
+resources:
+- group: examplecnf
+  kind: TestPMD
+  version: v1
+- group: examplecnf
+  kind: TestPMDMac
+  version: v1
+version: 3-alpha

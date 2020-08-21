@@ -18,6 +18,16 @@
   loop_control:
     loop_var: network_item
 
+- name: create service account
+  k8s:
+    state: present
+    definition: "{{ lookup('file', 'service_account.yaml') }}"
+
+- name: create scc
+  k8s:
+    state: present
+    definition: "{{ lookup('file', 'scc.yaml') }}"
+
 - name: Create TestPMD deployment
   k8s:
     state: present

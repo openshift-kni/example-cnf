@@ -1,0 +1,26 @@
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: testpmd
+allowHostDirVolumePlugin: true
+allowPrivilegeEscalation: false
+allowedCapabilities:
+  - IPC_LOCK
+fsGroup:
+  type: RunAsAny
+readOnlyRootFilesystem: false
+runAsUser: 
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+seccompProfiles:
+  - "*"
+users:
+  - system:serviceaccount:example-cnf:testpmd-operator
+volumes:
+  - configMap
+  - downwardAPI
+  - emptyDir
+  - persistentVolumeClaim
+  - projected
+  - secret

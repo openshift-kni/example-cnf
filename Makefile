@@ -1,64 +1,94 @@
-OC_TOOL ?= "oc"
-IMAGE_BUILD_CMD ?= "docker"
-IMAGE_REGISTRY ?= "quay.io"
-REGISTRY_NAMESPACE ?= "example-cnf"
-IMAGE_TAG ?= "latest"
+# Current Operator version
+VERSION ?= 0.1.0
+REGISTRY ?= quay.io
+ORG ?= krsacme
+# Default bundle image tag
+BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/testpmd-operator-bundle:v$(VERSION)
+# Options for 'bundle-build'
+ifneq ($(origin CHANNELS), undefined)
+BUNDLE_CHANNELS := --channels=$(CHANNELS)
+endif
+ifneq ($(origin DEFAULT_CHANNEL), undefined)
+BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
+endif
+BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
-TARGET_GOOS=linux
-TARGET_GOARCH=amd64
+# Image URL to use all building/pushing image targets
+IMG ?= $(REGISTRY)/$(ORG)/testpmd-operator:v$(VERSION)
 
-CACHE_DIR="_cache"
-TOOLS_DIR="$(CACHE_DIR)/tools"
+all: docker-build docker-push
 
-OPERATOR_SDK_VERSION="v0.18.0"
-OPERATOR_SDK_PLATFORM ?= "x86_64-linux-gnu"
-OPERATOR_SDK_BIN="operator-sdk-$(OPERATOR_SDK_VERSION)-$(OPERATOR_SDK_PLATFORM)"
-OPERATOR_SDK="$(TOOLS_DIR)/$(OPERATOR_SDK_BIN)"
+# Run against the configured Kubernetes cluster in ~/.kube/config
+run: ansible-operator
+	$(ANSIBLE_OPERATOR) run
 
-OPERATOR_IMAGE_NAME="testpmd-opeator"
-# Separate repository
-APPLICATION_IMAGE_NAME="testpmd-container-app"
+# Install CRDs into a cluster
+install: kustomize
+	$(KUSTOMIZE) build config/crd | kubectl apply -f -
 
-FULL_OPERATOR_IMAGE ?= "$(IMAGE_REGISTRY)/$(REGISTRY_NAMESPACE)/$(OPERATOR_IMAGE_NAME):$(IMAGE_TAG)"
-FULL_APPLICATION_IMAGE ?= "${IMAGE_REGISTRY}/${REGISTRY_NAMESPACE}/${APPLICATION_IMAGE_NAME}:${IMAGE_TAG}"
+# Uninstall CRDs from a cluster
+uninstall: kustomize
+	$(KUSTOMIZE) build config/crd | kubectl delete -f -
 
-GIT_VERSION=$$(git describe --always --tags)
-VERSION=$${CI_UPSTREAM_VERSION:-$(GIT_VERSION)}
-GIT_COMMIT=$$(git rev-list -1 HEAD)
-COMMIT=$${CI_UPSTREAM_COMMIT:-$(GIT_COMMIT)}
-BUILD_DATE=$$(date --utc -Iseconds)
+# Deploy controller in the configured Kubernetes cluster in ~/.kube/config
+deploy: kustomize
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
-# Export GO111MODULE=on to enable project to be built from within GOPATH/src
-export GO111MODULE=on
+# Undeploy controller in the configured Kubernetes cluster in ~/.kube/config
+undeploy: kustomize
+	$(KUSTOMIZE) build config/default | kubectl delete -f -
 
-.PHONY: build
-build:
-	@echo "Building operator image"
-	$(OPERATOR_SDK) build $(FULL_OPERATOR_IMAGE)
+# Build the docker image
+docker-build:
+	docker build . -t ${IMG}
 
-.PHONY: push
-push: build
-	@echo "Pushing opeator image"
-	$(IMAGE_BUILD_CMD) push $(FULL_OPERATOR_IMAGE)
+# Push the docker image
+docker-push:
+	docker push ${IMG}
 
-.PHONY: operator-sdk
-operator-sdk:
-	@if [ ! -x "$(OPERATOR_SDK)" ]; then\
-		echo "Downloading operator-sdk $(OPERATOR_SDK_VERSION)";\
-		mkdir -p $(TOOLS_DIR);\
-		curl -JL https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/$(OPERATOR_SDK_BIN) -o $(OPERATOR_SDK);\
-		chmod +x $(OPERATOR_SDK);\
-	else\
-		echo "Using operator-sdk cached at $(OPERATOR_SDK)";\
-	fi
+PATH  := $(PATH):$(PWD)/bin
+SHELL := env PATH=$(PATH) /bin/sh
+OS    = $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ARCH  = $(shell uname -m | sed 's/x86_64/amd64/')
+OSOPER   = $(shell uname -s | tr '[:upper:]' '[:lower:]' | sed 's/darwin/apple-darwin/' | sed 's/linux/linux-gnu/')
+ARCHOPER = $(shell uname -m )
 
-.PHONY: cluster-deploy
-cluster-deploy:
-	@echo "Deploying operator"
-	${OC_TOOL} kustomize | envsubst | ${OC_TOOL} apply -f - 
+kustomize:
+ifeq (, $(shell which kustomize 2>/dev/null))
+	@{ \
+	set -e ;\
+	mkdir -p bin ;\
+	curl -sSLo - https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v3.5.4/kustomize_v3.5.4_$(OS)_$(ARCH).tar.gz | tar xzf - -C bin/ ;\
+	}
+KUSTOMIZE=$(realpath ./bin/kustomize)
+else
+KUSTOMIZE=$(shell which kustomize)
+endif
 
-.PHONY: cluster-clean
-cluster-clean:
-	@echo "Deleting operator"
-	${OC_TOOL} delete namespace example-cnf
+ansible-operator:
+ifeq (, $(shell which ansible-operator 2>/dev/null))
+	@{ \
+	set -e ;\
+	mkdir -p bin ;\
+	curl -LO https://github.com/operator-framework/operator-sdk/releases/download/v1.0.0/ansible-operator-v1.0.0-$(ARCHOPER)-$(OSOPER) ;\
+	mv ansible-operator-v1.0.0-$(ARCHOPER)-$(OSOPER) ./bin/ansible-operator ;\
+	chmod +x ./bin/ansible-operator ;\
+	}
+ANSIBLE_OPERATOR=$(realpath ./bin/ansible-operator)
+else
+ANSIBLE_OPERATOR=$(shell which ansible-operator)
+endif
 
+# Generate bundle manifests and metadata, then validate generated files.
+.PHONY: bundle
+bundle: kustomize
+	operator-sdk generate kustomize manifests -q
+	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
+	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+	operator-sdk bundle validate ./bundle
+
+# Build the bundle image.
+.PHONY: bundle-build
+bundle-build:
+	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .

@@ -1,0 +1,45 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+    operators.operatorframework.io/builder: operator-sdk-v1.0.0+git
+    operators.operatorframework.io/project_layout: ansible.sdk.operatorframework.io/v1
+  name: testpmd-operator.vX.Y.Z
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions: {}
+  description: An operator to manage the TestPMD application
+  displayName: TestPMD Operator
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: true
+    type: OwnNamespace
+  - supported: true
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - testpmd
+  - nfv
+  - cnf
+  links:
+  - name: Testpmd Operator
+    url: https://testpmd-operator.domain
+  maintainers:
+  - email: skramaja@redhat.com
+    name: Saravanan KR
+  maturity: alpha
+  provider:
+    name: Red Hat
+  version: 0.0.0

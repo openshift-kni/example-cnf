@@ -1,0 +1,20 @@
+# permissions for end users to view testpmds.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: testpmd-viewer-role
+rules:
+- apiGroups:
+  - examplecnf.openshift.io
+  resources:
+  - testpmds
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - examplecnf.openshift.io
+  resources:
+  - testpmds/status
+  verbs:
+  - get

@@ -11,7 +11,7 @@
   when: "'/' not in network_item.name"
 
 - set_fact:
-    net_def: "{{ lookup('k8s', kind='NetworkAttachmentDefinition', namespace=meta.namespace, resource_name=net) }}"
+    net_def: "{{ lookup('k8s', kind='NetworkAttachmentDefinition', namespace=ansible_operator_meta.namespace, resource_name=net) }}"
   failed_when: net_def|length == 0
 
 - set_fact:
