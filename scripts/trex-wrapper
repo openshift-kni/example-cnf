@@ -17,6 +17,14 @@ trex-cfg-configure $CORES
 CORE_COUNT=$(grep ' c: ' /etc/trex_cfg.yaml | cut -d: -f2 | xargs)
 NUM_PORTS=$(grep ' port_limit: ' /etc/trex_cfg.yaml | cut -d: -f 2 | xargs)
 
+# TREX_CPU env will be set on the pod spec with number of required cores
+if [[ $((CORE_COUNT + 2)) != $TREX_CPU ]]; then
+    # TEMP
+    echo "CORES=$((CORE_COUNT + 2))"
+    echo "TREX_CPU=$TREX_CPU"
+    exit 1
+fi
+
 SERVER="/usr/local/bin/trex-server"
 chmod +x $SERVER
 $SERVER $CORE_COUNT &

@@ -3,11 +3,57 @@
 # https://github.com/secdev/scapy/blob/master/scapy/layers/l2.py#L164
 
 from trex.stl.api import *
+from trex.common.trex_logger import Logger
 
 import time
 import json
 from datetime import datetime
 import sys
+import logging
+import re
+
+
+log = logging.getLogger('run-trex')
+log.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
+
+fh = logging.FileHandler('/var/log/run-trex.log')
+fh.setLevel(logging.INFO)
+fh.setFormatter(formatter)
+
+fhd = logging.FileHandler('/var/log/trex.log')
+fhd.setLevel(logging.DEBUG)
+fhd.setFormatter(formatter)
+
+st = logging.StreamHandler()
+st.setLevel(logging.INFO)
+st.setFormatter(formatter)
+
+log.addHandler(fh)
+log.addHandler(fhd)
+log.addHandler(st)
+
+force_exit = False
+
+class CustomLogger(Logger):
+    def __init__ (self, verbose = "error"):
+        super(CustomLogger, self).__init__(verbose)
+        self.msg = ''
+
+    def _write (self, msg, newline):
+        if not force_exit:
+            ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+            if isinstance(msg, (str, bytes)):
+                msg = ansi_escape.sub('', msg)
+                self.msg += msg
+            if newline:
+                log.debug(self.msg)
+                self.msg = ''
+
+    def _flush (self):
+        pass
+
+clog = CustomLogger("debug")
 
 
 class STLS1(object):
@@ -24,7 +70,7 @@ class STLS1(object):
     def create_stream (self):
         size = self.fsize - 4; # HW will add 4 bytes ethernet CRC
 
-        ethr = Ether(dst="01:02:03:04:05:06") / IP(src = "16.0.0.1", dst = "48.0.0.1") / UDP(dport = 12, sport = 1025)
+        ethr = Ether() / IP(src = "16.0.0.1", dst = "48.0.0.1") / UDP(dport = 12, sport = 1025)
         vlan = Ether() / Dot1Q(vlan=11) / IP(src = "16.0.0.1", dst = "48.0.0.1") / UDP(dport = 12, sport = 1025)
         qinq = Ether(type=0x88A8) / Dot1Q(vlan=19) / Dot1Q(vlan=11) / IP(src = "16.0.0.1", dst = "48.0.0.1") / UDP(dport = 12, sport = 1025)
 
@@ -35,7 +81,7 @@ class STLS1(object):
         }
 
         if self.pkt_type not in pkt_types.keys():
-            print ("Wrong pkt_type given. Allowed values are " + format(pkt_types.keys()))
+            log.info ("Wrong pkt_type given. Allowed values are " + format(pkt_types.keys()))
             return []
 
         pad = max(0, size - len(self.pkt_type)) * 'x'
@@ -54,25 +100,23 @@ class STLS1(object):
             self.ipack[i] = stat[i]['ipackets']
             self.opack[i] = stat[i]['opackets']
         if ipack >= opack:
-            print("MATCH: out(%s) > in(%s)" % (opack, ipack), file = sys.stdout)
+            log.info("MATCH: out(%s) > in(%s)" % (opack, ipack))
             if self.miss and not self.miss[-1].get('end'):
                 self.miss[-1]['end'] = datetime.now()
-                print("Loss recovery: %s" % (self.miss[-1]['end'] - self.miss[-1]['start']))
+                log.info("Loss recovery: %s" % (self.miss[-1]['end'] - self.miss[-1]['start']))
         else:
-            print("MISS:  out(%s) > in(%s)" % (opack, ipack), file = sys.stdout)
+            log.info("MISS:  out(%s) > in(%s)" % (opack, ipack))
             if self.miss and not self.miss[-1].get('end'):
                 self.miss.append({'start': datetime.now()})
 
-def simple_burst (port_a, port_b, pkt_size, rate, duration=-1):
+# create client
+c = STLClient(verbose_level="debug", logger=clog)
 
-    # create client
-    c = STLClient()
+def simple_burst (port_a, port_b, pkt_size, rate, duration=-1):
+    global force_exit
     passed = True
 
     try:
-        # turn this on for some information
-        #c.set_verbose("debug")
-
         obj = STLS1(ports = [port_a, port_b])
         s1 = obj.create_stream()
 
@@ -90,7 +134,7 @@ def simple_burst (port_a, port_b, pkt_size, rate, duration=-1):
         c.clear_stats()
 
         # here we multiply the traffic lineaer to whatever given in rate
-        print("Running {:} on ports {:}, {:} for 10 seconds...".format(rate, port_a, port_b))
+        log.info("Running {:} on ports {:}, {:} for 10 seconds...".format(rate, port_a, port_b))
         c.start(ports = [port_a, port_b],
             mult = rate,
             duration = duration,
@@ -101,6 +145,8 @@ def simple_burst (port_a, port_b, pkt_size, rate, duration=-1):
             # Infinite
             while True:
                 obj.stats(c.get_stats(), ports = [port_a, port_b])
+                if force_exit:
+                    break
                 time.sleep(5)
         else:
             # block until done
@@ -109,19 +155,19 @@ def simple_burst (port_a, port_b, pkt_size, rate, duration=-1):
         # read the stats after the test
         stats = c.get_stats()
 
-        print(json.dumps(stats[port_a], indent = 4, separators=(',', ': '), sort_keys = True))
-        print(json.dumps(stats[port_b], indent = 4, separators=(',', ': '), sort_keys = True))
+        log.info(json.dumps(stats[port_a], indent = 4, separators=(',', ': '), sort_keys = True))
+        log.info(json.dumps(stats[port_b], indent = 4, separators=(',', ': '), sort_keys = True))
 
         lost_a = stats[port_a]["opackets"] - stats[port_b]["ipackets"]
         lost_b = stats[port_b]["opackets"] - stats[port_a]["ipackets"]
 
-        print("\npackets lost from {0} --> {1}:   {2} pkts".format(port_a, port_b, lost_a))
-        print("packets lost from {0} --> {1}:   {2} pkts".format(port_b, port_a, lost_b))
+        log.info("\npackets lost from {0} --> {1}:   {2} pkts".format(port_a, port_b, lost_a))
+        log.info("packets lost from {0} --> {1}:   {2} pkts".format(port_b, port_a, lost_b))
 
         if c.get_warnings():
-            print("\n\n*** test had warnings ****\n\n")
+            log.info("\n\n*** test had warnings ****\n\n")
             for w in c.get_warnings():
-                print(w)
+                log.info(w)
 
         if (lost_a == 0) and (lost_b == 0) and not c.get_warnings():
             passed = True
@@ -130,9 +176,10 @@ def simple_burst (port_a, port_b, pkt_size, rate, duration=-1):
 
     except STLError as e:
         passed = False
-        print(e)
+        log.info(e)
 
     finally:
+        force_exit = True
         c.disconnect()
 
     if passed:
@@ -144,4 +191,29 @@ def simple_burst (port_a, port_b, pkt_size, rate, duration=-1):
 packet_size = os.getenv("PACKET_SIZE") or 64
 packet_rate = os.getenv("PACKET_RATE") or "10pps"
 duration = os.getenv("DURATION") or -1
-simple_burst(0, 1, packet_size, packet_rate, duration)
+if duration != -1:
+    duration = int(duration)
+log.info("Starting burst...")
+log.info("Packet Size - %s" % packet_size)
+log.info("Packet Rate - %s" % packet_rate)
+if duration == -1:
+    log.info("Packets will be generated forever...")
+
+import signal
+import sys
+
+def signal_handler(sig, frame):
+    log.info('You pressed Ctrl+C!')
+    time.sleep(6)
+    global force_exit
+    force_exit = True
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+
+
+try:
+    simple_burst(0, 1, packet_size, packet_rate, duration)
+except Exception as e:
+    log.exception("failed to start burst: %s" % e)
+
