@@ -92,3 +92,4 @@ bundle: kustomize
 .PHONY: bundle-build
 bundle-build:
 	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+	docker push $(BUNDLE_IMG)

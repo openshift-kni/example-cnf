@@ -1,8 +1,8 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: "{{ meta.name }}-app"
-  namespace: "{{ meta.namespace }}"
+  name: "{{ ansible_operator_meta.name }}-app"
+  namespace: "{{ ansible_operator_meta.namespace }}"
 spec:
   replicas: {{ size | int }}
   selector:
@@ -18,14 +18,13 @@ spec:
 {% if network.mac|default() %}
             "mac": "{{ network.mac }}",
 {% endif %}
-            "namespace": "{{ meta.namespace }}"
+            "namespace": "{{ ansible_operator_meta.namespace }}"
           }{% if loop.index < network_name_list|length %},{% endif %}
 {% endfor %}
         ]'
       labels:
         app: testpmd
     spec:
-      serviceAccountName: testpmd-operator
       nodeSelector:
         app: testpmd
       containers:

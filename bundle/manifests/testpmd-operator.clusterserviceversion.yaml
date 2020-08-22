@@ -26,7 +26,7 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    operators.operatorframework.io/builder: operator-sdk-v1.0.0+git
+    operators.operatorframework.io/builder: operator-sdk-v1.0.0
     operators.operatorframework.io/project_layout: ansible.sdk.operatorframework.io/v1
   name: testpmd-operator.v0.1.0
   namespace: placeholder
@@ -106,6 +106,22 @@ spec:
           - update
           - watch
         - apiGroups:
+          - k8s.cni.cncf.io
+          resources:
+          - network-attachment-definitions
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - security.openshift.io
+          resourceNames:
+          - privileged
+          resources:
+          - securitycontextconstraints
+          verbs:
+          - use
+        - apiGroups:
           - authentication.k8s.io
           resources:
           - tokenreviews
@@ -147,7 +163,8 @@ spec:
                 - --metrics-addr=127.0.0.1:8080
                 - --enable-leader-election
                 - --leader-election-id=testpmd-operator
-                image: quay.io/krsacme/testpmd-operator:0.1.0
+                image: quay.io/krsacme/testpmd-operator:v0.1.0
+                imagePullPolicy: Always
                 name: manager
                 resources: {}
               terminationGracePeriodSeconds: 10
