@@ -1,7 +1,9 @@
 # Current Operator version
-VERSION ?= 0.0.1
+VERSION ?= 0.1.0
+REGISTRY ?= quay.io
+ORG ?= krsacme
 # Default bundle image tag
-BUNDLE_IMG ?= controller-bundle:$(VERSION)
+BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/trex-operator-bundle:v$(VERSION)
 # Options for 'bundle-build'
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
@@ -12,9 +14,9 @@ endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+IMG ?= $(REGISTRY)/$(ORG)/trex-operator:v$(VERSION)
 
-all: docker-build
+all: docker-build docker-push
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: ansible-operator
@@ -22,27 +24,27 @@ run: ansible-operator
 
 # Install CRDs into a cluster
 install: kustomize
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+	$(KUSTOMIZE) build config/crd | oc apply -f -
 
 # Uninstall CRDs from a cluster
 uninstall: kustomize
-	$(KUSTOMIZE) build config/crd | kubectl delete -f -
+	$(KUSTOMIZE) build config/crd | oc delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build config/default | oc apply -f -
 
 # Undeploy controller in the configured Kubernetes cluster in ~/.kube/config
 undeploy: kustomize
-	$(KUSTOMIZE) build config/default | kubectl delete -f -
+	$(KUSTOMIZE) build config/default | oc delete -f -
 
 # Build the docker image
 docker-build:
 	docker build . -t ${IMG}
 
 # Push the docker image
-docker-push:
+docker-push: docker-build
 	docker push ${IMG}
 
 PATH  := $(PATH):$(PWD)/bin
@@ -90,3 +92,4 @@ bundle: kustomize
 .PHONY: bundle-build
 bundle-build:
 	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+	docker push $(BUNDLE_IMG)

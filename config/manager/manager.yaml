@@ -28,4 +28,5 @@ spec:
             - "--enable-leader-election"
             - "--leader-election-id=trex-operator"
           image: controller:latest
+          imagePullPolicy: Always
       terminationGracePeriodSeconds: 10

@@ -53,4 +53,12 @@ rules:
       - patch
       - update
       - watch
+  - apiGroups:
+      - security.openshift.io
+    resources:
+      - securitycontextconstraints
+    resourceNames:
+      - privileged
+    verbs:
+      - use
 # +kubebuilder:scaffold:rules

@@ -1,6 +1,13 @@
 apiVersion: examplecnf.openshift.io/v1
 kind: TRexConfig
 metadata:
-  name: trexconfig-sample
+  name: trexconfig1
 spec:
-  foo: bar
+  cpu: 8
+  networks:
+    - name: vfdpdk1
+      mac: 20:04:0f:f1:89:01
+      count: 1
+    - name: vfdpdk2
+      mac: 20:04:0f:f1:89:02
+      count: 1

@@ -8,17 +8,29 @@ metadata:
           "apiVersion": "examplecnf.openshift.io/v1",
           "kind": "TRexConfig",
           "metadata": {
-            "name": "trexconfig-sample"
+            "name": "trexconfig1"
           },
           "spec": {
-            "foo": "bar"
+            "cpu": 8,
+            "networks": [
+              {
+                "count": 1,
+                "mac": "20:04:0f:f1:89:01",
+                "name": "vfdpdk1"
+              },
+              {
+                "count": 1,
+                "mac": "20:04:0f:f1:89:02",
+                "name": "vfdpdk2"
+              }
+            ]
           }
         }
       ]
     capabilities: Basic Install
-    operators.operatorframework.io/builder: operator-sdk-v1.0.0+git
+    operators.operatorframework.io/builder: operator-sdk-v1.0.0
     operators.operatorframework.io/project_layout: ansible.sdk.operatorframework.io/v1
-  name: trex-operator.v0.0.1
+  name: trex-operator.v0.1.0
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -80,6 +92,14 @@ spec:
           - update
           - watch
         - apiGroups:
+          - security.openshift.io
+          resourceNames:
+          - privileged
+          resources:
+          - securitycontextconstraints
+          verbs:
+          - use
+        - apiGroups:
           - authentication.k8s.io
           resources:
           - tokenreviews
@@ -121,7 +141,8 @@ spec:
                 - --metrics-addr=127.0.0.1:8080
                 - --enable-leader-election
                 - --leader-election-id=trex-operator
-                image: controller:latest
+                image: quay.io/krsacme/trex-operator:v0.1.0
+                imagePullPolicy: Always
                 name: manager
                 resources: {}
               terminationGracePeriodSeconds: 10
@@ -170,5 +191,4 @@ spec:
   maturity: alpha
   provider:
     name: Red Hat
-  replaces: trex-operator.v0.1.0
-  version: 0.0.1
+  version: 0.1.0
