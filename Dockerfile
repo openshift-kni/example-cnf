@@ -43,9 +43,7 @@ RUN cd ${DPDK_DIR}/examples/macaddr && \
     cp ${DPDK_DIR}/examples/macaddr/build/app/macaddr /usr/local/bin
 
 RUN yum install -y python3 && pip3 install kubernetes
-COPY testpmd-configure /usr/local/bin
 
 # copy testpmd runtime cmdline file
 COPY testpmd-runtime-cmds.txt /root/testpmd-runtime-cmds.txt
-
-COPY testpmd-wrapper /usr/local/bin
+COPY scripts /usr/local/bin

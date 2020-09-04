@@ -1,17 +1,4 @@
 #!/usr/bin/env python3
-# Copyright 2017 The Kubernetes Authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
 
 import os
 import sys
@@ -110,7 +97,8 @@ def create_cr(data):
     cr = { 'apiVersion': group + '/' + version,
            'metadata': {
                'name': 'INVALID',
-               'namespace': namespace
+               'namespace': namespace,
+               'ownerReferences': []
             },
            'kind': 'TestPMDMac',
            'spec': {}}
@@ -119,11 +107,24 @@ def create_cr(data):
     body['spec']['resources'] = data
     body['spec']['hostname'] = hostname
     body['spec']['nodename'] = nodename
-    #name_random = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
-    name = nodename
+    #name = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+    name = hostname
     body['metadata']['name'] = name
 
-    # TODO: Check possibility of adding ownership to the object
+    try:
+        api_instance = client.CoreV1Api()
+        api_response = api_instance.read_namespaced_pod(name=hostname, namespace=namespace)
+        uid = api_response.metadata.uid
+    except ApiException as e:
+        print('Found exception in reading the logs')
+
+    body['metadata']['ownerReferences'].append({
+        'apiVersion': 'v1',
+        'kind': 'Pod',
+        'name': hostname,
+        'uid': uid,
+        'controller': True
+    })
 
     exists = False
     try:

@@ -33,8 +33,19 @@ RUN="/usr/local/bin/testpmd-run"
 echo "testpmd -l $LCORES $PCI $@ --stats-period 10 --cmdline-file /root/testpmd-runtime-cmds.txt" > $RUN
 chmod +x $RUN
 
+testpmd-run &
+
+# TODO: Identify testpmd readiness
+sleep 10
+
 # Update the mac address with CR
 testpmd-configure
 
-testpmd-run &
+clean_up() {
+    # execute cleanups
+    exit $1
+}
+
+trap clean_up SIGHUP SIGINT SIGTERM
+
 sleep infinity
