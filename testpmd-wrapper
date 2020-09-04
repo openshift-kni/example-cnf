@@ -30,7 +30,7 @@ if [ -z $LCORES ]; then
 fi
 
 RUN="/usr/local/bin/testpmd-run"
-echo "testpmd -l $LCORES $PCI $@ --stats-period 10" > $RUN
+echo "testpmd -l $LCORES $PCI $@ --stats-period 10 --cmdline-file /root/testpmd-runtime-cmds.txt" > $RUN
 chmod +x $RUN
 
 # Update the mac address with CR
