@@ -26,7 +26,7 @@ spec:
         app: testpmd
     spec:
       nodeSelector:
-        app: testpmd
+        examplecnf.openshift.io/testpmd: ""
       containers:
       - name: testpmd
         command: ["testpmd-wrapper"]
@@ -51,7 +51,7 @@ spec:
         imagePullPolicy: Always
         securityContext:
           capabilities:
-            add: ["IPC_LOCK"]
+            add: ["IPC_LOCK", "NET_ADMIN"]
         resources:
           limits:
             hugepages-1Gi: {{ hugepage_1gb_count }}
