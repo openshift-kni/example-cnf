@@ -142,7 +142,7 @@ spec:
                 - --enable-leader-election
                 - --leader-election-id=trex-operator
                 image: quay.io/krsacme/trex-operator:v0.1.0
-                imagePullPolicy: Always
+                imagePullPolicy: IfNotPresent
                 name: manager
                 resources: {}
               terminationGracePeriodSeconds: 10

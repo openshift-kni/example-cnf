@@ -31,7 +31,7 @@ spec:
       - name: trex
         command: ["trex-wrapper"]
         image: "{{ image }}"
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         securityContext:
           capabilities:
             add: ["IPC_LOCK"]
