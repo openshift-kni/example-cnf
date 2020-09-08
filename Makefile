@@ -24,20 +24,24 @@ run: ansible-operator
 
 # Install CRDs into a cluster
 install: kustomize
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+	$(KUSTOMIZE) build config/crd | oc apply -f -
 
 # Uninstall CRDs from a cluster
 uninstall: kustomize
-	$(KUSTOMIZE) build config/crd | kubectl delete -f -
+	$(KUSTOMIZE) build config/crd | oc delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	oc apply -f config/manager/namespace.yaml
+	$(KUSTOMIZE) build config/default | oc apply -f -
+	cp config/manager/namespace.yaml testpmd-allinone.yaml
+	echo "---" >> testpmd-allinone.yaml
+	$(KUSTOMIZE) build config/default >> testpmd-allinone.yaml
 
 # Undeploy controller in the configured Kubernetes cluster in ~/.kube/config
 undeploy: kustomize
-	$(KUSTOMIZE) build config/default | kubectl delete -f -
+	$(KUSTOMIZE) build config/default | oc delete -f -
 
 # Build the docker image
 docker-build:
