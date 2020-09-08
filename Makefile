@@ -33,7 +33,11 @@ uninstall: kustomize
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	oc apply -f config/manager/namespace.yaml
 	$(KUSTOMIZE) build config/default | oc apply -f -
+	cp config/manager/namespace.yaml trex-allinone.yaml
+	echo "---" >> trex-allinone.yaml
+	$(KUSTOMIZE) build config/default >> trex-allinone.yaml
 
 # Undeploy controller in the configured Kubernetes cluster in ~/.kube/config
 undeploy: kustomize
