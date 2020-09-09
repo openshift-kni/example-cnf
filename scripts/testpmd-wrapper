@@ -33,6 +33,19 @@ RUN="/usr/local/bin/testpmd-run"
 echo "testpmd -l $LCORES $PCI $@ --stats-period 10 --cmdline-file /root/testpmd-runtime-cmds.txt" > $RUN
 chmod +x $RUN
 
+# Fetches mac address from pci using macaddr DPDK custom application
+# Mac address is written to tile /tmp/macaddr.txt
+# Fetch macaddress before running testpmd to avoid resource busy error
+if [ -f /tmp/macaddr.txt ]; then
+    rm -f /tmp/macaddr.txt
+fi
+n=0
+until [ "$n" -ge 5 ]; do
+   macaddr $PCI && break
+   n=$((n+1))
+   sleep 1
+done
+
 testpmd-run &
 
 # TODO: Identify testpmd readiness
