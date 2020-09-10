@@ -2,6 +2,8 @@
 VERSION ?= 0.1.0
 REGISTRY ?= quay.io
 ORG ?= krsacme
+DEFAULT_CHANNEL ?= alpha
+
 # Default bundle image tag
 BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/trex-operator-bundle:v$(VERSION)
 # Options for 'bundle-build'

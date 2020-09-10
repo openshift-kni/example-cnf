@@ -24,3 +24,4 @@
 
 - set_fact:
     network_name_list: "{{ network_name_list + [net] }}"
+  loop: "{{ range(0, network_item.count)|list }}"

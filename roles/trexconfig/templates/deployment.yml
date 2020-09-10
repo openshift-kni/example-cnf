@@ -13,13 +13,16 @@ spec:
       annotations:
         k8s.v1.cni.cncf.io/networks: '[
 {% for network in networks %}
+{% set outer_loop = loop %}
+{% for count in range(network.count) %}
           {
             "name": "{{ network.name }}",
-{% if network.mac|default() %}
-            "mac": "{{ network.mac }}",
+{% if network.mac|default([])|length == network.count %}
+            "mac": "{{ network.mac[loop.index - 1] }}",
 {% endif %}
             "namespace": "{{ ansible_operator_meta.namespace }}"
-          }{% if loop.index < network_name_list|length %},{% endif %}
+          }{% if loop.index < network.count or outer_loop.index < network_name_list|length %},{% endif %}
+{% endfor %}
 {% endfor %}
         ]'
       labels:
@@ -31,10 +34,14 @@ spec:
       - name: trex
         command: ["trex-wrapper"]
         image: "{{ image }}"
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: "{{ imagePullPolicy }}"
         securityContext:
+{% if privileged %}
+          privileged: true
+{% else %}
           capabilities:
-            add: ["IPC_LOCK"]
+            add: ["IPC_LOCK", "NET_ADMIN"]
+{% endif %}
         resources:
           limits:
             hugepages-1Gi: {{ hugepage_1gb_count }}
@@ -55,7 +62,7 @@ spec:
           mountPath: /dev/hugepages
         env:
         - name: NETWORK_NAME_LIST
-          value: "{{ network_resources.keys()|list|join(',') }}" 
+          value: "{{ network_resources.keys()|list|join(',') }}"
         - name: DUT_MAC_LIST
           value: "{{ ','.join(dut_maclist) }}"
         - name: TREX_CPU
