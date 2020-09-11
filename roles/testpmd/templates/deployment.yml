@@ -13,13 +13,16 @@ spec:
       annotations:
         k8s.v1.cni.cncf.io/networks: '[
 {% for network in networks %}
+{% set outer_loop = loop %}
+{% for count in range(network.count) %}
           {
             "name": "{{ network.name }}",
-{% if network.mac|default() %}
-            "mac": "{{ network.mac }}",
+{% if network.mac|default([])|length == network.count %}
+            "mac": "{{ network.mac[loop.index - 1] }}",
 {% endif %}
             "namespace": "{{ ansible_operator_meta.namespace }}"
-          }{% if loop.index < network_name_list|length %},{% endif %}
+          }{% if loop.index < network.count or outer_loop.index < network_name_list|length %},{% endif %}
+{% endfor %}
 {% endfor %}
         ]'
       labels:
