@@ -20,6 +20,6 @@ spec:
           args:
             - "--enable-leader-election"
             - "--leader-election-id=testpmd-operator"
-          image: quay.io/krsacme/testpmd-operator:v0.1.0
+          image: controller:latest
           imagePullPolicy: IfNotPresent
       terminationGracePeriodSeconds: 10

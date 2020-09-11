@@ -48,10 +48,14 @@ spec:
 {% endfor %}
         - "--forward-mode={{ forward_mode }}"
         image: "{{ image }}"
-        imagePullPolicy: Always
+        imagePullPolicy: "{{ imagePullPolicy }}"
         securityContext:
+{% if privileged %}
+          privileged: true
+{% else %}
           capabilities:
             add: ["IPC_LOCK", "NET_ADMIN"]
+{% endif %}
         resources:
           limits:
             hugepages-1Gi: {{ hugepage_1gb_count }}
@@ -72,7 +76,7 @@ spec:
           mountPath: /dev/hugepages
         env:
         - name: NETWORK_NAME_LIST
-          value: "{{ network_resources.keys()|list|join(',') }}" 
+          value: "{{ network_resources.keys()|list|join(',') }}"
         - name: NODE_NAME
           valueFrom:
             fieldRef:

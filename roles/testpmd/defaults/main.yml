@@ -1,4 +1,6 @@
 ---
 image: quay.io/krsacme/testpmd-container-app:latest
+imagePullPolicy: IfNotPresent
+privileged: false
 network_defintions: ""
 network_resources: {}
