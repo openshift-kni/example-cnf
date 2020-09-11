@@ -1,0 +1,26 @@
+# Helper file, this playbook is not used inside the operator
+# This playbook is useful to runnin locally for easy development
+# Command: ansible-playbook -i playbook.yaml -vv
+---
+- hosts: localhost
+  gather_facts: no
+  vars:
+    ansible_operator_meta:
+      name: testpmd-manual1
+      namespace: example-cnf
+  tasks:
+  - include_role:
+      name: testpmd
+    vars:
+      privileged: true
+      image: jumphost.cluster5.dfwt5g.lab:5000/nfv-example-cnf/testpmd-container-app:v0.1.0
+      imagePullPolicy: Always
+      ethpeer_maclist:
+        - 3c:fd:fe:79:2a:a0
+        - 3c:fd:fe:79:2a:a1
+      size: 1
+      networks:
+        - name: vfdpdk1
+          count: 1
+        - name: vfdpdk2
+          count: 1
