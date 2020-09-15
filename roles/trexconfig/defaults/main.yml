@@ -2,4 +2,5 @@
 image: quay.io/krsacme/trex-container-app:latest
 imagePullPolicy: IfNotPresent
 privileged: false
+command: ["trex-wrapper"]
 network_resources: {}

@@ -32,7 +32,7 @@ spec:
         examplecnf.openshift.io/trex: ""
       containers:
       - name: trex
-        command: ["trex-wrapper"]
+        command: "{{ command }}"
         image: "{{ image }}"
         imagePullPolicy: "{{ imagePullPolicy }}"
         securityContext:
