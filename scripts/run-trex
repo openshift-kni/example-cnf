@@ -150,15 +150,28 @@ class STLS1(object):
                 if created > now:
                     self.queue.put(event['object'])
 
+    def get_macs(self, spec):
+        macs = []
+        for resource in spec['resources']:
+            for device in spec['devices']:
+                macs.append(device['mac']
+        log.info("macs list - %s" % ",".join(macs))
+        return macs
+
     def update(self, obj):
         meta = obj['metadata']
         spec = obj['spec']
         log.info("Name(%s) Namespace(%s)" % (meta['name'], meta['namespace']))
+        macs = get_macs(spec)
+        if len(macs) < len(self.ports):
+            log.info("ERROR: macs len(%s) is less then ports len (%s)" % (len(macs), len(self.ports))
+            return
+
         log.info("reset ports")
         self.client.reset(ports=self.ports)
         log.info("create stream with new mac address")
         for idx in range(0, len(self.ports)):
-            self.add_streams(self.ports[idx], spec['resources'][idx]['devices'][0]['mac'])
+            self.add_streams(self.ports[idx], macs[idx])
         log.info("staring ports")
         self.client.start(ports=self.ports, mult=self.rate, duration=self.duration, core_mask=STLClient.CORE_MASK_PIN)
 
