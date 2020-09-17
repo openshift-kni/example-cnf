@@ -1,5 +1,5 @@
 # Current Operator version
-VERSION ?= 0.1.0
+VERSION ?= 0.1.1
 REGISTRY ?= quay.io
 ORG ?= krsacme
 DEFAULT_CHANNEL ?= alpha

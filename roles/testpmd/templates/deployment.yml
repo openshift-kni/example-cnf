@@ -84,7 +84,28 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+{% if mac_workaround_enable %}
+      initContainers:
+      - name: testpmd-mac-fix
+        image: "{{ mac_workaround_image }}"
+        imagePullPolicy: "{{ imagePullPolicy }}"
+        command:
+        - "cp"
+        - "-f"
+        - "/sriov-{{ mac_workaround_version }}"
+        - "/host/var/lib/cni/bin/{{ mac_workaround_file }}"
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: host-cni-bin
+          mountPath: /host/var/lib/cni/bin
+{% endif %}
       volumes:
       - name: hugepage
         emptyDir:
           medium: HugePages
+{% if mac_workaround_enable %}
+      - name: host-cni-bin
+        hostPath:
+          path: /var/lib/cni/bin
+{% endif %}

@@ -4,3 +4,9 @@ imagePullPolicy: IfNotPresent
 privileged: false
 network_defintions: ""
 network_resources: {}
+
+# mac workaround variables
+mac_workaround_enable: false
+mac_workaround_image: quay.io/krsacme/testpmd-container-app-mac-fix:latest
+mac_workaround_version: "4.5"
+mac_workaround_file: "sriov"
