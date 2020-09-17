@@ -71,6 +71,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+{% for key, value in environments.items() %}
+        - name: {{ key }}
+          value: "{{ value }}"
+{% endfor %}
       volumes:
       - name: hugepage
         emptyDir:
