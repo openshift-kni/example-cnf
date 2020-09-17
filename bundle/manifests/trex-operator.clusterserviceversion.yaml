@@ -180,5 +180,4 @@ spec:
   maturity: alpha
   provider:
     name: Red Hat
-  replaces: trex-operator.v0.1.0
   version: 0.1.1
