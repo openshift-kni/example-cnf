@@ -52,6 +52,8 @@ fi
 
 RUN_APP=${run_app:=1}
 if [[ $RUN_SERVER == "1" && $RUN_APP == "1" ]]; then
+    # leave the server running for 10s before starting application
+    sleep 10
     echo "Running TRex application ..."
     run-trex
 else
