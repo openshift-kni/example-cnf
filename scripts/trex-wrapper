@@ -9,6 +9,12 @@ fi
 
 CORES=$(taskset -pc 1 | cut -d: -f2)
 
+RUN_CONFIGURE=${run_configure:=1}
+if [[ $RUN_SERVER != "1" ]]; then
+    echo "Configure disabled for manual override, sleeping .."
+    sleep infinity
+fi
+
 # Write TRex cfg file
 trex-cfg-configure $CORES
 

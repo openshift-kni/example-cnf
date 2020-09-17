@@ -153,7 +153,7 @@ class STLS1(object):
     def get_macs(self, spec):
         macs = []
         for resource in spec['resources']:
-            for device in spec['devices']:
+            for device in resource['devices']:
                 macs.append(device['mac'])
         log.info("macs list - %s" % ",".join(macs))
         return macs
@@ -162,7 +162,7 @@ class STLS1(object):
         meta = obj['metadata']
         spec = obj['spec']
         log.info("Name(%s) Namespace(%s)" % (meta['name'], meta['namespace']))
-        macs = get_macs(spec)
+        macs = self.get_macs(spec)
         if len(macs) < len(self.ports):
             log.info("ERROR: macs len(%s) is less then ports len (%s)" % (len(macs), len(self.ports)))
             return
