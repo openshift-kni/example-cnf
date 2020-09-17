@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 if [ -z NETWORK_NAME_LIST ]; then
     echo "NETWORK_NAME_LIST is empty, exiting.."
@@ -27,7 +27,12 @@ fi
 
 SERVER="/usr/local/bin/trex-server"
 chmod +x $SERVER
-$SERVER $CORE_COUNT &
+
+RUN_SERVER=${run_server:=1}
+if [[ $RUN_SERVER == "1" ]]; then
+    echo "Starting TRex server ..."
+    $SERVER $CORE_COUNT &
+fi
 
 # wait for trex server to be ready
 count=60
@@ -41,10 +46,16 @@ if [ ${num_ports} -eq $NUM_PORTS ]; then
     echo "trex-server is ready"
 else
     echo "ERROR: trex-server could not start properly, existing... "
+    sleep infinity
     exit 1
 fi
 
-run-trex
+RUN_APP=${run_app:=1}
+if [[ $RUN_SERVER == "1" && $RUN_APP == "1" ]]; then
+    echo "Running TRex application ..."
+    run-trex
+else
+    echo "Skipping TRex application run, waiting ..."
+    sleep infinity
+fi
 
-echo "Complete..."
-sleep infinity
