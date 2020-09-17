@@ -15,7 +15,7 @@ RUN cd /opt/trex/trex-core/linux_dpdk && ./b configure --no-mlx --no-bxnt && ./b
 
 FROM centos:latest
 RUN yum update -y && yum clean all
-RUN yum install -y wget git net-tools pciutils perf unzip yum-utils python36 iproute && \
+RUN yum install -y wget git net-tools pciutils perf unzip yum-utils python36 iproute tcpdump vim && \
     yum clean all
 RUN cd /opt && git clone https://github.com/atheurer/trafficgen
 RUN pip3 install pyyaml kubernetes
