@@ -3,6 +3,9 @@
 import os
 import yaml
 import sys
+import random
+import re
+
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
@@ -41,7 +44,20 @@ def main():
     cfg[0]['c'] = len(core_list) - 2
     cfg[0]['platform']['master_thread_id'] = core_list[0]
     cfg[0]['platform']['latency_thread_id'] = core_list[1]
-    cfg[0]['platform']['dual_if'][0]['threads'] = core_list[2:]
+    cfg[0]['platform']['dual_if'] = []
+    for pci in cfg[0]['interfaces']:
+        sock = get_pci_sock_info(pci, core_list[2:])
+        if not sock:
+            print("ERROR: failed to get sock info for pci %s" % pci)
+            sys.exit(1)
+
+        match = False
+        for item in cfg[0]['platform']['dual_if']:
+            if item['socket'] == sock['socket']:
+                match = True
+                break
+        if not match:
+            cfg[0]['platform']['dual_if'].append(sock)
 
     src_mac = get_src_mac()
     if not src_mac:
@@ -72,6 +88,41 @@ def main():
     print(trex_cfg_template)
     with open(CFG_FILE, "w") as f:
         yaml.safe_dump(cfg, f)
+
+def get_pci_sock_info(pci, core_list):
+    pattern_full = r'\b([0-9a-fA-F]{4}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}.\d{1}\S*)'
+    partter_partial = r'\b([0-9a-fA-F]{2}:[0-9a-fA-F]{2}.\d{1}\S*)'
+    numa_node = "/sys/bus/pci/devices/"
+    if re.match(pattern_full, pci):
+        numa_node += pci
+    elif re.match(patter_partial, pci):
+        numa_node += "0000:" + pci
+    else:
+        print("ERROR: pci string %s does not match exepected format" % pci)
+        return
+
+    numa_node += "/numa_node"
+    with open(numa_node) as f:
+        sock_num = int(f.read().strip())
+
+    sock_info = {'socket': sock_num, 'threads': []}
+    for core in core_list:
+        core_sock_num = get_core_sock_num(core)
+        if core_sock_num == None:
+            print("ERROR: Unable to find sock number for core %s", core)
+            return
+        elif core_sock_num == sock_num:
+            sock_info['threads'].append(core)
+    return sock_info
+
+def get_core_sock_num(core):
+    files = os.listdir("/sys/devices/system/cpu/cpu" + str(core) + "/")
+    pattern = r'node(\d+)'
+    for item in files:
+        matches = re.match(pattern, item)
+        if matches:
+            sock = int(matches.group(1))
+            return sock
 
 def cores():
     core_string = sys.argv[1]
@@ -111,7 +162,12 @@ def get_src_mac():
         if 'mac' in item:
             macs.append(item['mac'])
         else:
-            print("TODO: Implement mac fetching DPDK application")
+            print("TODO: Implement mac fetching DPDK application - workaround")
+            mac = [int('fe', 16), int('16', 16),
+                   int('3b', 16), random.getrandbits(8),
+                   random.getrandbits(8), random.getrandbits(8)]
+            macStr = ':'.join(["%02x" % x for x in mac])
+            macs.append(macStr)
     return macs
 
 def get_dst_mac():
@@ -131,7 +187,8 @@ def get_dst_mac():
     for item in response['items']:
         print(item['spec']['nodename'])
         for resource in item['spec']['resources']:
-            macs.append(resource['devices'][0]['mac'])
+            for dev in resource['devices']:
+                macs.append(dev['mac'])
     return macs
 
 if __name__ == "__main__":
