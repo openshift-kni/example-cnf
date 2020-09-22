@@ -51,7 +51,7 @@ spec:
 {% endfor %}
         - "--forward-mode={{ forward_mode }}"
         image: "{{ image }}"
-        imagePullPolicy: "{{ imagePullPolicy }}"
+        imagePullPolicy: "{{ image_pull_policy }}"
         securityContext:
 {% if privileged %}
           privileged: true
@@ -92,7 +92,7 @@ spec:
       initContainers:
       - name: testpmd-mac-fix
         image: "{{ mac_workaround_image }}"
-        imagePullPolicy: "{{ imagePullPolicy }}"
+        imagePullPolicy: "{{ image_pull_policy }}"
         command:
         - "cp"
         - "-f"
