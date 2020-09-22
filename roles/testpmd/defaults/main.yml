@@ -4,6 +4,7 @@ imagePullPolicy: IfNotPresent
 privileged: false
 network_defintions: ""
 network_resources: {}
+environments: {}
 
 # mac workaround variables
 mac_workaround_enable: false
