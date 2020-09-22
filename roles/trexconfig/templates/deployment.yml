@@ -34,7 +34,7 @@ spec:
       - name: trex
         command: {{ command }}
         image: "{{ image }}"
-        imagePullPolicy: "{{ imagePullPolicy }}"
+        imagePullPolicy: "{{ image_pull_policy }}"
         securityContext:
 {% if privileged %}
           privileged: true
