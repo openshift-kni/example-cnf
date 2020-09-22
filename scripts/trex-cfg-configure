@@ -10,7 +10,6 @@ from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
 trex_cfg_template = [{
-    "port_limit": 2,
     "version": 2,
     "interfaces": [],
     "port_info": [],
@@ -37,8 +36,8 @@ def main():
 
     # Ports allocated to TRex
     pci_list = get_pci()
-    cfg[0]['interfaces'].extend(pci_list)
-    cfg[0]['port_limit'] = len(pci_list)
+    cfg[0]['interfaces'].extend([pci.replace('0000:','') for pci in pci_list])
+    #cfg[0]['port_limit'] = len(pci_list)
 
     core_list = cores()
     cfg[0]['c'] = len(core_list) - 2
@@ -91,11 +90,11 @@ def main():
 
 def get_pci_sock_info(pci, core_list):
     pattern_full = r'\b([0-9a-fA-F]{4}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}.\d{1}\S*)'
-    partter_partial = r'\b([0-9a-fA-F]{2}:[0-9a-fA-F]{2}.\d{1}\S*)'
+    pattern_partial = r'\b([0-9a-fA-F]{2}:[0-9a-fA-F]{2}.\d{1}\S*)'
     numa_node = "/sys/bus/pci/devices/"
     if re.match(pattern_full, pci):
         numa_node += pci
-    elif re.match(patter_partial, pci):
+    elif re.match(pattern_partial, pci):
         numa_node += "0000:" + pci
     else:
         print("ERROR: pci string %s does not match exepected format" % pci)

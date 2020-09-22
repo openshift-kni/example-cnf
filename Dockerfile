@@ -18,7 +18,7 @@ RUN yum update -y && yum clean all
 RUN yum install -y wget git net-tools pciutils perf unzip yum-utils python36 iproute tcpdump vim && \
     yum clean all
 RUN cd /opt && git clone https://github.com/atheurer/trafficgen
-RUN pip3 install pyyaml kubernetes
+RUN pip3 install pyyaml kubernetes ansible
 COPY --from=builder /opt /opt
 ENV PYTHONPATH="/opt/trex/trex-core/scripts/automation/trex_control_plane/interactive"
 ENV TREX_DIR="/opt/trex/trex-core/scripts"

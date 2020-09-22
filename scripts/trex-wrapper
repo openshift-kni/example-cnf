@@ -10,7 +10,7 @@ fi
 CORES=$(taskset -pc 1 | cut -d: -f2)
 
 RUN_CONFIGURE=${run_configure:=1}
-if [[ $RUN_SERVER != "1" ]]; then
+if [[ $RUN_CONFIGURE != "1" ]]; then
     echo "Configure disabled for manual override, sleeping .."
     sleep infinity
 fi
@@ -38,23 +38,28 @@ RUN_SERVER=${run_server:=1}
 if [[ $RUN_SERVER == "1" ]]; then
     echo "Starting TRex server ..."
     $SERVER $CORE_COUNT &
+else
+    echo "Skipping TRex server start, waiting ..."
+    sleep infinity
 fi
 
 # wait for trex server to be ready
 count=60
 num_ports=0
-while [ ${count} -gt 0 -a ${num_ports} -lt $NUM_PORTS ]; do
+while [[ ${count} -gt 0 ]] && [[ ${num_ports} -lt $NUM_PORTS ]]; do
     sleep 1
     num_ports=`netstat -tln | grep -E :4500\|:4501 | wc -l`
     ((count--))
 done
-if [ ${num_ports} -eq $NUM_PORTS ]; then
+if [[ ${num_ports} -eq $NUM_PORTS ]]; then
     echo "trex-server is ready"
 else
-    echo "ERROR: trex-server could not start properly, existing... "
+    echo "ERROR: trex-server could not start properly, exiting... "
     sleep infinity
     exit 1
 fi
+
+PACKET_RATE=${packet_rate:="10pps"}
 
 RUN_APP=${run_app:=1}
 if [[ $RUN_SERVER == "1" && $RUN_APP == "1" ]]; then
