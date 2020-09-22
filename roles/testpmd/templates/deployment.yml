@@ -100,6 +100,10 @@ spec:
         - "/host/var/lib/cni/bin/{{ mac_workaround_file }}"
         securityContext:
           privileged: true
+        resources:
+          limits:
+            memory: {{ memory }}
+            cpu: {{ cpu }}
         volumeMounts:
         - name: host-cni-bin
           mountPath: /host/var/lib/cni/bin
