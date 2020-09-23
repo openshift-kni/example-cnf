@@ -29,8 +29,9 @@ if [ -z $LCORES ]; then
     exit 1
 fi
 
+STATS_PERIOD=${stats_period:=1}
 RUN="/usr/local/bin/testpmd-run"
-echo "testpmd -l $LCORES $PCI $@ --stats-period 10 --cmdline-file /root/testpmd-runtime-cmds.txt" > $RUN
+echo "testpmd -l $LCORES $PCI $@ --stats-period ${STATS_PERIOD}  --cmdline-file /root/testpmd-runtime-cmds.txt" > $RUN
 chmod +x $RUN
 
 # Fetches mac address from pci using macaddr DPDK custom application
@@ -46,19 +47,15 @@ until [ "$n" -ge 5 ]; do
    sleep 1
 done
 
-testpmd-run &
-
-# TODO: Identify testpmd readiness
-sleep 10
-
-# Update the mac address with CR
-testpmd-configure
+# TODO: Remove the sleep by adding a check to verify the readiness of testpmd
+sleep 20 && testpmd-configure &
 
 clean_up() {
     # execute cleanups
     exit $1
 }
-
 trap clean_up SIGHUP SIGINT SIGTERM
+
+testpmd-run
 
 sleep infinity
