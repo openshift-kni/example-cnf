@@ -13,13 +13,50 @@
     msg: "networks parameter is empty"
   when: networks|length == 0
 
-- include_tasks: network-parse.yaml
+- name: "Parse network {{ network_item }}"
+  include_tasks: network-parse.yaml
   loop: "{{ networks }}"
   loop_control:
     loop_var: network_item
+
+- name: MAC workaround block
+  when: mac_workaround_enable|bool
+  block:
+    - name: Set daemonset name fact
+      set_fact:
+        mac_fix_ds_name: "{{ ansible_operator_meta.name }}-mac-fix-sriov-cni"
+
+    - name: Create DaemonSet for mac workaround of sriov-cni
+      k8s:
+        state: present
+        definition: "{{ lookup('template', 'daemonset.yml') }}"
+
+    - name: Check if DaemonSet is completed
+      k8s_info:
+        name: "{{ mac_fix_ds_name }}"
+        namespace: "{{ ansible_operator_meta.namespace }}"
+        kind: DaemonSet
+        api_version: apps/v1
+      register: ds_info
+    - debug: var=ds_info
+
+    - name: Check if DaemonSet is completed
+      k8s_info:
+        name: "{{ mac_fix_ds_name }}"
+        namespace: "{{ ansible_operator_meta.namespace }}"
+        kind: DaemonSet
+        api_version: apps/v1
+      register: ds_info
+      retries: 30
+      delay: 5
+      until:
+        - "ds_info.resources|length > 0"
+        - "ds_info.resources[0].status.desiredNumberScheduled == ds_info.resources[0].status.numberReady"
+      failed_when:
+        - "ds_info.resources|length > 0"
+        - "ds_info.resources[0].status.desiredNumberScheduled != ds_info.resources[0].status.numberReady"
 
 - name: Create TestPMD deployment
   k8s:
     state: present
     definition: "{{ lookup('template', 'deployment.yml') }}"
-

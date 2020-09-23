@@ -1,0 +1,33 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: "{{ mac_fix_ds_name }}"
+  namespace: "{{ ansible_operator_meta.namespace }}"
+spec:
+  selector:
+    matchLabels:
+      name: "{{ mac_fix_ds_name }}"
+  template:
+    metadata:
+      labels:
+        name: "{{ mac_fix_ds_name }}"
+    spec:
+      restartPolicy: Always
+      nodeSelector:
+        examplecnf.openshift.io/testpmd: ""
+      containers:
+      - name: testpmd-mac-fix
+        image: "{{ mac_workaround_image }}"
+        imagePullPolicy: "{{ image_pull_policy }}"
+        securityContext:
+          privileged: true
+        environments:
+          MAC_WORKAROUND_VERSION: "{{ mac_workaround_version }}"
+          MAC_WORKAROUND_FILE: "{{ mac_workaround_file }}"
+        volumeMounts:
+        - name: host-cni-bin
+          mountPath: /hostbin
+      volumes:
+      - name: host-cni-bin
+        hostPath:
+          path: /var/lib/cni/bin

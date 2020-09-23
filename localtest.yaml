@@ -14,13 +14,14 @@
     vars:
       privileged: true
       image: jumphost.cluster5.dfwt5g.lab:5000/nfv-example-cnf/testpmd-container-app:v0.1.0
-      imagePullPolicy: Always
+      image_pull_policy: Always
       ethpeer_maclist:
         - 3c:fd:fe:79:2a:a0
         - 3c:fd:fe:79:2a:a1
       size: 1
       networks:
         - name: vfdpdk1
-          count: 1
-        - name: vfdpdk2
-          count: 1
+          count: 2
+      mac_workaround_enable: true
+      mac_workaround_image: "jumphost.cluster5.dfwt5g.lab:5000/nfv-example-cnf/testpmd-container-app-mac-fix:v0.1.1"
+      mac_workaround_version: "4.4"

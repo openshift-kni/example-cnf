@@ -4,6 +4,8 @@ REGISTRY ?= quay.io
 ORG ?= krsacme
 DEFAULT_CHANNEL ?= alpha
 
+CLI ?= docker
+
 # Default bundle image tag
 BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/testpmd-operator-bundle:v$(VERSION)
 # Options for 'bundle-build'
@@ -47,11 +49,11 @@ undeploy: kustomize
 
 # Build the docker image
 docker-build:
-	docker build . -t ${IMG}
+	${CLI} build . -t ${IMG}
 
 # Push the docker image
 docker-push:
-	docker push ${IMG}
+	${CLI} push ${IMG}
 
 PATH  := $(PATH):$(PWD)/bin
 SHELL := env PATH=$(PATH) /bin/sh
@@ -97,5 +99,5 @@ bundle: kustomize
 # Build the bundle image.
 .PHONY: bundle-build
 bundle-build:
-	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
-	docker push $(BUNDLE_IMG)
+	${CLI} build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+	${CLI} push $(BUNDLE_IMG)
