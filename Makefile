@@ -4,6 +4,8 @@ REGISTRY ?= quay.io
 ORG ?= krsacme
 DEFAULT_CHANNEL ?= alpha
 
+CLUSTER_CLI ?= oc
+
 # Default bundle image tag
 BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/trex-operator-bundle:v$(VERSION)
 # Options for 'bundle-build'
@@ -26,24 +28,24 @@ run: ansible-operator
 
 # Install CRDs into a cluster
 install: kustomize
-	$(KUSTOMIZE) build config/crd | oc apply -f -
+	$(KUSTOMIZE) build config/crd | ${CLUSTER_CLI} apply -f -
 
 # Uninstall CRDs from a cluster
 uninstall: kustomize
-	$(KUSTOMIZE) build config/crd | oc delete -f -
+	$(KUSTOMIZE) build config/crd | ${CLUSTER_CLI} delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	oc apply -f config/manager/namespace.yaml
-	$(KUSTOMIZE) build config/default | oc apply -f -
+	${CLUSTER_CLI} apply -f config/manager/namespace.yaml
+	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} apply -f -
 	cp config/manager/namespace.yaml trex-allinone.yaml
 	echo "---" >> trex-allinone.yaml
 	$(KUSTOMIZE) build config/default >> trex-allinone.yaml
 
 # Undeploy controller in the configured Kubernetes cluster in ~/.kube/config
 undeploy: kustomize
-	$(KUSTOMIZE) build config/default | oc delete -f -
+	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} delete -f -
 
 # Build the docker image
 docker-build:
