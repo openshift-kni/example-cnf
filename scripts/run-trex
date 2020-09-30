@@ -118,6 +118,10 @@ class STLS1(object):
 
     def stats(self, stat, ports):
         for i in ports:
+            if  stat[i]['ipackets'] <= 0 or  stat[i]['opackets'] <= 0:
+                return
+
+        for i in ports:
             ipack = stat[i]['ipackets'] - self.ipack[i]
             opack = stat[i]['opackets'] - self.opack[i]
             self.ipack[i] = stat[i]['ipackets']
@@ -137,17 +141,20 @@ class STLS1(object):
     def notify_event(self, miss=False):
         if self.event_notified_miss != miss:
             data = {}
+            now = datetime.now()
+            data['microtime'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+            data['time'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
             if miss:
                 data['msg'] = ("Packet miss started")
                 data['reason'] = 'PacketDropped'
             else:
                 data['msg'] = ("Packet miss recovered")
                 data['reason'] = 'PacketMatched'
+            log.info("Post Event: %s at %s" % (data['reason'], data['microtime']))
             Thread(target=self.create_event, args=[data]).start()
             self.event_notified_miss = miss
 
     def create_event(self, data):
-        log.info("create_event: %s" % data)
         group = "examplecnf.openshift.io"
         version = "v1"
         namespace = "example-cnf"
@@ -168,8 +175,8 @@ class STLS1(object):
         trex_config_uid = objs['items'][0]['metadata']['uid']
         trex_config_api_version = objs['items'][0]['apiVersion']
 
-        evtTimeMicro = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        evtTime = datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        evtTimeMicro = data['microtime']
+        evtTime = data['time']
         evtName = trex_config_name + '-' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
 
         cr = { 	'apiVersion': 'events.k8s.io/v1beta1',
@@ -257,6 +264,13 @@ class STLS1(object):
             self.add_streams(self.ports[idx], macs[idx])
         log.info("staring ports")
         self.client.start(ports=self.ports, mult=self.rate, duration=self.duration, core_mask=STLClient.CORE_MASK_PIN)
+        data = {}
+        now = datetime.now()
+        data['microtime'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        data['time'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        data['msg'] = ("Packet stream is updated wit new destination mac address: %s" % ','.join(macs))
+        data['reason'] = 'StreamUpdated'
+        self.create_event(data)
 
     def add_streams(self, port, dest_mac):
         if dest_mac:
