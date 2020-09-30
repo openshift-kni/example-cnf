@@ -28,7 +28,7 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    operators.operatorframework.io/builder: operator-sdk-v1.0.0
+    operators.operatorframework.io/builder: operator-sdk-v1.0.0+git
     operators.operatorframework.io/project_layout: ansible.sdk.operatorframework.io/v1
   name: trex-operator.v0.1.1
   namespace: placeholder
@@ -99,6 +99,18 @@ spec:
           - securitycontextconstraints
           verbs:
           - use
+        - apiGroups:
+          - events.k8s.io
+          resources:
+          - events
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
         - apiGroups:
           - authentication.k8s.io
           resources:
