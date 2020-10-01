@@ -88,9 +88,13 @@ else
 ANSIBLE_OPERATOR=$(shell which ansible-operator)
 endif
 
+.PHONY: bundle-check
+bundle-check:
+	@echo -n "This will override bundle.Dockerfile, needed only for version change and CSV/CRD/RBAC changes. Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
+
 # Generate bundle manifests and metadata, then validate generated files.
 .PHONY: bundle
-bundle: kustomize
+bundle: bundle-check kustomize
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
