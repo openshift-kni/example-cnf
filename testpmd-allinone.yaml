@@ -302,7 +302,7 @@ spec:
         - --metrics-addr=127.0.0.1:8080
         - --enable-leader-election
         - --leader-election-id=testpmd-operator
-        image: jumphost.cluster5.dfwt5g.lab:5000/nfv-example-cnf/testpmd-operator:v0.1.0
-        imagePullPolicy: Always
+        image: quay.io/krsacme/testpmd-operator:v0.1.1
+        imagePullPolicy: IfNotPresent
         name: manager
       terminationGracePeriodSeconds: 10

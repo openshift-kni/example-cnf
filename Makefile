@@ -4,7 +4,8 @@ REGISTRY ?= quay.io
 ORG ?= krsacme
 DEFAULT_CHANNEL ?= alpha
 
-CLI ?= docker
+CONTAINER_CLI ?= docker
+CLUSTER_CLI ?= oc
 
 # Default bundle image tag
 BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/testpmd-operator-bundle:v$(VERSION)
@@ -28,32 +29,32 @@ run: ansible-operator
 
 # Install CRDs into a cluster
 install: kustomize
-	$(KUSTOMIZE) build config/crd | oc apply -f -
+	$(KUSTOMIZE) build config/crd | ${CLUSTER_CLI} apply -f -
 
 # Uninstall CRDs from a cluster
 uninstall: kustomize
-	$(KUSTOMIZE) build config/crd | oc delete -f -
+	$(KUSTOMIZE) build config/crd | ${CLUSTER_CLI} delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	oc apply -f config/manager/namespace.yaml
-	$(KUSTOMIZE) build config/default | oc apply -f -
+	${CLUSTER_CLI} apply -f config/manager/namespace.yaml
+	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} apply -f -
 	cp config/manager/namespace.yaml testpmd-allinone.yaml
 	echo "---" >> testpmd-allinone.yaml
 	$(KUSTOMIZE) build config/default >> testpmd-allinone.yaml
 
 # Undeploy controller in the configured Kubernetes cluster in ~/.kube/config
 undeploy: kustomize
-	$(KUSTOMIZE) build config/default | oc delete -f -
+	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} delete -f -
 
 # Build the docker image
 docker-build:
-	${CLI} build . -t ${IMG}
+	${CONTAINER_CLI} build . -t ${IMG}
 
 # Push the docker image
 docker-push:
-	${CLI} push ${IMG}
+	${CONTAINER_CLI} push ${IMG}
 
 PATH  := $(PATH):$(PWD)/bin
 SHELL := env PATH=$(PATH) /bin/sh
@@ -88,9 +89,13 @@ else
 ANSIBLE_OPERATOR=$(shell which ansible-operator)
 endif
 
+.PHONY: bundle-check
+bundle-check:
+	@echo -n "This will override bundle.Dockerfile, needed only for version change and CSV/CRD/RBAC changes. Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
+
 # Generate bundle manifests and metadata, then validate generated files.
 .PHONY: bundle
-bundle: kustomize
+bundle: bundle-check kustomize
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
@@ -99,5 +104,5 @@ bundle: kustomize
 # Build the bundle image.
 .PHONY: bundle-build
 bundle-build:
-	${CLI} build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
-	${CLI} push $(BUNDLE_IMG)
+	${CONTAINER_CLI} build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+	${CONTAINER_CLI} push $(BUNDLE_IMG)

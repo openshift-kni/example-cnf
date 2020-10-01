@@ -3,4 +3,5 @@ kind: TestPMD
 metadata:
   name: testpmd-sample
 spec:
-  foo: bar
+  networks:
+  - name: vfdpdk1

@@ -20,6 +20,7 @@ spec:
           args:
             - "--enable-leader-election"
             - "--leader-election-id=testpmd-operator"
+            - "--zap-encoder=console"
           image: controller:latest
           imagePullPolicy: IfNotPresent
       terminationGracePeriodSeconds: 10
