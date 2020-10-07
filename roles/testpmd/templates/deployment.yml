@@ -30,6 +30,7 @@ spec:
     spec:
       nodeSelector:
         examplecnf.openshift.io/testpmd: ""
+      terminationGracePeriodSeconds: {{ termination_grace_period_seconds }}
       containers:
       - name: testpmd
         command: ["testpmd-wrapper"]
@@ -84,6 +85,8 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        - name: CR_NAME
+          value: "{{ ansible_operator_meta.name }}"
 {% for key, value in environments.items() %}
         - name: {{ key }}
           value: "{{ value }}"

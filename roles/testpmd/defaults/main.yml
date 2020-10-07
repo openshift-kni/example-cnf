@@ -6,6 +6,8 @@ network_defintions: ""
 network_resources: {}
 environments: {}
 
+termination_grace_period_seconds: 300
+
 # mac workaround variables
 mac_workaround_enable: false
 mac_workaround_image: quay.io/krsacme/testpmd-container-app-mac-fix:latest
