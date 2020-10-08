@@ -30,7 +30,7 @@ metadata:
     capabilities: Basic Install
     operators.operatorframework.io/builder: operator-sdk-v1.0.0+git
     operators.operatorframework.io/project_layout: ansible.sdk.operatorframework.io/v1
-  name: trex-operator.v0.1.1
+  name: trex-operator.v0.1.2
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -142,7 +142,7 @@ spec:
                 - --metrics-addr=127.0.0.1:8080
                 - --enable-leader-election
                 - --leader-election-id=trex-operator
-                image: quay.io/krsacme/trex-operator:v0.1.1
+                image: quay.io/krsacme/trex-operator:v0.1.2
                 imagePullPolicy: IfNotPresent
                 name: manager
                 resources: {}
@@ -192,4 +192,5 @@ spec:
   maturity: alpha
   provider:
     name: Red Hat
-  version: 0.1.1
+  replaces: trex-operator.v0.1.1
+  version: 0.1.2
