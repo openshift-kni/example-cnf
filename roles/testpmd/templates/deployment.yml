@@ -51,6 +51,10 @@ spec:
         - "--eth-peer={{ loop.index -1 }},{{ mac }}"
 {% endfor %}
         - "--forward-mode={{ forward_mode }}"
+        lifecycle:
+          preStop:
+            exec:
+              command: ["testpmd-check-wait"]
         image: "{{ image }}"
         imagePullPolicy: "{{ image_pull_policy }}"
         securityContext:
