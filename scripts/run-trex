@@ -167,7 +167,7 @@ class STLS1(object):
             else:
                 data['msg'] = ("Packet miss recovered")
                 data['reason'] = 'PacketMatched'
-            log.info("Post Event: %s at %s" % (data['reason'], data['microtime']))
+            log.info("%s at %s" % (data['reason'], data['microtime']))
             Thread(target=self.create_event, args=[data]).start()
             self.event_notified_miss = miss
 
