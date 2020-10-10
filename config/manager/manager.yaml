@@ -14,6 +14,7 @@ spec:
     metadata:
       labels:
         control-plane: controller-manager
+        example-cnf-type: trex-operator
     spec:
       containers:
         - name: manager

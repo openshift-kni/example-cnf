@@ -28,7 +28,7 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    operators.operatorframework.io/builder: operator-sdk-v1.0.0+git
+    operators.operatorframework.io/builder: operator-sdk-v1.0.1
     operators.operatorframework.io/project_layout: ansible.sdk.operatorframework.io/v1
   name: trex-operator.v0.1.2
   namespace: placeholder
@@ -136,6 +136,7 @@ spec:
             metadata:
               labels:
                 control-plane: controller-manager
+                example-cnf-type: trex-operator
             spec:
               containers:
               - args:
