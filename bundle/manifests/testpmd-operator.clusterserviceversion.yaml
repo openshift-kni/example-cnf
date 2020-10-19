@@ -207,5 +207,4 @@ spec:
   maturity: alpha
   provider:
     name: Red Hat
-  replaces: testpmd-operator.v0.1.1
   version: 0.1.2
