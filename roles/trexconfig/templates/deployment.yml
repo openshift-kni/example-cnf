@@ -11,29 +11,30 @@ spec:
   template:
     metadata:
       annotations:
-        k8s.v1.cni.cncf.io/networks: '[
+        k8s.v1.cni.cncf.io/networks: |
+          [
 {% for network in networks %}
 {% set outer_loop = loop %}
 {% for count in range(network.count) %}
-          {
-            "name": "{{ network.name }}",
+            {
+              "name": "{{ network.name }}",
 {% if network.mac|default([])|length == network.count %}
-            "mac": "{{ network.mac[loop.index - 1] }}",
+              "mac": "{{ network.mac[loop.index - 1] }}",
 {% endif %}
-            "namespace": "{{ ansible_operator_meta.namespace }}"
-          }{% if loop.index < network.count or outer_loop.index < network_name_list|length %},{% endif %}
+              "namespace": "{{ ansible_operator_meta.namespace }}"
+            }{% if loop.index < network.count or outer_loop.index < network_name_list|length %},{% endif %}
 {% endfor %}
 {% endfor %}
-        ]'
+          ]
       labels:
         app: trex
     spec:
       nodeSelector:
         examplecnf.openshift.io/trex: ""
       containers:
-      - name: trex
+      - name: trex-server
         command: {{ command }}
-        image: "{{ image }}"
+        image: "{{ image_server }}"
         imagePullPolicy: "{{ image_pull_policy }}"
         securityContext:
 {% if privileged %}
@@ -60,6 +61,28 @@ spec:
         volumeMounts:
         - name: hugepage
           mountPath: /dev/hugepages
+        env:
+        - name: NETWORK_NAME_LIST
+          value: "{{ network_resources.keys()|list|join(',') }}"
+        - name: DUT_MAC_LIST
+          value: "{{ ','.join(dut_maclist) }}"
+        - name: TREX_CPU
+          value: "{{ cpu }}"
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+{% for key, value in environments.items() %}
+        - name: {{ key }}
+          value: "{{ value }}"
+{% endfor %}
+      - name: trex-app
+        image: "{{ image_app }}"
+        imagePullPolicy: "{{ image_pull_policy }}"
+        resources:
+          limits:
+            memory: "500Mi"
+            cpu: 2
         env:
         - name: NETWORK_NAME_LIST
           value: "{{ network_resources.keys()|list|join(',') }}"

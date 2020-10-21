@@ -1,5 +1,6 @@
 ---
-image: quay.io/krsacme/trex-container-app:latest
+image_server: quay.io/krsacme/trex-container-server:latest
+image_app: quay.io/krsacme/trex-container-app:latest
 image_pull_policy: IfNotPresent
 privileged: false
 command: ["trex-wrapper"]
