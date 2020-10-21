@@ -107,7 +107,7 @@ class STLS1(object):
         if macs:
             log.info("destination macs available")
             for idx in range(0, len(self.ports)):
-                self.add_streams(self.ports[idx], macs[0])
+                self.add_streams(self.ports[idx], macs[idx])
         else:
             log.info("destination macs not available")
             for idx in range(0, len(self.ports)):
@@ -128,12 +128,11 @@ class STLS1(object):
             self.client.clear_stats()
 
             # here we multiply the traffic lineaer to whatever given in rate
-            log.info("Running {:} on ports {:}, {:} for 10 seconds...".format(self.rate, self.port_a, self.port_b))
-            self.client.start(ports = self.ports,
-                mult = self.rate,
-                duration = self.duration,
-                core_mask = STLClient.CORE_MASK_PIN
-            )
+            log.info("Running {:} on ports {:}, {:} for {:} seconds...".format(
+                self.rate, self.port_a, self.port_b, self.duration))
+
+            self.client.start(ports = self.ports, mult = self.rate,
+                duration = self.duration, core_mask = STLClient.CORE_MASK_PIN)
             self.start_watch()
 
             if self.duration == -1:
@@ -153,25 +152,8 @@ class STLS1(object):
 
             # read the stats after the test
             stats = self.client.get_stats()
-
-            log.info(json.dumps(stats[self.port_a], indent = 4, separators=(',', ': '), sort_keys = True))
-            log.info(json.dumps(stats[self.port_b], indent = 4, separators=(',', ': '), sort_keys = True))
-
-            lost_a = stats[self.port_a]["opackets"] - stats[self.port_b]["ipackets"]
-            lost_b = stats[self.port_b]["opackets"] - stats[self.port_a]["ipackets"]
-
-            log.info("\npackets lost from {0} --> {1}:   {2} pkts".format(self.port_a, self.port_b, lost_a))
-            log.info("packets lost from {0} --> {1}:   {2} pkts".format(self.port_b, self.port_a, lost_b))
-
-            if self.client.get_warnings():
-                log.info("\n\n*** test had warnings ****\n\n")
-                for w in self.client.get_warnings():
-                    log.info(w)
-
-            if (lost_a == 0) and (lost_b == 0) and not self.client.get_warnings():
-                passed = True
-            else:
-                passed = False
+            warnings = self.client.get_warnings()
+            passed = trexstats.completed_stats(stats, warnings, self.port_a, self.port_b)
 
         except STLError as e:
             passed = False
