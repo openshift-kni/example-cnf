@@ -42,7 +42,8 @@ RUN cd ${DPDK_DIR}/examples/macaddr && \
     make && \
     cp ${DPDK_DIR}/examples/macaddr/build/app/macaddr /usr/local/bin
 
-RUN yum install -y python3 && pip3 install kubernetes
+# python required for expand-cpu util
+RUN yum install -y python3 && yum clean all
 
 # copy testpmd runtime cmdline file
 COPY testpmd-runtime-cmds.txt /root/testpmd-runtime-cmds.txt

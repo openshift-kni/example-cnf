@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -ex
+
+LOG_FILE="/var/log/testpmd/app.log"
+
+# Wait till the /var/log/testpmd.log file is created
+n=5
+until [ "$n" -le 0 ]; do
+    echo "Waiting for log file creation ($n)..."
+    [ -e $LOG_FILE ] && break || sleep 2
+    n=$((n - 1))
+done
+if [ $n -le 0 ]; then
+    echo "ERROR: File $LOG_FILE not found, exit application"
+    # TODO: Kill whole application
+    exit 1
+fi
+
+echo "Log file $LOG_FILE exists, wait for 'Port statistics' message"
+n=120
+until [ "$n" -le 0 ]; do
+    echo "Waiting for TestPMD start log ($n)..."
+    grep -q 'Port statistics' $LOG_FILE && break || sleep 5
+    n=$((n - 1))
+done
+if [ $n -le 0 ]; then
+    echo "ERROR: TestPMD is not started, waiting to configure timedout..."
+    # TODO: Kill whole application
+    exit 1
+fi
+
+testpmd-configure
+
+while true; do sleep 1; done

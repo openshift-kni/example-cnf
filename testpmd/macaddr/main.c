@@ -64,7 +64,7 @@ main(int argc, char *argv[])
 	nb_ports = rte_eth_dev_count_avail();
 	RTE_LOG(INFO, VHOST_PORT, "nb_borts %d\n", nb_ports);
 
-	fp = fopen("/tmp/macaddr.txt","w");
+	fp = fopen("/var/lib/testpmd/macaddr.txt","w");
 	for (idx = 0; idx < nb_ports; idx++)
 	{
 	    rte_eth_macaddr_get(idx, &vmdq_ports_eth_addr[idx]);
