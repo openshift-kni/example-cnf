@@ -1,6 +1,7 @@
 #!/bin/bash
 CLI=docker
-REGISTRY="quay.io/krsacme"
+ORG="rh-nfv-int"
+REGISTRY="quay.io/${ORG}"
 TAG="${TAG:-v0.2.0}"
 
 if [[ $1 == "all" ]]; then

@@ -2,83 +2,36 @@
 
 # https://github.com/secdev/scapy/blob/master/scapy/layers/l2.py#L164
 
+import os
+import sys
+sys.path.append(os.path.abspath("/opt/pyfiles/"))
+
 from trex.stl.api import *
-from trex.common.trex_logger import Logger
 
 import subprocess
 import signal
-import sys
 import time
 import json
-from datetime import datetime
-import sys
-import logging
-import re
 import queue
 from threading import Thread
-import os
-import string
-import random
-
-from kubernetes import client, config, watch
-from kubernetes.client.rest import ApiException
-from dateutil import parser
 from datetime import datetime
-from dateutil.tz import tzutc
 
-log = logging.getLogger('run-trex')
-log.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-fh = logging.FileHandler('/var/log/run-trex.log')
-fh.setLevel(logging.INFO)
-fh.setFormatter(formatter)
-
-fhd = logging.FileHandler('/var/log/trex.log')
-fhd.setLevel(logging.DEBUG)
-fhd.setFormatter(formatter)
-
-st = logging.StreamHandler()
-st.setLevel(logging.INFO)
-
-log.addHandler(fh)
-log.addHandler(fhd)
-log.addHandler(st)
-
-
-class CustomLogger(Logger):
-    def __init__ (self, verbose="error"):
-        super(CustomLogger, self).__init__(verbose)
-        self.msg = ''
-        self.force_exit = False
-
-    def _write (self, msg, newline):
-        if not self.force_exit:
-            ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-            if isinstance(msg, (str, bytes)):
-                msg = ansi_escape.sub('', msg)
-                self.msg += msg
-            if newline:
-                log.debug(self.msg)
-                self.msg = ''
-
-    def _flush (self):
-        pass
+# Internal python files - /opt/pyfiles/
+from logger import CustomLogger, log
+import trexmac
+import trexevent
+import trexstats
 
 clog = CustomLogger("debug")
 
 
 class STLS1(object):
-
     def __init__ (self, ports, size, rate, duration=-1, verbose="debug"):
         self.client = STLClient(verbose_level=verbose, logger=clog)
         self.fsize = 64
         self.pg_id = 0
         self.pkt_type = "ether"
         self.num_streams = 1
-        self.ipack = [0] * len(ports)
-        self.opack = [0] * len(ports)
-        self.miss = []
         self.force_exit = False
         self.ports = ports
         self.port_a = ports[0]
@@ -88,8 +41,7 @@ class STLS1(object):
         self.duration = duration
         self.queue = queue.Queue(maxsize=0)
         signal.signal(signal.SIGINT, self.signal_handler)
-        self.event_notified_miss = None
-        self.first_packet_match = False
+        self.stats_obj = trexstats.TRexAppStats(ports)
 
     def create_stream (self, dest_mac=None):
         size = self.fsize - 4; # HW will add 4 bytes ethernet CRC
@@ -114,172 +66,11 @@ class STLS1(object):
         streams = []
         for pg_id_add in range(0, self.num_streams):
             streams.append(STLStream(packet = pkt, mode = STLTXCont(pps=1), flow_stats = STLFlowStats(pg_id = self.pg_id + pg_id_add)))
-
         return streams
 
-    def stats(self, stat, ports):
-        for i in ports:
-            if  stat[i]['ipackets'] < 0 or  stat[i]['opackets'] <= 0:
-                log.info("invalid packet count - port(%s) out(%s) id(%s)" % (i,
-                         stat[i]['opackets'], stat[i]['ipackets']))
-                return
-
-        ipack = 0
-        opack = 0
-        for i in ports:
-            ipack += stat[i]['ipackets'] - self.ipack[i]
-            opack += stat[i]['opackets'] - self.opack[i]
-            self.ipack[i] = stat[i]['ipackets']
-            self.opack[i] = stat[i]['opackets']
-
-        if ipack < 0 or opack < 0:
-            log.info("invalid packet count - out(%s) id(%s)" % (opack, ipack))
-            return
-
-        if not self.first_packet_match:
-            if ipack >= opack and opack != 0:
-                self.first_packet_match = True
-            else:
-                log.info("still waiting for first packet match - out(%s) > in(%s)" % (opack, ipack))
-                return
-
-        if ipack >= opack:
-            log.info("MATCH: out(%s) > in(%s)" % (opack, ipack))
-            self.notify_event(False)
-            if self.miss and not self.miss[-1].get('end'):
-                self.miss[-1]['end'] = datetime.now()
-                log.info("Loss recovery: %s" % (self.miss[-1]['end'] - self.miss[-1]['start']))
-        else:
-            log.info("MISS:  out(%s) > in(%s)" % (opack, ipack))
-            self.notify_event(True)
-            if self.miss and not self.miss[-1].get('end'):
-                self.miss.append({'start': datetime.now()})
-
-    def notify_event(self, miss=False):
-        if self.event_notified_miss != miss:
-            data = {}
-            now = datetime.now()
-            data['microtime'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-            data['time'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-            if miss:
-                data['msg'] = ("Packet miss started")
-                data['reason'] = 'PacketDropped'
-            else:
-                data['msg'] = ("Packet miss recovered")
-                data['reason'] = 'PacketMatched'
-            log.info("%s at %s" % (data['reason'], data['microtime']))
-            Thread(target=self.create_event, args=[data]).start()
-            self.event_notified_miss = miss
-
-    def create_event(self, data):
-        group = "examplecnf.openshift.io"
-        version = "v1"
-        namespace = "example-cnf"
-        plural = "trexconfigs"
-
-        try:
-            custom_api = client.CustomObjectsApi()
-            objs = custom_api.list_namespaced_custom_object(group, version, namespace, plural)
-        except ApiException as e:
-            log.info("Exception when calling CustomObjectsApi->list_namespaced_custom_object: %s\n" % e)
-            return
-
-        if len(objs['items']) == 0:
-            log.info("no trexconfig objects")
-            return
-
-        trex_config_name = objs['items'][0]['metadata']['name']
-        trex_config_uid = objs['items'][0]['metadata']['uid']
-        trex_config_api_version = objs['items'][0]['apiVersion']
-
-        evtTimeMicro = data['microtime']
-        evtTime = data['time']
-        evtName = trex_config_name + '-' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
-
-        cr = { 	'apiVersion': 'events.k8s.io/v1beta1',
-		'kind': 'Event',
-                'metadata': {
-                   'name': evtName,
-                   'namespace': namespace,
-                   'ownerReferences': []
-                },
-                'type': 'Normal',
-                'eventTime': evtTimeMicro,
-                'deprecatedLastTimestamp': evtTime,
-                'deprecatedFirstTimestamp': evtTime,
-	        'reason': data['reason'],
-                'action': data['reason'],
-                'note': data['msg'],
-                'regarding': {
-                        'namespace': namespace,
-                        'kind': 'TRexConfig',
-                        'name': trex_config_name,
-                        'uid': trex_config_uid
-                    },
-                'reportingController': 'pod/' + os.environ['HOSTNAME'],
-                'reportingInstance': trex_config_name
-	     }
-
-        cr['metadata']['ownerReferences'].append({
-                'apiVersion': trex_config_api_version,
-                'kind': 'TRexConfig',
-                'name': trex_config_name,
-                'uid': trex_config_uid,
-                'controller': True
-            })
-
-        events_api = client.EventsV1beta1Api()
-        try:
-            resp = events_api.create_namespaced_event(namespace, cr)
-        except ApiException as e:
-            log.info("Exception on creating Event: %s\n" % e)
-
-    def get_testpmdmac_cr_values(self):
-        group = "examplecnf.openshift.io"
-        version = "v1"
-        namespace = "example-cnf"
-        plural = "testpmdmacs"
-
-        config.load_incluster_config()
-        custom_api = client.CustomObjectsApi()
-        try:
-            resp = custom_api.list_namespaced_custom_object(group, version, namespace, plural)
-            for item in resp['items']:
-                macs = self.get_macs(item['spec'])
-                return macs
-        except ApiException as e:
-            return None
-
     def start_watch(self):
-        process = Thread(target=self.watch_cr, args=[])
+        process = Thread(target=trexmac.watch_cr, args=[self.queue])
         process.start()
-
-    def watch_cr(self):
-        group = "examplecnf.openshift.io"
-        version = "v1"
-        namespace = "example-cnf"
-        plural = "testpmdmacs"
-
-        config.load_incluster_config()
-        custom_api = client.CustomObjectsApi()
-        w = watch.Watch()
-        now = datetime.utcnow().replace(tzinfo=tzutc())
-        for event in w.stream(custom_api.list_cluster_custom_object,
-                              group=group, version=version, plural=plural):
-            if event['type'] == 'ADDED':
-                meta = event['object']['metadata']
-                spec = event['object']['spec']
-                created = parser.parse(meta['creationTimestamp'])
-                if created > now:
-                    self.queue.put(event['object'])
-
-    def get_macs(self, spec):
-        macs = []
-        for resource in spec['resources']:
-            for device in resource['devices']:
-                macs.append(device['mac'])
-        log.info("macs list - %s" % ",".join(macs))
-        return macs
 
     def update(self, obj):
         meta = obj['metadata']
@@ -303,7 +94,7 @@ class STLS1(object):
         data['time'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
         data['msg'] = ("Packet stream is updated with mac: %s" % ','.join(macs))
         data['reason'] = 'StreamUpdated'
-        self.create_event(data)
+        trexevent.create_event(data)
 
     def add_streams(self, port, dest_mac):
         if dest_mac:
@@ -312,7 +103,7 @@ class STLS1(object):
         self.client.add_streams(new_stream, [port])
 
     def init_streams(self):
-        macs = self.get_testpmdmac_cr_values()
+        macs = trexmac.get_testpmdmac_cr_values()
         if macs:
             log.info("destination macs available")
             for idx in range(0, len(self.ports)):
@@ -347,7 +138,7 @@ class STLS1(object):
 
             if self.duration == -1:
                 while True:
-                    self.stats(self.client.get_stats(), ports = self.ports)
+                    self.stats_obj.stats(self.client.get_stats(), ports = self.ports)
                     try:
                         obj = self.queue.get_nowait()
                         self.update(obj)
