@@ -51,10 +51,6 @@ spec:
         - "--eth-peer={{ loop.index -1 }},{{ mac }}"
 {% endfor %}
         - "--forward-mode={{ forward_mode }}"
-        lifecycle:
-          preStop:
-            exec:
-              command: ["testpmd-check-wait"]
         image: "{{ image }}"
         imagePullPolicy: "{{ image_pull_policy }}"
         securityContext:
@@ -82,6 +78,41 @@ spec:
         volumeMounts:
         - name: hugepage
           mountPath: /dev/hugepages
+        - name: log-dir
+          mountPath: /var/log/testpmd
+        - name: lib-dir
+          mountPath: /var/lib/testpmd
+        env:
+        - name: NETWORK_NAME_LIST
+          value: "{{ network_resources.keys()|list|join(',') }}"
+        - name: TESTPMD_CPU_COUNT
+          value: "{{ cpu }}"
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: CR_NAME
+          value: "{{ ansible_operator_meta.name }}"
+{% for key, value in environments.items() %}
+        - name: {{ key }}
+          value: "{{ value }}"
+{% endfor %}
+      - name: monitor
+        lifecycle:
+          preStop:
+            exec:
+              command: ["testpmd-check-wait"]
+        image: "{{ image_monitor }}"
+        imagePullPolicy: "{{ image_pull_policy }}"
+        resources:
+          limits:
+            memory: "500Mi"
+            cpu: 2
+        volumeMounts:
+        - name: log-dir
+          mountPath: /var/log/testpmd
+        - name: lib-dir
+          mountPath: /var/lib/testpmd
         env:
         - name: NETWORK_NAME_LIST
           value: "{{ network_resources.keys()|list|join(',') }}"
@@ -99,3 +130,7 @@ spec:
       - name: hugepage
         emptyDir:
           medium: HugePages
+      - name: log-dir
+        emptyDir: {}
+      - name: lib-dir
+        emptyDir: {}

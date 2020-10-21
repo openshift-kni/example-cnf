@@ -1,5 +1,6 @@
 ---
 image: quay.io/krsacme/testpmd-container-app:latest
+image_monitor: quay.io/krsacme/testpmd-container-app-monitor:latest
 image_pull_policy: IfNotPresent
 privileged: false
 network_defintions: ""
