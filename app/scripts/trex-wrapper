@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -ex
+
+# wait for trex server to be ready
+count=120
+while [[ ${count} -gt 0 ]]; do
+    nc -z 0.0.0.0 4500 && break || sleep 1
+    ((count--))
+done
+if [[ ${count} -gt 0 ]]; then
+    echo "trex-server is ready"
+else
+    echo "ERROR: trex-server could not start properly, exiting... "
+    sleep infinity
+    exit 1
+fi
+
+RUN_APP=${run_app:=1}
+if [[ $RUN_APP == "1" ]]; then
+    # leave the server running for 10s before starting application
+    sleep 10
+    echo "Running TRex application ..."
+    run-trex
+else
+    echo "Skipping TRex application run, waiting ..."
+    sleep infinity
+fi
+

@@ -234,6 +234,22 @@ class STLS1(object):
         except ApiException as e:
             log.info("Exception on creating Event: %s\n" % e)
 
+    def get_testpmdmac_cr_values(self):
+        group = "examplecnf.openshift.io"
+        version = "v1"
+        namespace = "example-cnf"
+        plural = "testpmdmacs"
+
+        config.load_incluster_config()
+        custom_api = client.CustomObjectsApi()
+        try:
+            resp = custom_api.list_namespaced_custom_object(group, version, namespace, plural)
+            for item in resp['items']:
+                macs = self.get_macs(item['spec'])
+                return macs
+        except ApiException as e:
+            return None
+
     def start_watch(self):
         process = Thread(target=self.watch_cr, args=[])
         process.start()
@@ -296,10 +312,15 @@ class STLS1(object):
         self.client.add_streams(new_stream, [port])
 
     def init_streams(self):
-        with open('/etc/trex_cfg.yaml') as f:
-            cfg = yaml.safe_load(f)
-        for idx in range(0, len(self.ports)):
-            self.add_streams(self.ports[idx], cfg[0]['port_info'][idx]['dest_mac'])
+        macs = self.get_testpmdmac_cr_values()
+        if macs:
+            log.info("destination macs available")
+            for idx in range(0, len(self.ports)):
+                self.add_streams(self.ports[idx], macs[0])
+        else:
+            log.info("destination macs not available")
+            for idx in range(0, len(self.ports)):
+                self.add_streams(self.ports[idx], None)
 
     def simple_burst(self):
         passed = True
@@ -384,9 +405,9 @@ class STLS1(object):
 
 def main():
     # run the tests
-    packet_size = os.getenv("PACKET_SIZE") or 64
-    packet_rate = os.getenv("PACKET_RATE") or "10pps"
-    duration = os.getenv("DURATION") or -1
+    packet_size = os.getenv("PACKET_SIZE") or os.getenv("packet_size") or 64
+    packet_rate = os.getenv("PACKET_RATE") or os.getenv("packet_rate") or "10pps"
+    duration = os.getenv("DURATION") or os.getenv("duration") or -1
     if duration != -1:
         duration = int(duration)
     log.info("Starting burst...")

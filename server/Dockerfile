@@ -21,6 +21,7 @@ RUN cd /opt && git clone https://github.com/atheurer/trafficgen
 RUN pip3 install pyyaml kubernetes ansible
 COPY --from=builder /opt /opt
 ENV PYTHONPATH="/opt/trex/trex-core/scripts/automation/trex_control_plane/interactive"
+WORKDIR /opt/trex/trex-core/scripts
 ENV TREX_DIR="/opt/trex/trex-core/scripts"
 ENV TRAFFICGEN_DIR="/opt/trafficgen"
 COPY scripts /usr/local/bin/
