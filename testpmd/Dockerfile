@@ -26,6 +26,9 @@ RUN sed -i -e 's/EAL_IGB_UIO=y/EAL_IGB_UIO=n/' \
 COPY v3-bus-pci-fix-VF-bus-error-for-memory-access.diff ./v3-bus-pci-fix-VF-bus-error-for-memory-access.diff
 RUN cd ${DPDK_DIR} && git apply /v3-bus-pci-fix-VF-bus-error-for-memory-access.diff
 
+RUN git clone https://github.com/krsacme/testpmd-as-load-balancer.git /opt && \
+    cp /opt/v19.11/test-pmd ${DPDK_DIR}/app -r
+
 # Build it
 RUN cd ${DPDK_DIR} && \
     make install T=${RTE_TARGET} DESTDIR=${RTE_SDK} -j 8
