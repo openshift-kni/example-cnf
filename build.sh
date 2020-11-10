@@ -3,19 +3,23 @@
 set -e
 
 CLI=docker
-REGISTRY="quay.io/krsacme"
+ORG="rh-nfv-int"
+REGISTRY="quay.io/${ORG}"
 TAG="${TAG:-v0.2.0}"
 
-MONITOR="${REGISTRY}/testpmd-container-app-monitor:${TAG}"
-$CLI build monitor -f monitor/Dockerfile -t $MONITOR
-$CLI push $MONITOR
-
-if [[ $1 == "all" ]]; then
-    NAME=${REGISTRY}"/testpmd-container-app:"${TAG}
-    $CLI build testpmd -f testpmd/Dockerfile -t $NAME
-    $CLI push $NAME
-
-    CNI_IMG_NAME=${REGISTRY}"/testpmd-container-app-mac-fix:"${TAG}
-    $CLI build sriov-cni --file sriov-cni/Dockerfile -t $CNI_IMG_NAME
-    $CLI push $CNI_IMG_NAME
+LIST=""
+if [[ $1 == "all" || $1 == "testpmd" ]]; then
+    LIST="${LIST} testpmd"
 fi
+if [[ $1 == "all" || $1 == "monitor" ]]; then
+    LIST="${LIST} monitor"
+fi
+if [[ $1 == "all" || $1 == "mac" ]]; then
+    LIST="${LIST} mac"
+fi
+
+for item in ${LIST}; do
+    IMAGE="${REGISTRY}/testpmd-container-app-${item}:${TAG}"
+    $CLI build ${item} -f ${item}/Dockerfile -t $IMAGE
+    $CLI push $IMAGE
+done
