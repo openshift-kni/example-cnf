@@ -1,7 +1,7 @@
 # Current Operator version
 VERSION ?= 0.2.0
 REGISTRY ?= quay.io
-ORG ?= krsacme
+ORG ?= rh-nfv-int
 DEFAULT_CHANNEL ?= alpha
 
 CONTAINER_CLI ?= docker

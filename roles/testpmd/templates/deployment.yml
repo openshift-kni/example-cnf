@@ -51,7 +51,7 @@ spec:
         - "--eth-peer={{ loop.index -1 }},{{ mac }}"
 {% endfor %}
         - "--forward-mode={{ forward_mode }}"
-        image: "{{ image }}"
+        image: "{{ image_testpmd }}"
         imagePullPolicy: "{{ image_pull_policy }}"
         securityContext:
 {% if privileged %}
