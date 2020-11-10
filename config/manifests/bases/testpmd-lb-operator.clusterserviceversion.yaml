@@ -1,0 +1,47 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+    operators.operatorframework.io/builder: operator-sdk-v1.2.0
+    operators.operatorframework.io/project_layout: ansible.sdk.operatorframework.io/v1
+  name: testpmd-lb-operator.vX.Y.Z
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions: {}
+  description: LoadBalancer for FastData path traffic
+  displayName: LoadBalancer
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - example-cnf
+  - cnf
+  - testpmd
+  - loadbalancer
+  - nfv
+  links:
+  - name: Testpmd Lb Operator
+    url: https://testpmd-lb-operator.domain
+  maintainers:
+  - email: skramaja@redhat.com
+    name: '''Saravanan KR'''
+  maturity: alpha
+  provider:
+    name: Red Hat
+  version: 0.0.0

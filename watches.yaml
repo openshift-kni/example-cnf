@@ -1,0 +1,7 @@
+---
+# Use the 'create api' subcommand to add watches to this file.
+- version: v1
+  group: examplecnf.openshift.io
+  kind: LoadBalancer
+  role: loadbalancer
+# +kubebuilder:scaffold:watch

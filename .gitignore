@@ -1,0 +1,4 @@
+_cache
+bin
+*.patch
+*sync.sh

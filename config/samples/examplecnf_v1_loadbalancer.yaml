@@ -1,0 +1,6 @@
+apiVersion: examplecnf.openshift.io/v1
+kind: LoadBalancer
+metadata:
+  name: loadbalancer-sample
+spec:
+  foo: bar

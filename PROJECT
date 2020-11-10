@@ -1,0 +1,8 @@
+domain: openshift.io
+layout: ansible.sdk.operatorframework.io/v1
+projectName: testpmd-lb-operator
+resources:
+- group: examplecnf
+  kind: LoadBalancer
+  version: v1
+version: 3-alpha
