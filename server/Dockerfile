@@ -1,4 +1,4 @@
-FROM centos:latest AS builder
+FROM quay.io/krsacme/centos:8.2.2004 AS builder
 
 # Install prerequisite packages
 RUN yum update -y && yum clean all
@@ -8,12 +8,12 @@ RUN yum install -y wget numactl numactl-devel make cmake git wget gcc gcc-c++ ke
 
 RUN mkdir -p /opt/trex && cd /opt/trex && git clone https://github.com/cisco-system-traffic-generator/trex-core.git
 
-COPY v3-bus-pci-fix-VF-bus-error-for-memory-access.diff /v3-bus-pci-fix-VF-bus-error-for-memory-access.diff
-RUN cd /opt/trex/trex-core && git apply /v3-bus-pci-fix-VF-bus-error-for-memory-access.diff
+#COPY v3-bus-pci-fix-VF-bus-error-for-memory-access.diff /v3-bus-pci-fix-VF-bus-error-for-memory-access.diff
+#RUN cd /opt/trex/trex-core && git apply /v3-bus-pci-fix-VF-bus-error-for-memory-access.diff
 RUN cd /opt/trex/trex-core/linux_dpdk && ./b configure --no-mlx --no-bxnt && ./b build
 
 
-FROM centos:latest
+FROM quay.io/krsacme/centos:8.2.2004
 RUN yum update -y && yum clean all
 RUN yum install -y wget git net-tools pciutils perf unzip yum-utils python36 iproute tcpdump vim && \
     yum clean all

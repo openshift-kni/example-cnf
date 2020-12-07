@@ -1,15 +1,27 @@
 #!/bin/bash
-CLI=docker
+
+set -e
+
+CLI=${CLI:="docker"}
 ORG="rh-nfv-int"
 REGISTRY="quay.io/${ORG}"
 TAG="${TAG:-v0.2.0}"
 
-if [[ $1 == "all" ]]; then
-    NAME=${REGISTRY}"/trex-container-server:"${TAG}
-    $CLI build server -f server/Dockerfile -t $NAME
-    $CLI push $NAME
+EXTRA=""
+if [[ $2 == "force" ]]; then
+    EXTRA="--no-cache"
 fi
 
-NAME=${REGISTRY}"/trex-container-app:"${TAG}
-$CLI build app -f app/Dockerfile -t $NAME
-$CLI push $NAME
+LIST=""
+if [[ $1 == "all" || $1 == "server" ]]; then
+    LIST="${LIST} server"
+fi
+if [[ $1 == "all" || $1 == "app" ]]; then
+    LIST="${LIST} app"
+fi
+
+for item in ${LIST}; do
+    IMAGE="${REGISTRY}/trex-container-${item}:${TAG}"
+    $CLI build ${item} -f ${item}/Dockerfile -t $IMAGE $EXTRA
+    $CLI push $IMAGE
+done

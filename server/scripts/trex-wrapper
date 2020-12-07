@@ -15,16 +15,28 @@ if [[ $RUN_CONFIGURE != "1" ]]; then
     sleep infinity
 fi
 
+MODE=${MODE:="direct"}
 # Write TRex cfg file
-trex-cfg-configure $CORES
+if [[ $MODE == "lb" ]]; then
+    LB_MACS=${LB_MACS:=""}
+    if [ -z ${LB_MACS} ]; then
+        echo "ERROR: LB macs is empty in lb mode, cannot start server"
+        sleep infinity
+        exit 1
+    fi
+    trex-cfg-configure $CORES $LB_MACS
+else
+    trex-cfg-configure $CORES
+fi
 
 # Read the number of cores from the trex cfg
 # It is required as input via -c arg (for binary_search scripts of trafficgen)
-CORE_COUNT=$(grep ' c: ' /etc/trex_cfg.yaml | cut -d: -f2 | xargs)
+CORE_COUNT_CFG=$(grep ' c: ' /etc/trex_cfg.yaml | cut -d: -f2 | xargs)
 NUM_PORTS=$(grep ' port_limit: ' /etc/trex_cfg.yaml | cut -d: -f 2 | xargs)
 
+CORE_COUNT=${trex_core_count:=$CORE_COUNT_CFG}
 # TREX_CPU env will be set on the pod spec with number of required cores
-if [[ $((CORE_COUNT + 2)) != $TREX_CPU ]]; then
+if [[ $((CORE_COUNT_CFG + 2)) != $TREX_CPU ]]; then
     # TEMP
     echo "CORES=$((CORE_COUNT + 2))"
     echo "TREX_CPU=$TREX_CPU"
@@ -35,9 +47,11 @@ SERVER="/usr/local/bin/trex-server"
 chmod +x $SERVER
 
 RUN_SERVER=${run_server:=1}
+RUN_DELAY=${run_delay:=1}
 if [[ $RUN_SERVER == "1" ]]; then
-    echo "Starting TRex daemon server ..."
-    ./trex_daemon_server start
+    sleep $RUN_DELAY
+    #echo "Starting TRex daemon server ..."
+    #./trex_daemon_server start
     echo "Starting TRex server ..."
     $SERVER $CORE_COUNT
 else

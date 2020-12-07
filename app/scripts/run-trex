@@ -42,31 +42,8 @@ class STLS1(object):
         self.queue = queue.Queue(maxsize=0)
         signal.signal(signal.SIGINT, self.signal_handler)
         self.stats_obj = trexstats.TRexAppStats(ports)
-
-    def create_stream (self, dest_mac=None):
-        size = self.fsize - 4; # HW will add 4 bytes ethernet CRC
-
-        ethr = Ether(dst=dest_mac) / IP(src = "16.0.0.1", dst = "48.0.0.1") / UDP(dport = 12, sport = 1025)
-        vlan = Ether() / Dot1Q(vlan=11) / IP(src = "16.0.0.1", dst = "48.0.0.1") / UDP(dport = 12, sport = 1025)
-        qinq = Ether(type=0x88A8) / Dot1Q(vlan=19) / Dot1Q(vlan=11) / IP(src = "16.0.0.1", dst = "48.0.0.1") / UDP(dport = 12, sport = 1025)
-
-        pkt_types = {
-            "ether": ethr,
-            "vlan": vlan,
-            "qinq": qinq
-        }
-
-        if self.pkt_type not in pkt_types.keys():
-            log.info ("Wrong pkt_type given. Allowed values are " + format(pkt_types.keys()))
-            return []
-
-        pad = max(0, size - len(self.pkt_type)) * 'x'
-        pkt = STLPktBuilder(pkt = pkt_types[self.pkt_type]/pad)
-
-        streams = []
-        for pg_id_add in range(0, self.num_streams):
-            streams.append(STLStream(packet = pkt, mode = STLTXCont(pps=1), flow_stats = STLFlowStats(pg_id = self.pg_id + pg_id_add)))
-        return streams
+        # 'direct' or 'lb' mode
+        self.mode = os.getenv('MODE', 'direct')
 
     def start_watch(self):
         process = Thread(target=trexmac.watch_cr, args=[self.queue])
@@ -96,14 +73,63 @@ class STLS1(object):
         data['reason'] = 'StreamUpdated'
         trexevent.create_event(data)
 
+    def create_vm(self, direction=0):
+        ip_range = {'src': {'start': "18.0.0.1", 'end': "18.0.0.254"},
+                    'dst': {'start': "8.0.0.1",  'end': "8.0.0.254"}}
+
+        if (direction == 0):
+            src = ip_range['src']
+            dst = ip_range['dst']
+        else:
+            src = ip_range['dst']
+            dst = ip_range['src']
+
+        vm = [
+            # src                                                            (4)
+            STLVmFlowVar(name="src",
+                         min_value=src['start'],
+                         max_value=src['end'],
+                         size=4,op="inc"),
+            STLVmWrFlowVar(fv_name="src",pkt_offset= "IP.src"),
+
+            # dst
+            STLVmFlowVar(name="dst",
+                         min_value=dst['start'],
+                         max_value=dst['end'],
+                         size=4,op="inc"),
+            STLVmWrFlowVar(fv_name="dst",pkt_offset= "IP.dst"),
+
+            # checksum
+            STLVmFixIpv4(offset = "IP")
+            ]
+        return vm
+
+    def create_stream (self, dest_mac=None, port=0):
+        size = self.fsize - 4; # HW will add 4 bytes ethernet CRC
+
+        ethr_base = Ether(dst=dest_mac) / IP() / UDP()
+
+        pad = max(0, size - len('ether')) * 'x'
+        vm = self.create_vm(port)
+        pkt = STLPktBuilder(pkt=ethr_base/pad, vm=vm)
+
+        streams = []
+        for pg_id_add in range(0, self.num_streams):
+            streams.append(STLStream(packet = pkt, mode = STLTXCont(pps=1), flow_stats = STLFlowStats(pg_id = self.pg_id + pg_id_add)))
+        return streams
+
     def add_streams(self, port, dest_mac):
         if dest_mac:
             log.info("create stream for port %s with dest mac %s" % (port, dest_mac))
-        new_stream = self.create_stream(dest_mac)
+        new_stream = self.create_stream(dest_mac, port)
         self.client.add_streams(new_stream, [port])
 
     def init_streams(self):
-        macs = trexmac.get_testpmdmac_cr_values()
+        if self.mode == 'direct':
+            macs = trexmac.get_testpmdmac_cr_values()
+        else:
+            macs = os.getenv('LB_MACS', '').split(',')
+
         if macs:
             log.info("destination macs available")
             for idx in range(0, len(self.ports)):
@@ -133,7 +159,9 @@ class STLS1(object):
 
             self.client.start(ports = self.ports, mult = self.rate,
                 duration = self.duration, core_mask = STLClient.CORE_MASK_PIN)
-            self.start_watch()
+
+            if self.mode == 'direct':
+                self.start_watch()
 
             if self.duration == -1:
                 while True:

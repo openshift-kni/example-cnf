@@ -32,6 +32,13 @@ port_obj_l2_template = {
 CFG_FILE = "/etc/trex_cfg.yaml"
 
 def main():
+    core_string = sys.argv[1]
+    print("INPUT: core_string: %s" % core_string)
+    lb_mac_string = ''
+    if len(sys.argv) == 3:
+        lb_mac_string = sys.argv[2]
+        print("INPUT: lb_mac_string: %s" % lb_mac_string)
+
     cfg = trex_cfg_template.copy()
 
     # Ports allocated to TRex
@@ -39,7 +46,7 @@ def main():
     cfg[0]['interfaces'].extend([pci.replace('0000:','') for pci in pci_list])
     #cfg[0]['port_limit'] = len(pci_list)
 
-    core_list = cores()
+    core_list = cores(core_string)
     cfg[0]['c'] = len(core_list) - 2
     cfg[0]['platform']['master_thread_id'] = core_list[0]
     cfg[0]['platform']['latency_thread_id'] = core_list[1]
@@ -63,7 +70,14 @@ def main():
         print("ERROR: Source mac address is not available, exiting...")
         sys.exit(1)
 
-    dst_mac = get_dst_mac()
+    dst_mac = []
+    if lb_mac_string:
+        dst_mac = lb_mac_string.split(',')
+        print("destination mac obtained from lb_mac_string input - %s" % lb_mac_string)
+    else:
+        dst_mac = get_dst_mac()
+        print("destination mach fetched")
+
     if not dst_mac:
         print("ERROR: Destination mac address is not available, exiting...")
         sys.exit(1)
@@ -123,8 +137,7 @@ def get_core_sock_num(core):
             sock = int(matches.group(1))
             return sock
 
-def cores():
-    core_string = sys.argv[1]
+def cores(core_string):
     core_list = []
     for item in core_string.split(','):
         if '-' in item:

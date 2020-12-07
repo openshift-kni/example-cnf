@@ -12,6 +12,7 @@ def create_event(data):
     namespace = "example-cnf"
     plural = "trexconfigs"
 
+    config.load_incluster_config()
     try:
         custom_api = client.CustomObjectsApi()
         objs = custom_api.list_namespaced_custom_object(group, version, namespace, plural)

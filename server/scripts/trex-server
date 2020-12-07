@@ -3,12 +3,17 @@
 set -x
 CORE_COUNT=$1
 
+if [ -z $CORE_COUNT ]; then
+    echo "Provide number cores as first parameter"
+    exit 1
+fi
+
 cd $TREX_DIR
 n=0
 until [ "$n" -ge 5 ]
 do
-   ./_t-rex-64 -i --no-hw-flow-stat -c $CORE_COUNT >/dev/null
-   n=$((n+1)) 
+   ./_t-rex-64 -i --no-hw-flow-stat -c $CORE_COUNT
+   n=$((n+1))
    sleep 5
 done
 echo "Failed to start TRex Server on 5 retries..."
