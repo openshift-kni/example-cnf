@@ -2,6 +2,16 @@
 
 set -e
 
+# direct variables
+MODE=${MODE:="direct"}
+LB_MACS=${LB_MACS:=""}
+
+# environments
+RUN_CONFIGURE=${run_configure:=1}
+RUN_SERVER=${run_server:=1}
+RUN_DELAY=${run_delay:=1}
+# trex_core_count (trexCoreCount)
+
 if [ -z NETWORK_NAME_LIST ]; then
     echo "NETWORK_NAME_LIST is empty, exiting.."
     exit 1
@@ -9,16 +19,13 @@ fi
 
 CORES=$(taskset -pc 1 | cut -d: -f2)
 
-RUN_CONFIGURE=${run_configure:=1}
 if [[ $RUN_CONFIGURE != "1" ]]; then
     echo "Configure disabled for manual override, sleeping .."
     sleep infinity
 fi
 
-MODE=${MODE:="direct"}
 # Write TRex cfg file
 if [[ $MODE == "lb" ]]; then
-    LB_MACS=${LB_MACS:=""}
     if [ -z ${LB_MACS} ]; then
         echo "ERROR: LB macs is empty in lb mode, cannot start server"
         sleep infinity
@@ -46,8 +53,6 @@ fi
 SERVER="/usr/local/bin/trex-server"
 chmod +x $SERVER
 
-RUN_SERVER=${run_server:=1}
-RUN_DELAY=${run_delay:=1}
 if [[ $RUN_SERVER == "1" ]]; then
     sleep $RUN_DELAY
     #echo "Starting TRex daemon server ..."

@@ -22,6 +22,11 @@ if [[ $RUN_APP == "1" ]]; then
     sleep 10
     echo "Running TRex application ..."
     run-trex
+elif [[ $RUN_APP == "2" ]]; then
+    sleep 10
+    echo "Running binary search"
+    run-binary-search
+    sleep infinity
 else
     echo "Skipping TRex application run, waiting ..."
     sleep infinity
