@@ -1,25 +1,18 @@
-FROM quay.io/krsacme/centos:8.2.2004 AS builder
+FROM quay.io/krsacme/centos:8.2.2004
 
 # Install prerequisite packages
 RUN yum update -y && yum clean all
 RUN yum install -y wget numactl numactl-devel make cmake git wget gcc gcc-c++ kernel-headers glibc-devel net-tools \
-        glibc-headers pciutils nfs-utils perf unzip xorg-x11-xauth yum-utils python36  iproute zlib-devel binutils && \
-    yum clean all
+        glibc-headers pciutils nfs-utils perf unzip xorg-x11-xauth yum-utils python36  iproute zlib-devel binutils \
+        tcpdump vim && yum clean all
 
-RUN mkdir -p /opt/trex && cd /opt/trex && git clone https://github.com/cisco-system-traffic-generator/trex-core.git
+RUN mkdir -p /opt/trex && cd /opt/trex && git clone --branch v2.85 https://github.com/cisco-system-traffic-generator/trex-core.git
 
-#COPY v3-bus-pci-fix-VF-bus-error-for-memory-access.diff /v3-bus-pci-fix-VF-bus-error-for-memory-access.diff
-#RUN cd /opt/trex/trex-core && git apply /v3-bus-pci-fix-VF-bus-error-for-memory-access.diff
-RUN cd /opt/trex/trex-core/linux_dpdk && ./b configure --no-mlx --no-bxnt && ./b build
+RUN cd /opt/trex/trex-core/linux_dpdk && ./b configure --no-mlx --no-bxnt --new-memory && cp dpdk_config.h /opt/trex/trex-core/src/ && ./b build
 
-
-FROM quay.io/krsacme/centos:8.2.2004
-RUN yum update -y && yum clean all
-RUN yum install -y wget git net-tools pciutils perf unzip yum-utils python36 iproute tcpdump vim && \
-    yum clean all
 RUN cd /opt && git clone https://github.com/atheurer/trafficgen
 RUN pip3 install pyyaml kubernetes ansible
-COPY --from=builder /opt /opt
+
 ENV PYTHONPATH="/opt/trex/trex-core/scripts/automation/trex_control_plane/interactive"
 WORKDIR /opt/trex/trex-core/scripts
 ENV TREX_DIR="/opt/trex/trex-core/scripts"
