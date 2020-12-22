@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+from kubernetes import client, config, watch
+from kubernetes.client.rest import ApiException
+import socket
+import sys
+import os
+import time
+from threading import Thread
+import traceback
+
+
+def send_lb_data(data):
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    try:
+        sock.connect("/var/lib/testpmd/lb.sock")
+    except socket.error as msg:
+        print("failed to connect to socket")
+        print(msg)
+        traceback.print_exc()
+        sys.exit(1)
+        return
+
+    try:
+        print("sending %s" % data);
+        sock.sendall(bytearray(data, "utf8"))
+    except:
+        print("failed to send data to socket")
+        traceback.print_exc()
+        sys.exit(1)
+    finally:
+        sock.close();
+
+def send_macs(spec, name):
+    for resource in spec['resources']:
+        for device in resource['devices']:
+            msg = "1," + device['mac'] + "," + name
+            send_lb_data(msg)
+
+def send_testpmdmac_cr_values():
+    group = "examplecnf.openshift.io"
+    version = "v1"
+    namespace = "example-cnf"
+    plural = "testpmdmacs"
+
+    config.load_incluster_config()
+    custom_api = client.CustomObjectsApi()
+    try:
+        resp = custom_api.list_namespaced_custom_object(group, version, namespace, plural)
+        name_list = []
+        for item in resp['items']:
+            name = item['metadata']['name']
+            if name in name_list:
+                continue
+            name_list.append(name)
+            send_macs(item['spec'], name)
+    except ApiException as e:
+        return None
+
+def mac_fetch_thread():
+    print("fetch started")
+    time.sleep(2)
+    send_testpmdmac_cr_values()
+    print("fetch completed")
+
+def main():
+    group = "examplecnf.openshift.io"
+    version = "v1"
+    namespace = "example-cnf"
+    plural = "testpmdmacs"
+
+    # TODO(skramaja) NOt required as watch gets existing objs, test well before removing
+    #Thread(target=mac_fetch_thread).start()
+
+    config.load_incluster_config()
+    custom_api = client.CustomObjectsApi()
+    w = watch.Watch()
+    for event in w.stream(custom_api.list_cluster_custom_object,
+                          group=group, version=version, plural=plural):
+        if event['type'] == 'ADDED':
+            msg = "1,"
+        elif event['type'] == 'DELETED':
+            msg = "2,"
+        else:
+            msg = None
+
+        if msg:
+            name = event['object']['metadata']['name']
+            for item in event['object']['spec']['resources']:
+                for device in item['devices']:
+                    msg += device['mac'] + ','
+            msg += name + ';'
+            send_lb_data(msg)
+
+if __name__ == "__main__":
+    main()

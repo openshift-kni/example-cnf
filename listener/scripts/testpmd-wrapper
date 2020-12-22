@@ -2,17 +2,16 @@
 
 set -ex
 
+RUN_APP=${run_app:=1}
+
 LOG_FILE="/var/log/testpmd/app.log"
-
-RUN_MAC=${run_mac:=1}
-if [[ "$RUN_MAC" == "0" ]]; then
-    echo "run_mac is set to 0, waiting..."
-    sleep infinity
-fi
-
 
 # Wait till the /var/log/testpmd.log file is created
 n=5
+if [[ $RUN_APP == "0" ]]; then
+    # add extra deploy for debugging
+    n=600
+fi
 until [ "$n" -le 0 ]; do
     echo "Waiting for log file creation ($n)..."
     [ -e $LOG_FILE ] && break || sleep 2
@@ -24,7 +23,7 @@ if [ $n -le 0 ]; then
     exit 1
 fi
 
-TESTPMD_LOG_CHECK_STRING=${log_check_string:="mac packet forwarding"}
+TESTPMD_LOG_CHECK_STRING=${log_check_string:="lb packet forwarding"}
 echo "Log file $LOG_FILE exists, wait for ${TESTPMD_LOG_CHECK_STRING} message"
 n=120
 until [ "$n" -le 0 ]; do
@@ -34,10 +33,7 @@ until [ "$n" -le 0 ]; do
 done
 if [ $n -le 0 ]; then
     echo "ERROR: TestPMD is not started, waiting to configure timedout..."
-    # TODO: Kill whole application
     exit 1
 fi
 
-testpmd-configure
-
-while true; do sleep 1; done
+listener
