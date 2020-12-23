@@ -64,10 +64,12 @@ spec:
         env:
         - name: NETWORK_NAME_LIST
           value: "{{ network_resources.keys()|list|join(',') }}"
-        - name: DUT_MAC_LIST
-          value: "{{ ','.join(dut_maclist) }}"
         - name: TREX_CPU
           value: "{{ cpu }}"
+        - name: MODE
+          value: "{{ 'lb' if enable_lb|default(false) else 'direct' }}"
+        - name: LB_MACS
+          value: "{{ lb_macs|join(',') }}"
         - name: NODE_NAME
           valueFrom:
             fieldRef:
@@ -86,10 +88,12 @@ spec:
         env:
         - name: NETWORK_NAME_LIST
           value: "{{ network_resources.keys()|list|join(',') }}"
-        - name: DUT_MAC_LIST
-          value: "{{ ','.join(dut_maclist) }}"
         - name: TREX_CPU
           value: "{{ cpu }}"
+        - name: MODE
+          value: "{{ 'lb' if enable_lb|default(false) else 'direct' }}"
+        - name: LB_MACS
+          value: "{{ lb_macs|join(',') }}"
         - name: NODE_NAME
           valueFrom:
             fieldRef:

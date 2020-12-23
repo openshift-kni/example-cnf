@@ -9,7 +9,7 @@
       name: trex-manual1
       namespace: example-cnf
     privileged: false
-    image: quay.io/krsacme/trex-container-app:v0.0.1 
+    image: quay.io/krsacme/trex-container-app:v0.0.1
     imagePullPolicy: Always
     size: 1
     networks:
@@ -29,7 +29,6 @@
       memory: 1000
       cpu: 4
       network_resources: {}
-      dut_maclist: []
   - fail:
   - include_role:
       name: trex

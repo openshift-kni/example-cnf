@@ -28,7 +28,7 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    operators.operatorframework.io/builder: operator-sdk-v1.0.1
+    operators.operatorframework.io/builder: operator-sdk-v1.2.0
     operators.operatorframework.io/project_layout: ansible.sdk.operatorframework.io/v1
   name: trex-operator.v0.2.0
   namespace: placeholder
@@ -111,18 +111,6 @@ spec:
           - patch
           - update
           - watch
-        - apiGroups:
-          - authentication.k8s.io
-          resources:
-          - tokenreviews
-          verbs:
-          - create
-        - apiGroups:
-          - authorization.k8s.io
-          resources:
-          - subjectaccessreviews
-          verbs:
-          - create
         serviceAccountName: default
       deployments:
       - name: trex-operator-controller-manager
@@ -143,7 +131,7 @@ spec:
                 - --metrics-addr=127.0.0.1:8080
                 - --enable-leader-election
                 - --leader-election-id=trex-operator
-                image: quay.io/krsacme/trex-operator:v0.2.0
+                image: quay.io/rh-nfv-int/trex-operator:v0.2.0
                 imagePullPolicy: IfNotPresent
                 name: manager
                 resources: {}

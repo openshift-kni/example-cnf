@@ -2,6 +2,8 @@
 - set_fact:
     network_resources: {}
     network_name_list: []
+    image_server: "{{ registry }}/{{ org }}/trex-container-server:{{ version }}"
+    image_app: "{{ registry }}/{{ org }}/trex-container-app:{{ version }}"
 
 - name: Check if networks parameter is empty
   fail:

@@ -4,5 +4,3 @@ memory: 1000Mi
 cpu: 8
 
 networks: []
-
-dut_maclist: []
