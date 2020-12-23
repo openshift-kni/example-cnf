@@ -1,0 +1,143 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: "loadbalancer"
+  namespace: "{{ ansible_operator_meta.namespace }}"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lb
+  template:
+    metadata:
+      annotations:
+        k8s.v1.cni.cncf.io/networks: '[
+{% for network in networks %}
+{% set outer_loop = loop %}
+{% for count in range(network.count) %}
+          {
+            "name": "{{ network.name }}",
+{% if network.mac|default([])|length == network.count %}
+            "mac": "{{ network.mac[loop.index - 1] }}",
+{% endif %}
+            "namespace": "{{ ansible_operator_meta.namespace }}"
+          }{% if loop.index < network.count or outer_loop.index < network_name_list|length %},{% endif %}
+{% endfor %}
+{% endfor %}
+        ]'
+      labels:
+        app: lb
+    spec:
+      nodeSelector:
+        examplecnf.openshift.io/lb: ""
+      containers:
+      - name: loadbalancer
+        command: ["testpmd-wrapper"]
+        args:
+        - "--socket-mem {{ socket_memory }}"
+        - "-n {{ memory_channels }}"
+        - "--proc-type auto"
+        - "--file-prefix pg"
+        - "--"
+        - "--disable-rss"
+        - "--nb-cores={{ forwarding_cores }}"
+        - "--rxq={{ rx_queues }}"
+        - "--txq={{ tx_queues }}"
+        - "--rxd={{ rx_descriptors }}"
+        - "--txd={{ tx_descriptors }}"
+        - "--auto-start"
+{% for mac in packet_generator_macs %}
+        - "--eth-peer={{ loop.index -1 }},{{ mac }}"
+{% endfor %}
+        - "--forward-mode=lb"
+        image: "{{ image_testpmd }}"
+        imagePullPolicy: "{{ image_pull_policy }}"
+        securityContext:
+{% if privileged %}
+          privileged: true
+{% else %}
+          capabilities:
+            add: ["IPC_LOCK", "NET_ADMIN"]
+{% endif %}
+        resources:
+          limits:
+            hugepages-1Gi: {{ hugepage_1gb_count }}
+            memory: {{ memory }}
+            cpu: {{ cpu }}
+{% for key, value in network_resources.items() %}
+            {{ key }}: {{ value }}
+{% endfor %}
+          requests:
+            hugepages-1Gi: {{ hugepage_1gb_count }}
+            memory: {{ memory }}
+            cpu: {{ cpu }}
+{% for key, value in network_resources.items() %}
+            {{ key }}: {{ value }}
+{% endfor %}
+        volumeMounts:
+        - name: hugepage
+          mountPath: /dev/hugepages
+        - name: log-dir
+          mountPath: /var/log/testpmd
+        - name: lib-dir
+          mountPath: /var/lib/testpmd
+        env:
+        - name: NETWORK_NAME_LIST
+          value: "{{ network_resources.keys()|list|join(',') }}"
+        - name: CNF_APP_NETWORK_NAME_LIST
+          value: "{{ cnf_app_network_resources.keys()|list|join(',') }}"
+        - name: TESTPMD_CPU_COUNT
+          value: "{{ cpu }}"
+        - name: MODE
+          value: "lb"
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: CR_NAME
+          value: "{{ ansible_operator_meta.name }}"
+{% for key, value in environments.items() %}
+        - name: {{ key }}
+          value: "{{ value }}"
+{% endfor %}
+      - name: listener
+        image: "{{ image_listener }}"
+        imagePullPolicy: "{{ image_pull_policy }}"
+        resources:
+          limits:
+            memory: "500Mi"
+            cpu: 2
+        volumeMounts:
+        - name: log-dir
+          mountPath: /var/log/testpmd
+        - name: lib-dir
+          mountPath: /var/lib/testpmd
+        env:
+        - name: NETWORK_NAME_LIST
+          value: "{{ network_resources.keys()|list|join(',') }}"
+        - name: CNF_APP_NETWORK_NAME_LIST
+          value: "{{ cnf_app_network_resources.keys()|list|join(',') }}"
+        - name: TESTPMD_CPU_COUNT
+          value: "{{ cpu }}"
+        - name: ETH_PEER_MACS
+          value: "{{ packet_generator_macs }}"
+        - name: MODE
+          value: "lb"
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: CR_NAME
+          value: "{{ ansible_operator_meta.name }}"
+{% for key, value in environments.items() %}
+        - name: {{ key }}
+          value: "{{ value }}"
+{% endfor %}
+      volumes:
+      - name: hugepage
+        emptyDir:
+          medium: HugePages
+      - name: log-dir
+        emptyDir: {}
+      - name: lib-dir
+        emptyDir: {}

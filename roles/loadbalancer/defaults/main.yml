@@ -1,2 +1,29 @@
 ---
-# defaults file for LoadBalancer
+registry: quay.io
+org: rh-nfv-int
+version: v0.2.0
+image_pull_policy: IfNotPresent
+privileged: false
+network_defintions: ""
+environments: {}
+
+image_testpmd: "{{ registry }}/{{ org }}/testpmd-container-app-testpmd:{{ version }}"
+image_listener: "{{ registry }}/{{ org }}/testpmd-container-app-listener:{{ version }}"
+
+hugepage_1gb_count: 4Gi
+memory: 1000Mi
+cpu: 6
+forwarding_cores: 4
+
+memory_channels: 4
+socket_memory: 1024
+
+rx_queues: 1
+rx_descriptors: 1024
+tx_queues: 1
+tx_descriptors: 1024
+
+cnf_app_networks: []
+packet_generator_networks: []
+# ethpeer_maclist
+packet_generator_macs: []

@@ -1,2 +1,45 @@
 ---
-# tasks file for LoadBalancer
+- set_fact:
+    network_resources: {}
+    network_name_list: []
+    networks: []
+
+- name: Validate the CPUs and forwarding cores
+  fail:
+    msg: "{{ forwarding_cores }} should be lesser than {{ cpus }}"
+  when: forwarding_cores >= cpu
+
+- name: Check if Packet Generator networks parameter is empty
+  fail:
+    msg: "packet_generator_networks parameter is empty"
+  when: packet_generator_networks|length == 0
+
+- name: Check if CNF App networks parameter is empty
+  fail:
+    msg: "cnf_app_networks parameter is empty"
+  when: cnf_app_networks|length == 0
+
+- name: Merge networks
+  set_fact:
+    networks: "{{ packet_generator_networks + cnf_app_networks }}"
+
+- name: "Parse CNF App network {{ network_item }}"
+  include_tasks: network-parse.yaml
+  loop: "{{ cnf_app_networks }}"
+  loop_control:
+    loop_var: network_item
+
+- name: Set CNF app network resource names
+  set_fact:
+    cnf_app_network_resources: "{{ network_resources }}"
+
+- name: "Parse Packet generator network {{ network_item }}"
+  include_tasks: network-parse.yaml
+  loop: "{{ packet_generator_networks }}"
+  loop_control:
+    loop_var: network_item
+
+- name: Create LoadBalancer deployment
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'deployment.yml') }}"

@@ -1,0 +1,27 @@
+---
+- debug:
+    msg: "Gather network info of network: {{ network_item.name }}"
+
+- set_fact:
+    net: "{{ network_item.name.split('/')[1] }}"
+  when: "'/' in network_item.name"
+
+- set_fact:
+    net: "{{ network_item.name }}"
+  when: "'/' not in network_item.name"
+
+- set_fact:
+    net_def: "{{ lookup('k8s', kind='NetworkAttachmentDefinition', namespace=ansible_operator_meta.namespace, resource_name=net) }}"
+  failed_when: net_def|length == 0
+
+- set_fact:
+    network_port_count: "{{ network_item.count|default(1) }}"
+
+- set_fact:
+    network_resource_name: "{{ net_def['metadata']['annotations']['k8s.v1.cni.cncf.io/resourceName'] }}"
+
+- set_fact:
+    network_resources: "{{ network_resources | combine( {network_resource_name : network_port_count} ) }}"
+
+- set_fact:
+    network_name_list: "{{ network_name_list + [net] }}"
