@@ -30,7 +30,7 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    operators.operatorframework.io/builder: operator-sdk-v1.0.1
+    operators.operatorframework.io/builder: operator-sdk-v1.2.0
     operators.operatorframework.io/project_layout: ansible.sdk.operatorframework.io/v1
   name: testpmd-operator.v0.2.0
   namespace: placeholder
@@ -125,18 +125,6 @@ spec:
           - securitycontextconstraints
           verbs:
           - use
-        - apiGroups:
-          - authentication.k8s.io
-          resources:
-          - tokenreviews
-          verbs:
-          - create
-        - apiGroups:
-          - authorization.k8s.io
-          resources:
-          - subjectaccessreviews
-          verbs:
-          - create
         serviceAccountName: default
       deployments:
       - name: testpmd-operator-controller-manager
@@ -157,7 +145,10 @@ spec:
                 - --metrics-addr=127.0.0.1:8080
                 - --enable-leader-election
                 - --leader-election-id=testpmd-operator
-                image: quay.io/krsacme/testpmd-operator:v0.2.0
+                env:
+                - name: ANSIBLE_GATHERING
+                  value: explicit
+                image: quay.io/rh-nfv-int/testpmd-operator:v0.2.0
                 imagePullPolicy: IfNotPresent
                 name: manager
                 resources: {}

@@ -24,4 +24,7 @@ spec:
             - "--zap-encoder=console"
           image: controller:latest
           imagePullPolicy: IfNotPresent
+          env:
+            - name: ANSIBLE_GATHERING
+              value: explicit
       terminationGracePeriodSeconds: 10

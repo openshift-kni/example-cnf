@@ -2,6 +2,9 @@
 - set_fact:
     network_resources: {}
     network_name_list: []
+    image_testpmd: "{{ registry }}/{{ org }}/testpmd-container-app-testpmd:{{ version }}"
+    image_monitor: "{{ registry }}/{{ org }}/testpmd-container-app-monitor:{{ version }}"
+    mac_workaround_image: "{{ registry }}/{{ org }}/testpmd-container-app-mac:{{ version }}"
 
 - name: Validate the CPUs and forwarding cores
   fail:

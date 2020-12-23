@@ -2,8 +2,6 @@
 registry: quay.io
 org: rh-nfv-int
 version: v0.2.0
-image_testpmd: "{{ registry }}/{{ org }}/testpmd-container-app-testpmd:{{ version }}"
-image_monitor: "{{ registry }}/{{ org }}/testpmd-container-app-monitor:{{ version }}"
 image_pull_policy: IfNotPresent
 privileged: false
 network_defintions: ""
@@ -14,6 +12,5 @@ termination_grace_period_seconds: 300
 
 # mac workaround variables
 mac_workaround_enable: false
-mac_workaround_image: "{{ registry }}/{{ org }}/testpmd-container-app-mac:{{ version }}"
 mac_workaround_version: "4.5"
 mac_workaround_file: "sriov"

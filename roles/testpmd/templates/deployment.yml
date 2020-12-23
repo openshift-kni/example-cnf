@@ -120,6 +120,8 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
+        - name: MODE
+          value: "{{ testpmd_mode|default('lb') }}"
         - name: CR_NAME
           value: "{{ ansible_operator_meta.name }}"
 {% for key, value in environments.items() %}
