@@ -7,7 +7,7 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: lb
+      example-cnf-type: lb-app
   template:
     metadata:
       annotations:
@@ -26,10 +26,19 @@ spec:
 {% endfor %}
         ]'
       labels:
-        app: lb
+        example-cnf-type: lb-app
     spec:
-      nodeSelector:
-        examplecnf.openshift.io/lb: ""
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: example-cnf-type
+                operator: In
+                values:
+                - cnf-app
+                - pkt-gen
+            topologyKey: kubernetes.io/hostname
       containers:
       - name: loadbalancer
         command: ["testpmd-wrapper"]
