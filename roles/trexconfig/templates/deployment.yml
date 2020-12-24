@@ -7,7 +7,7 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: trex
+      example-cnf-type: pkt-gen
   template:
     metadata:
       annotations:
@@ -27,10 +27,21 @@ spec:
 {% endfor %}
           ]
       labels:
-        app: trex
+        example-cnf-type: pkt-gen
     spec:
-      nodeSelector:
-        examplecnf.openshift.io/trex: ""
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: example-cnf-type
+                operator: In
+                values:
+                - lb-app
+{% if not enable_lb|bool %}
+                - cnf-app
+{% endif %}
+            topologyKey: kubernetes.io/hostname
       containers:
       - name: trex-server
         command: {{ command }}
@@ -67,7 +78,7 @@ spec:
         - name: TREX_CPU
           value: "{{ cpu }}"
         - name: MODE
-          value: "{{ 'lb' if enable_lb|default(false) else 'direct' }}"
+          value: "{{ 'lb' if enable_lb|bool else 'direct' }}"
         - name: LB_MACS
           value: "{{ lb_macs|join(',') }}"
         - name: NODE_NAME
