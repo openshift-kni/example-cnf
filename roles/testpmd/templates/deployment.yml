@@ -7,7 +7,7 @@ spec:
   replicas: {{ size | int }}
   selector:
     matchLabels:
-      app: testpmd
+      example-cnf-type: cnf-app
   template:
     metadata:
       annotations:
@@ -26,10 +26,18 @@ spec:
 {% endfor %}
         ]'
       labels:
-        app: testpmd
+        example-cnf-type: cnf-app
     spec:
-      nodeSelector:
-        examplecnf.openshift.io/testpmd: ""
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: example-cnf-type
+                operator: In
+                values:
+                - lb-app
+            topologyKey: kubernetes.io/hostname
       terminationGracePeriodSeconds: {{ termination_grace_period_seconds }}
       containers:
       - name: testpmd
