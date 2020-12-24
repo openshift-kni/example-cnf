@@ -5,7 +5,7 @@ set -e
 CLI=${CLI:="docker"}
 ORG=${ORG:="rh-nfv-int"}
 REGISTRY="quay.io/${ORG}"
-TAG=${TAG:-"v0.2.0"}
+TAG=${TAG:-"v0.2.1"}
 PULL=${PULL:="1"}
 
 EXTRA=""
