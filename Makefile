@@ -1,5 +1,5 @@
 # Current Operator version
-VERSION ?= 0.2.0
+VERSION ?= 0.2.1
 REGISTRY ?= quay.io
 ORG ?= rh-nfv-int
 DEFAULT_CHANNEL ?= alpha
