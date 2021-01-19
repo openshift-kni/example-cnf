@@ -1,0 +1,7 @@
+apiVersion: examplecnf.openshift.io/v1
+kind: CNFAppMac
+metadata:
+  name: cnfappmac-sample
+spec:
+  # Add fields here
+  foo: bar
