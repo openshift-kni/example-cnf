@@ -5,4 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: quay.io/rh-nfv-int/testpmd-lb-operator
-  newTag: v0.2.1
+  newTag: v0.2.2
