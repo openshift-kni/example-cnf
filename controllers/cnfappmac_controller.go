@@ -92,8 +92,19 @@ func (r *CNFAppMacReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	pod := &corev1.Pod{}
 	err = r.Get(ctx, req.NamespacedName, pod)
 	if err != nil {
+		if errors.IsNotFound(err) {
+			// Might be deleted
+			return ctrl.Result{}, nil
+		}
 		return ctrl.Result{}, err
 	}
+
+	isMarkedToBeDeleted := pod.GetDeletionTimestamp() != nil
+	if isMarkedToBeDeleted {
+		r.removeCR(req)
+		return ctrl.Result{}, nil
+	}
+
 	if pod.Status.Phase != corev1.PodRunning {
 		return ctrl.Result{}, nil
 	}
@@ -181,6 +192,23 @@ func (r *CNFAppMacReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	log.Info("Job created")
 	return ctrl.Result{}, nil
+}
+
+func (r *CNFAppMacReconciler) removeCR(req ctrl.Request) {
+	ctx := context.Background()
+	macCR := &examplecnfv1.CNFAppMac{}
+	err := r.Get(ctx, req.NamespacedName, macCR)
+	if err == nil {
+		r.Delete(ctx, macCR)
+	}
+
+	macName := req.NamespacedName
+	macName.Name = "mac-fetch-" + req.NamespacedName.Name
+	job := &batchv1.Job{}
+	err = r.Get(context.Background(), macName, job)
+	if err == nil {
+		r.Delete(ctx, job)
+	}
 }
 
 func (r *CNFAppMacReconciler) createMacFetchJob(req ctrl.Request, nodeName string, resources []string) error {
