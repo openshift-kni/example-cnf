@@ -1,0 +1,51 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+    operators.operatorframework.io/builder: operator-sdk-v1.2.0
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
+  name: cnf-app-mac-operator.vX.Y.Z
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: CNFAppMac is the Schema for the cnfappmacs API
+      displayName: CNFApp Mac
+      kind: CNFAppMac
+      name: cnfappmacs.examplecnf.openshift.io
+      version: v1
+  description: Operator to monitor namespace for PODs with VF to get MAC address of VF
+  displayName: CNF App MAC Fetch Operator
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - cnf
+  - sriov
+  - mac
+  links:
+  - name: Cnf App Mac Operator
+    url: https://cnf-app-mac-operator.domain
+  maintainers:
+  - email: skramaja@redhat.com'
+    name: '''Saravanan KR'
+  maturity: alpha
+  provider:
+    name: Red Hat
+  version: 0.0.0

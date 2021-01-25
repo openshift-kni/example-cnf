@@ -4,11 +4,11 @@ REGISTRY ?= quay.io
 ORG ?= rh-nfv-int
 DEFAULT_CHANNEL ?= alpha
 
-CONTAINER_CLI ?= ${docker}
+CONTAINER_CLI ?= docker
 CLUSTER_CLI ?= oc
 
 # Default bundle image tag
-BUNDLE_IMG ?= cnf-app-mac-operator-bundle:$(VERSION)
+BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/cnf-app-mac-operator-bundle:v$(VERSION)
 # Options for 'bundle-build'
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
