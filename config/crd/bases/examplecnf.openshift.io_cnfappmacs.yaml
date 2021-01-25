@@ -36,10 +36,36 @@ spec:
         spec:
           description: CNFAppMacSpec defines the desired state of CNFAppMac
           properties:
-            foo:
-              description: Foo is an example field of CNFAppMac. Edit CNFAppMac_types.go
-                to remove/update
+            hostname:
               type: string
+            node:
+              type: string
+            resources:
+              items:
+                properties:
+                  devices:
+                    items:
+                      properties:
+                        mac:
+                          type: string
+                        pci:
+                          type: string
+                      required:
+                      - mac
+                      - pci
+                      type: object
+                    type: array
+                  name:
+                    type: string
+                required:
+                - devices
+                - name
+                type: object
+              type: array
+          required:
+          - hostname
+          - node
+          - resources
           type: object
         status:
           description: CNFAppMacStatus defines the observed state of CNFAppMac

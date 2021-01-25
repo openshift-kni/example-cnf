@@ -4,7 +4,7 @@ REGISTRY ?= quay.io
 ORG ?= rh-nfv-int
 DEFAULT_CHANNEL ?= alpha
 
-CONTAINER_CLI ?= ${CONTAIER_CLI}
+CONTAINER_CLI ?= ${docker}
 CLUSTER_CLI ?= oc
 
 # Default bundle image tag
@@ -40,7 +40,8 @@ test: generate fmt vet manifests
 	source $(ENVTEST_ASSETS_DIR)/setup-envtest.sh; fetch_envtest_tools $(ENVTEST_ASSETS_DIR); setup_envtest_env $(ENVTEST_ASSETS_DIR); go test ./... -coverprofile cover.out
 
 # Build manager binary
-manager: generate fmt vet
+#manager: generate fmt vet
+manager: generate fmt
 	go build -o bin/manager main.go
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
@@ -49,16 +50,16 @@ run: generate fmt vet manifests
 
 # Install CRDs into a cluster
 install: manifests kustomize
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+	$(KUSTOMIZE) build config/crd | ${CLUSTER_CLI} apply -f -
 
 # Uninstall CRDs from a cluster
 uninstall: manifests kustomize
-	$(KUSTOMIZE) build config/crd | kubectl delete -f -
+	$(KUSTOMIZE) build config/crd | ${CLUSTER_CLI} delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: manifests kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} apply -f -
 
 # Generate manifests e.g. CRD, RBAC etc.
 manifests: controller-gen
@@ -76,10 +77,11 @@ vet:
 generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
-# Build the ${CONTAIER_CLI} image
-docker-build: test
-	${CONTAIER_CLI} build . -t ${IMG}
-	${CONTAIER_CLI} push ${IMG}
+# Build the ${CONTAINER_CLI} image
+#docker-build: test
+docker-build:
+	${CONTAINER_CLI} build . -t ${IMG}
+	${CONTAINER_CLI} push ${IMG}
 
 # find or download controller-gen
 # download controller-gen if necessary
@@ -124,5 +126,5 @@ bundle: manifests kustomize
 # Build the bundle image.
 .PHONY: bundle-build
 bundle-build:
-	${CONTAIER_CLI} build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
-	${CONTAIER_CLI} push $(BUNDLE_IMG)
+	${CONTAINER_CLI} build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+	${CONTAINER_CLI} push $(BUNDLE_IMG)

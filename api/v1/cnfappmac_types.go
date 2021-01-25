@@ -20,22 +20,25 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+type Device struct {
+	MAC string `json:"mac"`
+	PCI string `json:"pci"`
+}
+
+type Resource struct {
+	Name    string   `json:"name"`
+	Devices []Device `json:"devices"`
+}
 
 // CNFAppMacSpec defines the desired state of CNFAppMac
 type CNFAppMacSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of CNFAppMac. Edit CNFAppMac_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	Hostname  string     `json:"hostname"`
+	Node      string     `json:"node"`
+	Resources []Resource `json:"resources"`
 }
 
 // CNFAppMacStatus defines the observed state of CNFAppMac
 type CNFAppMacStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 }
 
 // +kubebuilder:object:root=true

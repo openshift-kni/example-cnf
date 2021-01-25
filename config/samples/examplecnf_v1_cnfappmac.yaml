@@ -3,5 +3,10 @@ kind: CNFAppMac
 metadata:
   name: cnfappmac-sample
 spec:
-  # Add fields here
-  foo: bar
+  node: worker-25
+  hostname: abcd1234
+  resources:
+  - name: intel/net1
+    devices:
+    - mac: a1:b2:c3:d4:e5:f6
+      pci: 0000:01:00.1
