@@ -2,7 +2,6 @@
 
 set -ex
 
-RUN_MAC=${run_mac:=1}
 RUN_APP=${run_app:=1}
 
 LOG_DIR="/var/log/testpmd"
@@ -85,26 +84,6 @@ fi
 CMD="${CMD} 2>&1 | tee /var/log/testpmd/app.log"
 echo "${CMD}" > $RUN
 chmod +x $RUN
-
-if [[ "$RUN_MAC" == "0" ]]; then
-    echo "run_mac is set to 0, waiting..."
-    sleep infinity
-fi
-
-if [[ "$MODE" != "lb" ]]; then
-    # Fetches mac address from pci using macaddr DPDK custom application
-    # Mac address is written to tile /tmp/macaddr.txt
-    # Fetch macaddress before running testpmd to avoid resource busy error
-    if [ -f /var/lib/testpmd/macaddr.txt ]; then
-        rm -f /var/lib/testpmd/macaddr.txt
-    fi
-    n=0
-    until [ "$n" -ge 5 ]; do
-       macaddr $PCI && break
-       n=$((n+1))
-       sleep 1
-    done
-fi
 
 function sig_term() {
     echo $(date +"%F %T,%3N") > /var/log/testpmd/sigterm-received.log

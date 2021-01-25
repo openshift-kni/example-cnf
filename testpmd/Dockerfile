@@ -27,13 +27,6 @@ RUN sed -i -e 's/EAL_IGB_UIO=y/EAL_IGB_UIO=n/' \
 RUN cd ${DPDK_DIR} && \
     make install T=${RTE_TARGET} DESTDIR=${RTE_SDK} -j 8
 
-# macaddr DPDK application
-COPY macaddr ${DPDK_DIR}/examples/macaddr/
-
-RUN cd ${DPDK_DIR}/examples/macaddr && \
-    make && \
-    cp ${DPDK_DIR}/examples/macaddr/build/app/macaddr /usr/local/bin
-
 # python required for expand-cpu util
 RUN yum install -y python3 && yum clean all
 

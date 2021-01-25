@@ -52,25 +52,24 @@ def get_mac_pci_mapping():
 
 
 def get_mac_of_pci(pcis):
-    mac_file = '/var/lib/testpmd/macaddr.txt'
-    if not os.path.exists(mac_file):
-        print("ERROR: mac address file /var/lib/testpmd/macaddr.txt should be present")
+    print(pcis)
+    content = subprocess.check_output(["grep", "-Re", "^Port [0-9]: ", "/var/log/testpmd/app.log"])
+    lines = content.decode("utf-8").split('\n')
+    if len(lines) < len(pcis):
+        print("Invalid output from testpmd log \n%s" % content.decode("utf-8"))
         sys.exit(1)
-    content = ''
-    info = {}
-    with open(mac_file) as f:
-        content = f.read()
-    lines = content.split('\n')
     data = []
+    count = 0
     for line in lines:
-        info = line.split(',')
-        if len(line.split(',')) != 2:
+        if not line:
             continue
+        line_split = line.split(': ', 1)
         info = {}
-        info['pci'] = line.split(',')[0]
-        info['mac'] = line.split(',')[1]
+        info['pci'] = pcis[count]
+        info['mac'] = line_split[1].strip()
         print(info)
         data.append(info)
+        count += 1
     return data
 
 
