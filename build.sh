@@ -2,10 +2,11 @@
 
 set -e
 
-CLI=${CLI:="docker"}
-ORG="rh-nfv-int"
-REGISTRY="quay.io/${ORG}"
 TAG="${TAG:-v0.2.1}"
+
+CLI=${CLI:="docker"}
+ORG=${ORG:="rh-nfv-int"}
+REGISTRY="quay.io/${ORG}"
 
 EXTRA=""
 if [[ $2 == "force" ]]; then
