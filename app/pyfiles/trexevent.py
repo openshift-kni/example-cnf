@@ -32,8 +32,8 @@ def create_event(data):
     evtTime = data['time']
     evtName = trex_config_name + '-' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
 
-    cr = { 	'apiVersion': 'events.k8s.io/v1beta1',
-    	'kind': 'Event',
+    cr = {  'apiVersion': 'events.k8s.io/v1beta1',
+            'kind': 'Event',
             'metadata': {
                'name': evtName,
                'namespace': namespace,
