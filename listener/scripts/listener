@@ -39,7 +39,7 @@ def send_macs(spec, name):
 def send_testpmdmac_cr_values():
     group = "examplecnf.openshift.io"
     version = "v1"
-    namespace = "example-cnf"
+    namespace = os.environ.get("NAMESPACE", "example-cnf")
     plural = "cnfappmacs"
 
     config.load_incluster_config()
@@ -65,7 +65,7 @@ def mac_fetch_thread():
 def main():
     group = "examplecnf.openshift.io"
     version = "v1"
-    namespace = "example-cnf"
+    namespace = os.environ.get("NAMESPACE", "example-cnf")
     plural = "cnfappmacs"
 
     # TODO(skramaja) NOt required as watch gets existing objs, test well before removing
@@ -74,8 +74,8 @@ def main():
     config.load_incluster_config()
     custom_api = client.CustomObjectsApi()
     w = watch.Watch()
-    for event in w.stream(custom_api.list_cluster_custom_object,
-                          group=group, version=version, plural=plural):
+    for event in w.stream(custom_api.list_namespaced_custom_object,
+                          group=group, version=version, plural=plural, namespace=namespace):
         if event['type'] == 'ADDED':
             msg = "1,"
         elif event['type'] == 'DELETED':
