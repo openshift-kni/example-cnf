@@ -22,8 +22,8 @@ if [[ $1 == "all" || $1 == "testpmd" ]]; then
     fi
     if [[ $PULL == "1" ]]; then
         pushd $PWD/testpmd/testpmd-as-load-balancer
-        git checkout master
-        git pull origin master
+        git -C $PWD checkout master
+        git -C $PWD pull origin master
         popd
     fi
 fi

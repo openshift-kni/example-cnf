@@ -40,7 +40,7 @@ def send_testpmdmac_cr_values():
     group = "examplecnf.openshift.io"
     version = "v1"
     namespace = "example-cnf"
-    plural = "testpmdmacs"
+    plural = "cnfappmacs"
 
     config.load_incluster_config()
     custom_api = client.CustomObjectsApi()
@@ -66,7 +66,7 @@ def main():
     group = "examplecnf.openshift.io"
     version = "v1"
     namespace = "example-cnf"
-    plural = "testpmdmacs"
+    plural = "cnfappmacs"
 
     # TODO(skramaja) NOt required as watch gets existing objs, test well before removing
     #Thread(target=mac_fetch_thread).start()
