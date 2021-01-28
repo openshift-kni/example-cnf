@@ -27,7 +27,8 @@ clog = CustomLogger("debug")
 
 class STLS1(object):
     def __init__ (self, ports, size, rate, duration=-1, verbose="debug"):
-        self.client = STLClient(verbose_level=verbose, logger=clog)
+        self.server_url = os.environ.get("server_url", "localhost")
+        self.client = STLClient(verbose_level=verbose, logger=clog, server=self.server_url)
         self.fsize = 64
         self.pg_id = 0
         self.pkt_type = "ether"

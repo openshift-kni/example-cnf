@@ -10,7 +10,7 @@ def create_event(data):
     group = "examplecnf.openshift.io"
     version = "v1"
     namespace = "example-cnf"
-    plural = "trexconfigs"
+    plural = "trexapps"
 
     config.load_incluster_config()
     try:
@@ -21,7 +21,7 @@ def create_event(data):
         return
 
     if len(objs['items']) == 0:
-        log.info("no trexconfig objects")
+        log.info("no trexapps objects")
         return
 
     trex_config_name = objs['items'][0]['metadata']['name']
@@ -32,7 +32,8 @@ def create_event(data):
     evtTime = data['time']
     evtName = trex_config_name + '-' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
 
-    cr = {  'apiVersion': 'events.k8s.io/v1beta1',
+    cr = {
+            'apiVersion': 'events.k8s.io/v1beta1',
             'kind': 'Event',
             'metadata': {
                'name': evtName,
@@ -48,7 +49,7 @@ def create_event(data):
             'note': data['msg'],
             'regarding': {
                     'namespace': namespace,
-                    'kind': 'TRexConfig',
+                    'kind': 'TRexApp',
                     'name': trex_config_name,
                     'uid': trex_config_uid
                 },
@@ -58,7 +59,7 @@ def create_event(data):
 
     cr['metadata']['ownerReferences'].append({
             'apiVersion': trex_config_api_version,
-            'kind': 'TRexConfig',
+            'kind': 'TRexApp',
             'name': trex_config_name,
             'uid': trex_config_uid,
             'controller': True
