@@ -3,4 +3,5 @@
 # It should be run by config/default
 resources:
 - bases/examplecnf.openshift.io_trexconfigs.yaml
+- bases/examplecnf.openshift.io_trexapps.yaml
 # +kubebuilder:scaffold:crdkustomizeresource

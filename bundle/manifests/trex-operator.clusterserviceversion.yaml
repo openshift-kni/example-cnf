@@ -6,6 +6,16 @@ metadata:
       [
         {
           "apiVersion": "examplecnf.openshift.io/v1",
+          "kind": "TRexApp",
+          "metadata": {
+            "name": "trexapp-sample"
+          },
+          "spec": {
+            "foo": "bar"
+          }
+        },
+        {
+          "apiVersion": "examplecnf.openshift.io/v1",
           "kind": "TRexConfig",
           "metadata": {
             "name": "trexconfig1"
@@ -36,6 +46,9 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
+    - kind: TRexApp
+      name: trexapps.examplecnf.openshift.io
+      version: v1
     - kind: TRexConfig
       name: trexconfigs.examplecnf.openshift.io
       version: v1
@@ -55,6 +68,7 @@ spec:
           - pods
           - pods/exec
           - pods/log
+          - services
           verbs:
           - create
           - delete
@@ -63,6 +77,17 @@ spec:
           - patch
           - update
           - watch
+        - apiGroups:
+          - batch
+          resources:
+          - jobs
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
         - apiGroups:
           - apps
           resources:
@@ -111,6 +136,20 @@ spec:
           - patch
           - update
           - watch
+        - apiGroups:
+          - examplecnf.openshift.io
+          resources:
+          - trexapps
+          - trexapps/status
+          - trexapps/finalizers
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
         serviceAccountName: default
       deployments:
       - name: trex-operator-controller-manager
@@ -128,7 +167,6 @@ spec:
             spec:
               containers:
               - args:
-                - --metrics-addr=127.0.0.1:8080
                 - --enable-leader-election
                 - --leader-election-id=trex-operator
                 image: quay.io/rh-nfv-int/trex-operator:v0.2.2
@@ -181,5 +219,4 @@ spec:
   maturity: alpha
   provider:
     name: Red Hat
-  replaces: trex-operator.v0.2.1
   version: 0.2.2

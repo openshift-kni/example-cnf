@@ -1,0 +1,39 @@
+kind: Job
+apiVersion: batch/v1
+metadata:
+  name: "job-{{ ansible_operator_meta.name }}"
+  namespace: "{{ ansible_operator_meta.namespace }}"
+spec:
+  template:
+    metadata:
+      labels:
+        example-cnf-type: pkt-gen-app
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: trex-app
+        image: "{{ image_app }}"
+        imagePullPolicy: "{{ image_pull_policy }}"
+        resources:
+          limits:
+            memory: "500Mi"
+            cpu: 2
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+        env:
+        - name: MODE
+          value: "{{ 'lb' if enable_lb|default(false) else 'direct' }}"
+        - name: LB_MACS
+          value: "{{ lb_macs|join(',') }}"
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+{% for key, value in environments.items() %}
+        - name: {{ key }}
+          value: "{{ value }}"
+{% endfor %}
+      volumes:
+      - name: varlog
+        emptyDir: {}

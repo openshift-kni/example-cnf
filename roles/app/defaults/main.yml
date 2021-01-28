@@ -1,11 +1,9 @@
 ---
-version: v0.2.0
+version: ''
 registry: quay.io
 org: rh-nfv-int
-image_pull_policy: IfNotPresent
-privileged: false
+image_pull_policy: Always
 command: ["trex-wrapper"]
 environments: {}
-network_resources: {}
 enable_lb: true
 lb_macs: []

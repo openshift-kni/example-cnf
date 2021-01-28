@@ -1,0 +1,11 @@
+---
+- name: fail if version is not provided
+  fail:
+    msg: "application 'version' in CR is required"
+  when: "version|length == 0"
+- set_fact:
+    image_app: "{{ registry }}/{{ org }}/trex-container-app:{{ version }}"
+- name: Create TRex App Job
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'job.yml') }}"

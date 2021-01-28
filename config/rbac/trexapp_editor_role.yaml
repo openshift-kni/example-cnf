@@ -1,0 +1,24 @@
+# permissions for end users to edit trexapps.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: trexapp-editor-role
+rules:
+- apiGroups:
+  - examplecnf.openshift.io
+  resources:
+  - trexapps
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - examplecnf.openshift.io
+  resources:
+  - trexapps/status
+  verbs:
+  - get

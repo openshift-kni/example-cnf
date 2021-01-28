@@ -1,13 +1,17 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: "{{ ansible_operator_meta.name }}-app"
+  name: "{{ ansible_operator_meta.name }}"
   namespace: "{{ ansible_operator_meta.namespace }}"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      example-cnf-type: pkt-gen
+{% if trex_server|bool %}
+        example-cnf-type: pkt-gen
+{% elif trex_app|bool %}
+        example-cnf-type: pkt-gen-app
+{% endif %}
   template:
     metadata:
       annotations:
@@ -27,7 +31,11 @@ spec:
 {% endfor %}
           ]
       labels:
+{% if trex_server|bool %}
         example-cnf-type: pkt-gen
+{% elif trex_app|bool %}
+        example-cnf-type: pkt-gen-app
+{% endif %}
     spec:
       affinity:
         podAntiAffinity:
@@ -43,6 +51,7 @@ spec:
 {% endif %}
             topologyKey: kubernetes.io/hostname
       containers:
+{% if trex_server|bool %}
       - name: trex-server
         command: {{ command }}
         image: "{{ image_server }}"
@@ -89,6 +98,8 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+{% endif %}
+{% if trex_app|bool %}
       - name: trex-app
         image: "{{ image_app }}"
         imagePullPolicy: "{{ image_pull_policy }}"
@@ -113,6 +124,7 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+{% endif %}
       volumes:
       - name: hugepage
         emptyDir:

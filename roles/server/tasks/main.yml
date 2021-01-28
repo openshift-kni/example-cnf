@@ -1,0 +1,48 @@
+---
+- name: fail if version is not provided
+  fail:
+    msg: "application 'version' in CR is required"
+  when: "version|length == 0"
+
+- set_fact:
+    network_resources: {}
+    network_name_list: []
+    image_server: "{{ registry }}/{{ org }}/trex-container-server:{{ version }}"
+    image_app: "{{ registry }}/{{ org }}/trex-container-app:{{ version }}"
+
+- name: Check if networks parameter is empty
+  fail:
+    msg: "networks parameter is empty"
+  when: networks|length == 0
+
+- include_tasks: network-parse.yaml
+  loop: "{{ networks }}"
+  loop_control:
+    loop_var: network_item
+
+- name: Create TRex deployment
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'deployment.yml') }}"
+
+- name: Create TRex Server Service
+  when: trex_server|default(true)|bool
+  k8s:
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: trex-server
+        namespace: "{{ ansible_operator_meta.namespace }}"
+      spec:
+        selector:
+          example-cnf-type: pkt-gen
+        ports:
+        - port: 4500
+          protocol: TCP
+          targetPort: 4500
+          name: async
+        - port: 4501
+          protocol: TCP
+          targetPort: 4501
+          name: sync
