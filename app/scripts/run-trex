@@ -25,120 +25,35 @@ import trexstats
 clog = CustomLogger("debug")
 
 
-class STLS1(object):
+class STLS1_Wrapper(object):
     def __init__ (self, ports, size, rate, duration=-1, verbose="debug"):
+        # 'direct' or 'lb' mode
+        self.mode = os.getenv('MODE', 'direct')
+        # profile file path (absolute path), default is /opt/pyfiles/default.py
+        self.profile = os.environ.get("profile", "/opt/pyfiles/default.py")
         self.server_url = os.environ.get("server_url", "localhost")
         self.client = STLClient(verbose_level=verbose, logger=clog, server=self.server_url)
-        self.fsize = 64
-        self.pg_id = 0
-        self.pkt_type = "ether"
-        self.num_streams = 1
         self.force_exit = False
         self.ports = ports
         self.port_a = ports[0]
         self.port_b = ports[1]
-        self.size =size
         self.rate = rate
         self.duration = duration
         self.queue = queue.Queue(maxsize=0)
         signal.signal(signal.SIGINT, self.signal_handler)
-        self.stats_obj = trexstats.TRexAppStats(ports)
-        # 'direct' or 'lb' mode
-        self.mode = os.getenv('MODE', 'direct')
 
-    def start_watch(self):
-        process = Thread(target=trexmac.watch_cr, args=[self.queue])
-        process.start()
-
-    def update(self, obj):
-        meta = obj['metadata']
-        spec = obj['spec']
-        log.info("Name(%s) Namespace(%s)" % (meta['name'], meta['namespace']))
-        macs = self.get_macs(spec)
-        if len(macs) < len(self.ports):
-            log.info("ERROR: macs len(%s) is less then ports len (%s)" % (len(macs), len(self.ports)))
-            return
-
-        log.info("reset ports")
-        self.client.reset(ports=self.ports)
-        log.info("create stream with new mac address")
-        for idx in range(0, len(self.ports)):
-            self.add_streams(self.ports[idx], macs[idx])
-        log.info("staring ports")
-        self.client.start(ports=self.ports, mult=self.rate, duration=self.duration, core_mask=STLClient.CORE_MASK_PIN)
-        data = {}
-        now = datetime.now()
-        data['microtime'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        data['time'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        data['msg'] = ("Packet stream is updated with mac: %s" % ','.join(macs))
-        data['reason'] = 'StreamUpdated'
-        trexevent.create_event(data)
-
-    def create_vm(self, direction=0):
-        ip_range = {'src': {'start': "18.0.0.1", 'end': "18.0.0.254"},
-                    'dst': {'start': "8.0.0.1",  'end': "8.0.0.254"}}
-
-        if (direction == 0):
-            src = ip_range['src']
-            dst = ip_range['dst']
-        else:
-            src = ip_range['dst']
-            dst = ip_range['src']
-
-        vm = [
-            # src                                                            (4)
-            STLVmFlowVar(name="src",
-                         min_value=src['start'],
-                         max_value=src['end'],
-                         size=4,op="inc"),
-            STLVmWrFlowVar(fv_name="src",pkt_offset= "IP.src"),
-
-            # dst
-            STLVmFlowVar(name="dst",
-                         min_value=dst['start'],
-                         max_value=dst['end'],
-                         size=4,op="inc"),
-            STLVmWrFlowVar(fv_name="dst",pkt_offset= "IP.dst"),
-
-            # checksum
-            STLVmFixIpv4(offset = "IP")
-            ]
-        return vm
-
-    def create_stream (self, dest_mac=None, port=0):
-        size = self.fsize - 4; # HW will add 4 bytes ethernet CRC
-
-        ethr_base = Ether(dst=dest_mac) / IP() / UDP()
-
-        pad = max(0, size - len('ether')) * 'x'
-        vm = self.create_vm(port)
-        pkt = STLPktBuilder(pkt=ethr_base/pad, vm=vm)
-
-        streams = []
-        for pg_id_add in range(0, self.num_streams):
-            streams.append(STLStream(packet = pkt, mode = STLTXCont(pps=1), flow_stats = STLFlowStats(pg_id = self.pg_id + pg_id_add)))
-        return streams
-
-    def add_streams(self, port, dest_mac):
-        if dest_mac:
-            log.info("create stream for port %s with dest mac %s" % (port, dest_mac))
-        new_stream = self.create_stream(dest_mac, port)
-        self.client.add_streams(new_stream, [port])
+    def start_stats_monitor(self):
+        self.process = Thread(target=trexstats.watch, args=[self.client, self.ports])
+        self.process.start()
 
     def init_streams(self):
-        if self.mode == 'direct':
-            macs = trexmac.get_testpmdmac_cr_values()
-        else:
-            macs = os.getenv('LB_MACS', '').split(',')
+        profile_a = STLProfile.load_py(self.profile, direction=0)
+        profile_b = STLProfile.load_py(self.profile, direction=1)
+        stream_a = profile_a.get_streams()
+        stream_b = profile_b.get_streams()
 
-        if macs:
-            log.info("destination macs available")
-            for idx in range(0, len(self.ports)):
-                self.add_streams(self.ports[idx], macs[idx])
-        else:
-            log.info("destination macs not available")
-            for idx in range(0, len(self.ports)):
-                self.add_streams(self.ports[idx], None)
+        self.client.add_streams(stream_a, self.ports[0])
+        self.client.add_streams(stream_b, self.ports[1])
 
     def simple_burst(self):
         passed = True
@@ -161,23 +76,16 @@ class STLS1(object):
             self.client.start(ports = self.ports, mult = self.rate,
                 duration = self.duration, core_mask = STLClient.CORE_MASK_PIN)
 
-            if self.mode == 'direct':
-                self.start_watch()
+            # post started event
+            trexstats.started()
 
-            if self.duration == -1:
-                while True:
-                    self.stats_obj.stats(self.client.get_stats(), ports = self.ports)
-                    try:
-                        obj = self.queue.get_nowait()
-                        self.update(obj)
-                    except queue.Empty:
-                        pass
-                    if self.force_exit:
-                        break
-                    time.sleep(1)
-            else:
-                # block until done
-                self.client.wait_on_traffic(ports=self.ports)
+            # start monitory thread to post stats
+            self.start_stats_monitor()
+
+            # block until done
+            self.client.wait_on_traffic(ports=self.ports)
+
+            trexstats.force_exit = True
 
             # read the stats after the test
             stats = self.client.get_stats()
@@ -186,6 +94,7 @@ class STLS1(object):
 
         except STLError as e:
             passed = False
+            trexstats.force_exit = True
             log.info(e)
 
         finally:
@@ -199,10 +108,10 @@ class STLS1(object):
 
     def signal_handler(self, sig, frame):
         log.info('You pressed Ctrl+C!')
-        time.sleep(6)
+        trexstats.force_exit = True
+        self.client.reset(ports = self.ports)
         self.force_exit = True
         clog.force_exit = True
-        sys.exit(0)
 
 
 def main():
@@ -218,7 +127,7 @@ def main():
     if duration == -1:
         log.info("Packets will be generated forever...")
     try:
-        obj = STLS1(ports = [0, 1], size=packet_size, rate=packet_rate, duration=duration)
+        obj = STLS1_Wrapper(ports = [0, 1], size=packet_size, rate=packet_rate, duration=duration)
         obj.simple_burst()
     except Exception as e:
         log.exception("failed to start burst: %s" % e)

@@ -21,7 +21,7 @@ def create_event(data):
         return
 
     if len(objs['items']) == 0:
-        log.info("no trexapps objects")
+        log.info("cannot create event, no trexapps CR object")
         return
 
     trex_config_name = objs['items'][0]['metadata']['name']

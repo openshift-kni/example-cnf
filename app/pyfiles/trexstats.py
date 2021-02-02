@@ -67,6 +67,30 @@ class TRexAppStats(object):
             Thread(target=trexevent.create_event, args=[data]).start()
             self.event_notified_miss = miss
 
+force_exit = False
+stats_period = 5
+
+def watch(client, ports):
+    stats_obj = TRexAppStats(ports)
+    count = 0
+    while True:
+        if force_exit:
+            break
+        count += 1
+        if (count % stats_period == 0):
+            stats_obj.stats(client.get_stats(), ports=ports)
+            count = 0
+        time.sleep(1)
+
+
+def started():
+    data = {}
+    now = datetime.now()
+    data['microtime'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+    data['time'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+    data['msg'] = "Started streams"
+    data['reason'] = 'TestStarted'
+    trexevent.create_event(data)
 
 def completed_stats(stats, warnings, port_a, port_b):
     packet_size = os.getenv("PACKET_SIZE") or os.getenv("packet_size") or 64
@@ -88,23 +112,24 @@ def completed_stats(stats, warnings, port_a, port_b):
 
     lost_a = stats[port_a]["opackets"] - stats[port_b]["ipackets"]
     lost_b = stats[port_b]["opackets"] - stats[port_a]["ipackets"]
+    lost = lost_a + lost_b
 
     log.info("\npackets lost from {0} --> {1}:   {2} pkts".format(port_a, port_b, lost_a))
     log.info("packets lost from {0} --> {1}:   {2} pkts".format(port_b, port_a, lost_b))
+    log.info("packet lost total: {} pkts".format(lost))
 
     if warnings:
         log.info("\n\n*** test had warnings ****\n\n")
         for w in warnings:
             log.info(w)
 
-    if (lost_a == 0) and (lost_b == 0) and not warnings:
+    if lost <= 0 and not warnings:
         passed = True
         packets = stats[port_a]["opackets"] + stats[port_b]["opackets"]
-        data['msg'] = ("Test has Passed with no loss, total packets %s" % packets)
+        data['msg'] = ("Test has Passed with no loss, total packets %s".format(packets))
         data['reason'] = 'TestPassed'
     else:
-        data['msg'] = ("Test has failed with packets loss, (%s, %s) "
-            "packets lost on each port" % (lost_a, lost_b))
+        data['msg'] = ("Test has failed with packets loss of {} pkts".format(lost))
         data['reason'] = 'TestFailed'
 
     trexevent.create_event(data)

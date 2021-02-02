@@ -15,7 +15,6 @@ if [[ ${count} -gt 0 ]]; then
     echo "trex-server is ready"
 else
     echo "ERROR: trex-server could not start properly, exiting... "
-    sleep infinity
     exit 1
 fi
 
@@ -28,6 +27,11 @@ elif [[ $RUN_APP == "2" ]]; then
     sleep 10
     echo "Running binary search"
     run-binary-search
+    sleep infinity
+elif [[ $RUN_APP == "3" ]]; then
+    sleep 10
+    echo "Running binary search"
+    run-trex-direct
     sleep infinity
 else
     echo "Skipping TRex application run, waiting ..."
