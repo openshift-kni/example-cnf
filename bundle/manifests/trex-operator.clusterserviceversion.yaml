@@ -88,6 +88,7 @@ spec:
           - list
           - patch
           - update
+          - watch
         - apiGroups:
           - apps
           resources:

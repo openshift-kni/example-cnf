@@ -1,8 +1,44 @@
 ---
+- name: requeue request
+  requeue_after:
+    time: 5m
+- name: check if treconfig is available
+  k8s_info:
+    kind: TRexConfig
+    api_version: examplecnf.openshift.io/v1
+  register: trex_config
+- name: fail if trexconfig is not created
+  fail:
+    msg: "wait for trexconfig resource"
+  when: "trex_config.resources|length == 0"
+
 - name: fail if version is not provided
   fail:
     msg: "application 'version' in CR is required"
   when: "version|length == 0"
+
+- name: get the list of incomplete jobs
+  k8s_info:
+    kind: Job
+    api_version: batch/v1
+    label_selectors:
+    - example-cnf-type=pkt-gen-app
+    field_selectors:
+    - status.successful!=1
+  register: jobs_running
+- name: set default active job fact
+  set_fact:
+    active_jobs: 0
+- name: find active jobs
+  set_fact:
+    active_jobs: "{{ active_jobs + 1 }}"
+  loop: "{{ jobs_running.resources }}"
+  when: "item.status.failed != 1"
+- name: fail if any one of pkt gen job is running
+  fail:
+    msg: "All pkt gen job should be complete before starting next"
+  when: "active_jobs|int > 0"
+
 - set_fact:
     image_app: "{{ registry }}/{{ org }}/trex-container-app:{{ version }}"
 - name: Create TRex App Job
