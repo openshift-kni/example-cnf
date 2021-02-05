@@ -1,0 +1,27 @@
+---
+- name: get the list of incomplete jobs
+  k8s_info:
+    kind: Job
+    api_version: batch/v1
+    label_selectors:
+    - example-cnf-type=pkt-gen-app
+    field_selectors:
+    - status.successful!=1
+  register: jobs_running
+- name: set default active job fact
+  set_fact:
+    active_jobs: 0
+- name: find active jobs
+  set_fact:
+    active_jobs: "{{ active_jobs + 1 }}"
+  loop: "{{ jobs_running.resources }}"
+  when:
+    - "'failed' not in item.status or item.status.failed != 1"
+- name: set image path
+  set_fact:
+    image_app: "{{ registry }}/{{ org }}/trex-container-app:{{ version }}"
+- name: create trexapp job
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'job.yml') }}"
+  when: "active_jobs|int == 0"

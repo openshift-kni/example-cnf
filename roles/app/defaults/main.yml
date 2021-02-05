@@ -7,3 +7,8 @@ command: ["trex-wrapper"]
 environments: {}
 enable_lb: true
 lb_macs: []
+trex_profile_name: ''
+trex_profile_config_map: ''
+duration: None
+packet_size: ''
+packet_rate: ''
