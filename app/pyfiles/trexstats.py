@@ -83,26 +83,30 @@ def watch(client, ports):
         time.sleep(1)
 
 
-def started():
+def started(profile, packet_rate, duration):
+    if not profile:
+        profile = "default"
     data = {}
     now = datetime.now()
     data['microtime'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
     data['time'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-    data['msg'] = "Started streams"
+    data['msg'] = ("Started streams with profile ({0}) at rate ({1}) "
+                    "for ({2})s ".format(profile, packet_rate, duration))
     data['reason'] = 'TestStarted'
     trexevent.create_event(data)
 
-def completed_stats(stats, warnings, port_a, port_b):
-    packet_size = os.getenv("PACKET_SIZE") or os.getenv("packet_size") or 64
-    packet_rate = os.getenv("PACKET_RATE") or os.getenv("packet_rate") or "10pps"
-    duration = os.getenv("DURATION") or os.getenv("duration") or -1
-
+def completed_stats(stats, warnings, port_a, port_b, profile, rate, duration):
+    size = os.getenv("PACKET_SIZE")
     data = {}
     now = datetime.now()
     data['microtime'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
     data['time'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-    data['msg'] = ("Packet (%s) with rate (%s) for (%s) seconds "
-        "have completed" % (packet_size, packet_rate, duration))
+    if profile:
+        msg = ("Profile (%s) " % profile)
+    else:
+        msg = ("Profile (default) with size (%s) " % size)
+    msg += ("with rate (%s) for (%s)s have completed" % (rate, duration))
+    data['msg'] = msg
     data['reason'] = 'TestCompleted'
     trexevent.create_event(data)
 

@@ -3,7 +3,7 @@
 set -ex
 
 RUN_APP=${run_app:=1}
-SERVER=${server_url:="0.0.0.0"}
+SERVER=${TREX_SERVER_URL:="0.0.0.0"}
 
 # wait for trex server to be ready
 count=120
@@ -16,6 +16,22 @@ if [[ ${count} -gt 0 ]]; then
 else
     echo "ERROR: trex-server could not start properly, exiting... "
     exit 1
+fi
+
+if [ ! -z ${TREX_PROFILE_NAME} ]; then
+    if [ -f "/opt/trexprofile/content" ]; then
+        # ConfigMap created by nfv-example-cnf-deploy ansible scripts
+        ln -s /opt/trexprofile/content "${HOME}/${TREX_PROFILE_NAME}"
+    elif [ -f "/opt/trexprofile/${TREX_PROFILE_NAME}" ]; then
+        # ConfigMap created by oc/kubectl cli
+        ln -s "/opt/trexprofile/${TREX_PROFILE_NAME}" "${HOME}/${TREX_PROFILE_NAME}"
+    elif [ -f "/opt/trex/trex-core/scripts/stl/${TREX_PROFILE_NAME}" ]; then
+        # No ConfigMap, Use one of trex-core's profile
+        ln -s "/opt/trex/trex-core/scripts/stl/${TREX_PROFILE_NAME}" "${HOME}/${TREX_PROFILE_NAME}"
+    else
+        echo "ERROR: TREX_PROFILE_NAME is defined but could not find valid profiles"
+        exit 1
+    fi
 fi
 
 if [[ $RUN_APP == "1" ]]; then

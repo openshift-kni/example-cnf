@@ -11,10 +11,11 @@ def create_event(data):
     version = "v1"
     namespace = "example-cnf"
     plural = "trexapps"
+    name = os.environ.get("CR_NAME")
 
     config.load_incluster_config()
+    custom_api = client.CustomObjectsApi()
     try:
-        custom_api = client.CustomObjectsApi()
         objs = custom_api.list_namespaced_custom_object(group, version, namespace, plural)
     except ApiException as e:
         log.info("Exception when calling CustomObjectsApi->list_namespaced_custom_object: %s\n" % e)
@@ -24,9 +25,18 @@ def create_event(data):
         log.info("cannot create event, no trexapps CR object")
         return
 
-    trex_config_name = objs['items'][0]['metadata']['name']
-    trex_config_uid = objs['items'][0]['metadata']['uid']
-    trex_config_api_version = objs['items'][0]['apiVersion']
+    if len(objs['items']) > 1:
+        try:
+            cr_obj = custom_api.get_namespaced_custom_object(group, version, namespace, plural, name)
+        except ApiException as e:
+            log.info("Exception when calling CustomObjectsApi->get_namespaced_custom_object: %s\n" % e)
+            return
+    else:
+        cr_obj = objs['items'][0]
+
+    trex_config_name = cr_obj['metadata']['name']
+    trex_config_uid = cr_obj['metadata']['uid']
+    trex_config_api_version = cr_obj['apiVersion']
 
     evtTimeMicro = data['microtime']
     evtTime = data['time']

@@ -26,12 +26,12 @@ clog = CustomLogger("debug")
 
 
 class STLS1_Wrapper(object):
-    def __init__ (self, ports, size, rate, duration=-1, verbose="debug"):
+    def __init__ (self, ports, rate, profile, duration=-1, verbose="debug"):
         # 'direct' or 'lb' mode
         self.mode = os.getenv('MODE', 'direct')
         # profile file path (absolute path), default is /opt/pyfiles/default.py
-        self.profile = os.environ.get("profile", "/opt/pyfiles/default.py")
-        self.server_url = os.environ.get("server_url", "localhost")
+        self.profile = profile
+        self.server_url = os.environ.get("TREX_SERVER_URL", "localhost")
         self.client = STLClient(verbose_level=verbose, logger=clog, server=self.server_url)
         self.force_exit = False
         self.ports = ports
@@ -47,8 +47,11 @@ class STLS1_Wrapper(object):
         self.process.start()
 
     def init_streams(self):
-        profile_a = STLProfile.load_py(self.profile, direction=0)
-        profile_b = STLProfile.load_py(self.profile, direction=1)
+        profile_path = "/opt/pyfiles/default.py"
+        if self.profile:
+            profile_path = os.path.join(os.path.expanduser('~'), self.profile)
+        profile_a = STLProfile.load_py(profile_path, direction=0)
+        profile_b = STLProfile.load_py(profile_path, direction=1)
         stream_a = profile_a.get_streams()
         stream_b = profile_b.get_streams()
 
@@ -77,7 +80,7 @@ class STLS1_Wrapper(object):
                 duration = self.duration, core_mask = STLClient.CORE_MASK_PIN)
 
             # post started event
-            trexstats.started()
+            trexstats.started(self.profile, self.rate, self.duration)
 
             # start monitory thread to post stats
             self.start_stats_monitor()
@@ -90,7 +93,7 @@ class STLS1_Wrapper(object):
             # read the stats after the test
             stats = self.client.get_stats()
             warnings = self.client.get_warnings()
-            passed = trexstats.completed_stats(stats, warnings, self.port_a, self.port_b)
+            passed = trexstats.completed_stats(stats, warnings, self.port_a, self.port_b, self.profile, self.rate, self.duration)
 
         except STLError as e:
             passed = False
@@ -105,6 +108,7 @@ class STLS1_Wrapper(object):
             print("\nTest has passed :-)\n")
         else:
             print("\nTest has failed :-(\n")
+            sys.exit(1)
 
     def signal_handler(self, sig, frame):
         log.info('You pressed Ctrl+C!')
@@ -116,18 +120,28 @@ class STLS1_Wrapper(object):
 
 def main():
     # run the tests
-    packet_size = os.getenv("PACKET_SIZE") or os.getenv("packet_size") or 64
-    packet_rate = os.getenv("PACKET_RATE") or os.getenv("packet_rate") or "10pps"
-    duration = os.getenv("DURATION") or os.getenv("duration") or -1
+    packet_rate = os.getenv("PACKET_RATE") or "10pps"
+    packet_size = os.getenv("PACKET_SIZE")
+    duration = os.getenv("DURATION")
+    profile = os.environ.get("TREX_PROFILE_NAME")
+    if not duration:
+        log.info("Provide duration in seconds, -1 for continous burst mode")
+        sys.exit(1)
+
     if duration != -1:
         duration = int(duration)
     log.info("Starting burst...")
-    log.info("Packet Size - %s" % packet_size)
     log.info("Packet Rate - %s" % packet_rate)
     if duration == -1:
-        log.info("Packets will be generated forever...")
+        log.info("Packets will be generated forever")
+    else:
+        log.info("Duration - %s" % duration)
+    if profile:
+        log.info("TRex profile - %s" % profile)
+    if packet_size:
+        log.info("Packet Size - %s" % packet_size)
     try:
-        obj = STLS1_Wrapper(ports = [0, 1], size=packet_size, rate=packet_rate, duration=duration)
+        obj = STLS1_Wrapper(ports = [0, 1], rate=packet_rate, profile=profile, duration=duration)
         obj.simple_burst()
     except Exception as e:
         log.exception("failed to start burst: %s" % e)

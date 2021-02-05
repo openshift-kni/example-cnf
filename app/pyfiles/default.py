@@ -5,7 +5,7 @@ import sys
 class STLS1(object):
 
     def __init__ (self):
-        packet_size = os.getenv("PACKET_SIZE") or os.getenv("packet_size") or 64
+        packet_size = os.getenv("PACKET_SIZE") or 64
         self.fsize = int(packet_size)
         self.pg_id = 0
         self.pkt_type = "ether"
