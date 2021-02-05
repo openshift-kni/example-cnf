@@ -105,37 +105,6 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
-      - name: monitor
-        lifecycle:
-          preStop:
-            exec:
-              command: ["testpmd-check-wait"]
-        image: "{{ image_monitor }}"
-        imagePullPolicy: "{{ image_pull_policy }}"
-        resources:
-          limits:
-            memory: "500Mi"
-            cpu: 2
-        volumeMounts:
-        - name: log-dir
-          mountPath: /var/log/testpmd
-        - name: lib-dir
-          mountPath: /var/lib/testpmd
-        env:
-        - name: NETWORK_NAME_LIST
-          value: "{{ network_resources.keys()|list|join(',') }}"
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        - name: MODE
-          value: "{{ testpmd_mode|default('lb') }}"
-        - name: CR_NAME
-          value: "{{ ansible_operator_meta.name }}"
-{% for key, value in environments.items() %}
-        - name: {{ key }}
-          value: "{{ value }}"
-{% endfor %}
       volumes:
       - name: hugepage
         emptyDir:
