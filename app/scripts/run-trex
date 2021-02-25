@@ -125,7 +125,7 @@ def main():
     duration = os.getenv("DURATION")
     profile = os.environ.get("TREX_PROFILE_NAME")
     if not duration:
-        log.info("Provide duration in seconds, -1 for continous burst mode")
+        log.info("ERROR: Provide duration in seconds, -1 for continous burst mode")
         sys.exit(1)
 
     if duration != -1:

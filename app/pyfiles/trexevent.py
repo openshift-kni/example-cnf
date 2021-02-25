@@ -2,6 +2,7 @@ import random
 import string
 from kubernetes import client, config, watch
 from kubernetes.client.rest import ApiException
+from kubernetes.config.config_exception import ConfigException
 
 from logger import log
 
@@ -13,7 +14,11 @@ def create_event(data):
     plural = "trexapps"
     name = os.environ.get("CR_NAME")
 
-    config.load_incluster_config()
+    try:
+        config.load_incluster_config()
+    except ConfigException:
+        return
+
     custom_api = client.CustomObjectsApi()
     try:
         objs = custom_api.list_namespaced_custom_object(group, version, namespace, plural)

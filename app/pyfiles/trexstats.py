@@ -68,7 +68,8 @@ class TRexAppStats(object):
             self.event_notified_miss = miss
 
 force_exit = False
-stats_period = 5
+stats_period = os.getenv("STATS_PERIOD") or 5
+stats_period = int(stats_period)
 
 def watch(client, ports):
     stats_obj = TRexAppStats(ports)

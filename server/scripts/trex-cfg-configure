@@ -5,6 +5,7 @@ import yaml
 import sys
 import random
 import re
+import subprocess
 
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
@@ -31,10 +32,13 @@ port_obj_l2_template = {
 
 CFG_FILE = "/etc/trex_cfg.yaml"
 
+
 def main():
-    core_string = sys.argv[1]
-    print("INPUT: core_string: %s" % core_string)
+    core_string = ''
     lb_mac_string = ''
+    if len(sys.argv) >= 1:
+        core_string = sys.argv[1]
+        print("INPUT: core_string: %s" % core_string)
     if len(sys.argv) == 3:
         lb_mac_string = sys.argv[2]
         print("INPUT: lb_mac_string: %s" % lb_mac_string)
@@ -43,10 +47,17 @@ def main():
 
     # Ports allocated to TRex
     pci_list = get_pci()
+    if not pci_list:
+        pci_list = get_vfio_pcis()
     cfg[0]['interfaces'].extend([pci.replace('0000:','') for pci in pci_list])
     #cfg[0]['port_limit'] = len(pci_list)
 
+    if not core_string or '-' in core_string:
+        numa = get_numa_node(pci_list)
+        core_string = get_cores(numa, 6)
+
     core_list = cores(core_string)
+
     cfg[0]['c'] = len(core_list) - 2
     cfg[0]['platform']['master_thread_id'] = core_list[0]
     cfg[0]['platform']['latency_thread_id'] = core_list[1]
@@ -66,6 +77,8 @@ def main():
             cfg[0]['platform']['dual_if'].append(sock)
 
     src_mac = get_src_mac()
+    if not src_mac:
+        src_mac = get_pci_mac(pci_list)
     if not src_mac:
         print("ERROR: Source mac address is not available, exiting...")
         sys.exit(1)
@@ -149,7 +162,9 @@ def cores(core_string):
     return core_list
 
 def get_pci():
-    networks = os.environ['NETWORK_NAME_LIST']
+    networks = os.environ.get('NETWORK_NAME_LIST')
+    if not networks:
+        return []
     network_list = networks.split(',')
     pci_all = []
     for net in network_list:
@@ -162,6 +177,8 @@ def get_pci():
 
 def get_src_mac():
     podinfo = "/etc/podnetinfo/annotations"
+    if not os.path.exists(podinfo):
+        return []
     obj = []
     macs = []
     with open(podinfo) as f:
@@ -202,6 +219,52 @@ def get_dst_mac():
             for dev in resource['devices']:
                 macs.append(dev['mac'])
     return macs
+
+###########################
+def get_vfio_pcis():
+    dev = []
+    dev_lines = subprocess.check_output(["lspci", "-Dvmmnnk"]).splitlines()
+    for dev_line in dev_lines:
+        line = dev_line.decode("utf8")
+        if 'Slot' in line:
+            slot = line.split(':', 1)[1].strip()
+        if 'vfio-pci' in line:
+            dev.append(slot)
+    return dev[:2]
+
+def get_numa_node(pci_list):
+    numa_path = "/sys/bus/pci/devices/" + pci_list[0] + "/numa_node"
+    with open(numa_path) as f:
+        return int(f.read())
+
+def get_cores(numa, count):
+    path = "/sys/bus/node/devices/node" + str(numa) + "/cpulist"
+    with open(path) as f:
+        val = f.read().split(',')[2:count+2]
+        return ','.join(val)
+
+def get_pci_mac(pci_list):
+    mac = ["20:04:0f:f1:89:01","20:04:0f:f1:89:02"]
+    idx = -1
+    for pci in pci_list:
+        idx += 1
+        path = "/sys/bus/pci/devices/" + pci + "/physfn/"
+        pf = os.path.realpath(path)
+        for item in os.listdir(pf + "/net"):
+            pf_name = item
+        for item in os.listdir(path):
+            if os.path.islink(path + item):
+                rel = os.path.realpath(path + item)
+                if pci in rel:
+                    vf = item.replace('virtfn', '')
+                    get_vf_mac(pf_name, vf, mac[idx])
+    return mac
+
+def get_vf_mac(pf_name, vf, mac):
+    subprocess.check_output(["ip", "link", "set", pf_name, "vf", vf, "mac", mac])
+    subprocess.check_output(["ip", "link", "set", pf_name, "vf", vf, "trust", "on"])
+
+###########################
 
 if __name__ == "__main__":
     main()

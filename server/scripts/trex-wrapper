@@ -12,11 +12,6 @@ RUN_SERVER=${run_server:=1}
 RUN_DELAY=${run_delay:=1}
 # trex_core_count (trexCoreCount)
 
-if [ -z NETWORK_NAME_LIST ]; then
-    echo "NETWORK_NAME_LIST is empty, exiting.."
-    exit 1
-fi
-
 CORES=$(taskset -pc 1 | cut -d: -f2)
 
 if [[ $RUN_CONFIGURE != "1" ]]; then
