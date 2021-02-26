@@ -42,7 +42,11 @@ def send_testpmdmac_cr_values():
     namespace = os.environ.get("NAMESPACE", "example-cnf")
     plural = "cnfappmacs"
 
-    config.load_incluster_config()
+    if os.path.exists("/var/lib/testpmd/kubeconfig"):
+        config.load_kube_config(config_file="/var/lib/testpmd/kubeconfig")
+    else:
+        config.load_incluster_config()               
+
     custom_api = client.CustomObjectsApi()
     try:
         resp = custom_api.list_namespaced_custom_object(group, version, namespace, plural)
@@ -63,15 +67,25 @@ def mac_fetch_thread():
     print("fetch completed")
 
 def main():
+    # TODO(skramaja) NOt required as watch gets existing objs, test well before removing
+    #Thread(target=mac_fetch_thread).start()
+    while True:
+        try:
+            start_watch()
+        except ApiException as e:
+            print("ERROR: ApiException: %s, restart watch" % e)
+
+def start_watch():    
     group = "examplecnf.openshift.io"
     version = "v1"
     namespace = os.environ.get("NAMESPACE", "example-cnf")
     plural = "cnfappmacs"
 
-    # TODO(skramaja) NOt required as watch gets existing objs, test well before removing
-    #Thread(target=mac_fetch_thread).start()
+    if os.path.exists("/var/lib/testpmd/kubeconfig"):
+        config.load_kube_config(config_file="/var/lib/testpmd/kubeconfig")
+    else:
+        config.load_incluster_config()               
 
-    config.load_incluster_config()
     custom_api = client.CustomObjectsApi()
     w = watch.Watch()
     for event in w.stream(custom_api.list_namespaced_custom_object,

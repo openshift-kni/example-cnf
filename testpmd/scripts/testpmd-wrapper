@@ -10,47 +10,64 @@ rm -rf /var/log/testpmd/*
 
 MODE=${MODE:-"fwd"}
 
-if [ -z NETWORK_NAME_LIST ]; then
-    echo "NETWORK_NAME_LIST is empty, exiting.."
-    exit 1
-fi
-
-PCI=""
-IFS=',' read -r -a NETWORK_ARRAY <<< "$NETWORK_NAME_LIST"
-
-TESTPMD_ENV="/var/lib/testpmd/env.txt"
-echo "" > $TESTPMD_ENV
-for item in "${NETWORK_ARRAY[@]}"; do
-    IFS='/' read -r -a RES_ARRAY <<< "$item"
-    NAME="PCIDEVICE_OPENSHIFT_IO_${RES_ARRAY[1]^^}"
-    if [ -z ${!NAME} ]; then
-        echo "Could not find ${NAME} with PCI address, exiting"
+if [ -z ${NETWORK_NAME_LIST} ]; then
+    if [[ "$MODE" != "lb" ]]; then
+        echo "ERROR: NETWORK_NAME_LIST is required."
         exit 1
     fi
-    echo "${NAME}=${!NAME}" >> $TESTPMD_ENV
-    IFS=',' read -r -a PCI_ARRAY <<< "${!NAME}"
-    for pci_item in "${PCI_ARRAY[@]}"; do
-        PCI+=" -w ${pci_item} "
+    echo "NETWORK_NAME_LIST is empty, lb mode, running directly"
+    PCI=$(lb-direct --pci)
+    LCORES=$(lb-direct --lcore)
+    CNF_PCI=$(lb-direct --dutpci)
+else
+    PCI=""
+    IFS=',' read -r -a NETWORK_ARRAY <<< "$NETWORK_NAME_LIST"
+    TESTPMD_ENV="/var/lib/testpmd/env.txt"
+    echo "" > $TESTPMD_ENV
+    for item in "${NETWORK_ARRAY[@]}"; do
+        IFS='/' read -r -a RES_ARRAY <<< "$item"
+        NAME="PCIDEVICE_OPENSHIFT_IO_${RES_ARRAY[1]^^}"
+        if [ -z ${!NAME} ]; then
+            echo "Could not find ${NAME} with PCI address, exiting"
+            exit 1
+        fi
+        echo "${NAME}=${!NAME}" >> $TESTPMD_ENV
+        IFS=',' read -r -a PCI_ARRAY <<< "${!NAME}"
+        for pci_item in "${PCI_ARRAY[@]}"; do
+            PCI+=" -w ${pci_item} "
+        done
     done
-done
-
-LCORES=$(cat /sys/fs/cgroup/cpuset/cpuset.cpus)
-if [ -z $LCORES ]; then
-    echo "Could not find cores, existing.."
-    exit 1
+    
+    LCORES=$(cat /sys/fs/cgroup/cpuset/cpuset.cpus)
+    if [ -z $LCORES ]; then
+        echo "Could not find cores, existing.."
+        exit 1
+    fi
+    
+    CORES_STR=$(expand-cpus)
+    IFS=',' read -ra CORES_ARR <<< "$CORES_STR"
+    CORES_LEN=${#CORES_ARR[@]}
+    if [[ $CORES_LEN -gt $TESTPMD_CPU_COUNT ]]; then
+        echo "ERROR: Acutal cores (${CORES_LEN}) is greater than configured cores (${TESTPMD_CPU_COUNT})"
+        exit 1
+    fi
+    if [[ "$MODE" == "lb" ]]; then
+        CNF_PCI=""
+        IFS=',' read -r -a NETWORK_ARRAY <<< "$CNF_APP_NETWORK_NAME_LIST"
+        for item in "${NETWORK_ARRAY[@]}"; do
+            IFS='/' read -r -a RES_ARRAY <<< "$item"
+            NAME="PCIDEVICE_OPENSHIFT_IO_${RES_ARRAY[1]^^}"
+            if [ -z ${!NAME} ]; then
+                echo "Could not find ${NAME} with PCI address, exiting"
+                exit 1
+            fi
+            IFS=',' read -r -a PCI_ARRAY <<< "${!NAME}"
+            for pci_item in "${PCI_ARRAY[@]}"; do
+                CNF_PCI+=" --dut-pci ${pci_item} "
+            done
+        done
+    fi
 fi
-
-CORES_STR=$(expand-cpus)
-IFS=',' read -ra CORES_ARR <<< "$CORES_STR"
-CORES_LEN=${#CORES_ARR[@]}
-if [[ $CORES_LEN -gt $TESTPMD_CPU_COUNT ]]; then
-    echo "ERROR: Acutal cores (${CORES_LEN}) is greater than configured cores (${TESTPMD_CPU_COUNT})"
-    exit 1
-fi
-
-#CORES_SLICE="${CORES_ARR[@]:1}"
-#CORES_SPACE="${CORES_SLICE[*]}"
-#LCORES="${CORES_SPACE//${IFS:0:1}/,}"
 
 STATS_PERIOD=${stats_period:=1}
 RUN="/usr/local/bin/testpmd-run"
@@ -62,21 +79,6 @@ CMD="${CMD} --stats-period ${STATS_PERIOD}"
 CMD="${CMD} --cmdline-file /root/testpmd-runtime-cmds.txt"
 
 if [[ "$MODE" == "lb" ]]; then
-    CNF_PCI=""
-    IFS=',' read -r -a NETWORK_ARRAY <<< "$CNF_APP_NETWORK_NAME_LIST"
-    for item in "${NETWORK_ARRAY[@]}"; do
-        IFS='/' read -r -a RES_ARRAY <<< "$item"
-        NAME="PCIDEVICE_OPENSHIFT_IO_${RES_ARRAY[1]^^}"
-        if [ -z ${!NAME} ]; then
-            echo "Could not find ${NAME} with PCI address, exiting"
-            exit 1
-        fi
-        IFS=',' read -r -a PCI_ARRAY <<< "${!NAME}"
-        for pci_item in "${PCI_ARRAY[@]}"; do
-            CNF_PCI+=" --dut-pci ${pci_item} "
-        done
-    done
-    ETH_PEER="${ETH_PEER_MACS}"
     CMD="${CMD} --enable-lb "
     CMD="${CMD} ${CNF_PCI} "
 fi
