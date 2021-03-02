@@ -45,7 +45,7 @@ def send_testpmdmac_cr_values():
     if os.path.exists("/var/lib/testpmd/kubeconfig"):
         config.load_kube_config(config_file="/var/lib/testpmd/kubeconfig")
     else:
-        config.load_incluster_config()               
+        config.load_incluster_config()
 
     custom_api = client.CustomObjectsApi()
     try:
@@ -72,10 +72,14 @@ def main():
     while True:
         try:
             start_watch()
-        except ApiException as e:
-            print("ERROR: ApiException: %s, restart watch" % e)
+        except ApiException as api_ex:
+            print("ERROR: ApiException: \n%s\n-----------------" % api_ex)
+        except Exception as ex:
+            print("ERROR: Exception: \n%s\n--------------------" % ex)
+        time.sleep(5)
 
-def start_watch():    
+
+def start_watch():
     group = "examplecnf.openshift.io"
     version = "v1"
     namespace = os.environ.get("NAMESPACE", "example-cnf")
@@ -84,7 +88,7 @@ def start_watch():
     if os.path.exists("/var/lib/testpmd/kubeconfig"):
         config.load_kube_config(config_file="/var/lib/testpmd/kubeconfig")
     else:
-        config.load_incluster_config()               
+        config.load_incluster_config()
 
     custom_api = client.CustomObjectsApi()
     w = watch.Watch()
