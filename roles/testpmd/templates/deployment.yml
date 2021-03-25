@@ -38,7 +38,6 @@ spec:
                 values:
                 - lb-app
             topologyKey: kubernetes.io/hostname
-      terminationGracePeriodSeconds: {{ termination_grace_period_seconds }}
       containers:
       - name: testpmd
         command: ["testpmd-wrapper"]
