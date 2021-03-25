@@ -2,10 +2,18 @@ domain: openshift.io
 layout: ansible.sdk.operatorframework.io/v1
 projectName: testpmd-operator
 resources:
-- group: examplecnf
+-
+  # TODO(user): Uncomment the below line if this resource implements a controller, else delete it.
+  # controller: true
+  domain: openshift.io
+  group: examplecnf
   kind: TestPMD
   version: v1
-- group: examplecnf
+-
+  # TODO(user): Uncomment the below line if this resource implements a controller, else delete it.
+  # controller: true
+  domain: openshift.io
+  group: examplecnf
   kind: TestPMDMac
   version: v1
-version: 3-alpha
+version: "3"

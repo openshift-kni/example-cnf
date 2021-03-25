@@ -38,17 +38,33 @@ spec:
                 values:
                 - lb-app
             topologyKey: kubernetes.io/hostname
+      terminationGracePeriodSeconds: {{ termination_grace_period_seconds }}
       containers:
       - name: testpmd
-        command:
-        - /var/lib/testpmd/run
+        command: ["testpmd-wrapper"]
+        args:
+        - "--socket-mem {{ socket_memory }}"
+        - "-n {{ memory_channels }}"
+        - "--proc-type auto"
+        - "--file-prefix pg"
+        - "--"
+        - "--disable-rss"
+        - "--nb-cores={{ forwarding_cores }}"
+        - "--rxq={{ rx_queues }}"
+        - "--txq={{ tx_queues }}"
+        - "--rxd={{ rx_descriptors }}"
+        - "--txd={{ tx_descriptors }}"
+        - "--auto-start"
+{% for mac in ethpeer_maclist %}
+        - "--eth-peer={{ loop.index -1 }},{{ mac }}"
+{% endfor %}
+        - "--forward-mode={{ forward_mode }}"
         image: "{{ image_testpmd }}"
         imagePullPolicy: "{{ image_pull_policy }}"
         securityContext:
 {% if privileged %}
           privileged: true
 {% else %}
-          runAsUser: 0
           capabilities:
             add: ["IPC_LOCK", "NET_ADMIN"]
 {% endif %}
@@ -74,9 +90,6 @@ spec:
           mountPath: /var/log/testpmd
         - name: lib-dir
           mountPath: /var/lib/testpmd
-        - name: cnf-run
-          mountPath: /var/lib/testpmd/run
-          subPath: run
         env:
         - name: NETWORK_NAME_LIST
           value: "{{ network_resources.keys()|list|join(',') }}"
@@ -88,20 +101,6 @@ spec:
               fieldPath: spec.nodeName
         - name: CR_NAME
           value: "{{ ansible_operator_meta.name }}"
-        - name: eth_peer
-          value: "{{ eth_peer }}"
-        - name: socket_mem
-          value: "{{ socket_memory }}"
-        - name: memory_channels
-          value: "{{ memory_channels }}"
-        - name: rx_queues
-          value: "{{ rx_queues }}"
-        - name: tx_queues
-          value: "{{ tx_queues }}"
-        - name: rx_descriptors
-          value: "{{ rx_descriptors }}"
-        - name: tx_descriptors
-          value: "{{ tx_descriptors }}"
 {% for key, value in environments.items() %}
         - name: {{ key }}
           value: "{{ value }}"
@@ -114,7 +113,3 @@ spec:
         emptyDir: {}
       - name: lib-dir
         emptyDir: {}
-      - name: cnf-run
-        configMap:
-          name: cnf-run
-          defaultMode: 0755
