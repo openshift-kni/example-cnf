@@ -49,12 +49,10 @@ elif [[ $RUN_APP == "2" ]]; then
     sleep 10
     echo "Running binary search"
     run-binary-search
-    sleep infinity
 elif [[ $RUN_APP == "3" ]]; then
     sleep 10
     echo "Running TRex in direct mode (without LB)"
     run-trex-direct
-    sleep infinity
 else
     echo "Skipping TRex run, waiting ..."
     sleep infinity

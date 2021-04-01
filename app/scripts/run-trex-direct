@@ -52,8 +52,9 @@ class STLS1(object):
         self.process.start()
 
     def start_watch(self):
-        process = Thread(target=trexmac.watch_cr, args=[self.queue])
-        process.start()
+        self.watch_mac = Thread(target=trexmac.watch_cr, args=[self.queue])
+        self.watch_mac.daemon = True
+        self.watch_mac.start()
 
     def update(self, obj):
         meta = obj['metadata']
@@ -179,7 +180,6 @@ class STLS1(object):
 
             trexstats.force_exit = True
 
-
             # read the stats after the test
             stats = self.client.get_stats()
             warnings = self.client.get_warnings()
@@ -196,8 +196,10 @@ class STLS1(object):
 
         if passed:
             print("\nTest has passed :-)\n")
+            sys.exit(0)
         else:
             print("\nTest has failed :-(\n")
+            sys.exit(1)
 
     def signal_handler(self, sig, frame):
         log.info('You pressed Ctrl+C!')
