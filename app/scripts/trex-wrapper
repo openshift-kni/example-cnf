@@ -4,6 +4,12 @@ set -ex
 
 RUN_APP=${run_app:=1}
 SERVER=${TREX_SERVER_URL:="0.0.0.0"}
+MODE=${MODE:="lb"}
+
+if [[ "${MODE}" == "direct" ]]; then
+  echo "MODE is ${MODE}"
+  RUN_APP=3
+fi
 
 # wait for trex server to be ready
 count=120
@@ -37,7 +43,7 @@ fi
 if [[ $RUN_APP == "1" ]]; then
     # leave the server running for 10s before starting application
     sleep 10
-    echo "Running TRex application ..."
+    echo "Running TRex ..."
     run-trex
 elif [[ $RUN_APP == "2" ]]; then
     sleep 10
@@ -46,11 +52,10 @@ elif [[ $RUN_APP == "2" ]]; then
     sleep infinity
 elif [[ $RUN_APP == "3" ]]; then
     sleep 10
-    echo "Running binary search"
+    echo "Running TRex in direct mode (without LB)"
     run-trex-direct
     sleep infinity
 else
-    echo "Skipping TRex application run, waiting ..."
+    echo "Skipping TRex run, waiting ..."
     sleep infinity
 fi
-

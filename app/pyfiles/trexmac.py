@@ -10,15 +10,15 @@ from logger import log
 def watch_cr(queue):
     group = "examplecnf.openshift.io"
     version = "v1"
-    namespace = "example-cnf"
-    plural = "testpmdmacs"
+    namespace = os.environ.get("NAMESPACE", "example-cnf")
+    plural = "cnfappmacs"
 
     config.load_incluster_config()
     custom_api = client.CustomObjectsApi()
     w = watch.Watch()
     now = datetime.utcnow().replace(tzinfo=tzutc())
-    for event in w.stream(custom_api.list_cluster_custom_object,
-                          group=group, version=version, plural=plural):
+    for event in w.stream(custom_api.list_namespaced_custom_object,
+                          group=group, version=version, plural=plural, namespace=namespace):
         if event['type'] == 'ADDED':
             meta = event['object']['metadata']
             spec = event['object']['spec']
@@ -34,11 +34,11 @@ def get_macs(spec):
     log.info("macs list - %s" % ",".join(macs))
     return macs
 
-def get_testpmdmac_cr_values():
+def get_cnfappmac_cr_values():
     group = "examplecnf.openshift.io"
     version = "v1"
     namespace = "example-cnf"
-    plural = "testpmdmacs"
+    plural = "cnfappmacs"
 
     config.load_incluster_config()
     custom_api = client.CustomObjectsApi()

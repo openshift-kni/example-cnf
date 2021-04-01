@@ -4,7 +4,7 @@ set -e
 
 TAG="${TAG:-v0.2.1}"
 
-CLI=${CLI:="docker"}
+CLI=${CLI:="podman"}
 ORG=${ORG:="rh-nfv-int"}
 REGISTRY="quay.io/${ORG}"
 

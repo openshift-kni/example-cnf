@@ -3,7 +3,7 @@ USER root
 RUN yum install -y nc && yum clean all
 RUN mkdir -p /opt/trex && cd /opt/trex && git clone --branch v2.85 https://github.com/cisco-system-traffic-generator/trex-core.git
 RUN cd /opt && git clone https://github.com/atheurer/trafficgen
-RUN pip3 install pyyaml kubernetes ansible
+RUN pip3 install pyyaml kubernetes
 ENV PYTHONPATH="/opt/trex/trex-core/scripts/automation/trex_control_plane/interactive"
 ENV TREX_DIR="/opt/trex/trex-core/scripts"
 ENV TRAFFICGEN_DIR="/opt/trafficgen"

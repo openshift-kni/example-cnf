@@ -26,10 +26,11 @@ clog = CustomLogger("debug")
 
 
 class STLS1(object):
-    def __init__ (self, ports, size, rate, duration=-1, verbose="debug"):
-        self.server_url = os.environ.get("server_url", "localhost")
+    def __init__ (self, ports, size, rate, profile=None, duration=-1, verbose="debug"):
+        self.server_url = os.environ.get("TREX_SERVER_URL", "localhost")
         self.client = STLClient(verbose_level=verbose, logger=clog, server=self.server_url)
         self.fsize = 64
+        self.profile = profile
         self.pg_id = 0
         self.pkt_type = "ether"
         self.num_streams = 1
@@ -45,6 +46,10 @@ class STLS1(object):
         self.stats_obj = trexstats.TRexAppStats(ports)
         # 'direct' or 'lb' mode
         self.mode = os.getenv('MODE', 'direct')
+
+    def start_stats_monitor(self):
+        self.process = Thread(target=trexstats.watch, args=[self.client, self.ports])
+        self.process.start()
 
     def start_watch(self):
         process = Thread(target=trexmac.watch_cr, args=[self.queue])
@@ -127,7 +132,7 @@ class STLS1(object):
 
     def init_streams(self):
         if self.mode == 'direct':
-            macs = trexmac.get_testpmdmac_cr_values()
+            macs = trexmac.get_cnfappmac_cr_values()
         else:
             macs = os.getenv('LB_MACS', '').split(',')
 
@@ -164,30 +169,25 @@ class STLS1(object):
             if self.mode == 'direct':
                 self.start_watch()
 
-            trexstats.started()
+            trexstats.started(self.profile, self.rate, self.duration)
 
-            if self.duration == -1:
-                while True:
-                    self.stats_obj.stats(self.client.get_stats(), ports = self.ports)
-                    try:
-                        obj = self.queue.get_nowait()
-                        self.update(obj)
-                    except queue.Empty:
-                        pass
-                    if self.force_exit:
-                        break
-                    time.sleep(1)
-            else:
-                # block until done
-                self.client.wait_on_traffic(ports=self.ports)
+            # start monitory thread to post stats
+            self.start_stats_monitor()
+
+            # block until done
+            self.client.wait_on_traffic(ports=self.ports)
+
+            trexstats.force_exit = True
+
 
             # read the stats after the test
             stats = self.client.get_stats()
             warnings = self.client.get_warnings()
-            passed = trexstats.completed_stats(stats, warnings, self.port_a, self.port_b)
+            passed = trexstats.completed_stats(stats, warnings, self.port_a, self.port_b, self.profile, self.rate, self.duration)
 
         except STLError as e:
             passed = False
+            trexstats.force_exit = True
             log.info(e)
 
         finally:
@@ -212,15 +212,18 @@ def main():
     packet_size = os.getenv("PACKET_SIZE") or os.getenv("packet_size") or 64
     packet_rate = os.getenv("PACKET_RATE") or os.getenv("packet_rate") or "10pps"
     duration = os.getenv("DURATION") or os.getenv("duration") or -1
+    profile = os.environ.get("TREX_PROFILE_NAME")
     if duration != -1:
         duration = int(duration)
     log.info("Starting burst...")
     log.info("Packet Size - %s" % packet_size)
     log.info("Packet Rate - %s" % packet_rate)
+    if profile:
+        log.info("TRex profile - %s" % profile)
     if duration == -1:
         log.info("Packets will be generated forever...")
     try:
-        obj = STLS1(ports = [0, 1], size=packet_size, rate=packet_rate, duration=duration)
+        obj = STLS1(ports = [0, 1], size=packet_size, rate=packet_rate, duration=duration, profile=profile)
         obj.simple_burst()
     except Exception as e:
         log.exception("failed to start burst: %s" % e)
