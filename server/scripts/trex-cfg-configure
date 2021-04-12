@@ -52,7 +52,7 @@ def main():
     cfg[0]['interfaces'].extend([pci.replace('0000:','') for pci in pci_list])
     #cfg[0]['port_limit'] = len(pci_list)
 
-    if not core_string or '-' in core_string:
+    if not core_string:
         numa = get_numa_node(pci_list)
         core_string = get_cores(numa, 6)
 
