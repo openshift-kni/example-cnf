@@ -1,10 +1,10 @@
 # Current Operator version
-VERSION ?= 0.2.2
+VERSION ?= 0.2.3
 REGISTRY ?= quay.io
 ORG ?= rh-nfv-int
 DEFAULT_CHANNEL ?= alpha
 
-CONTAINER_CLI ?= docker
+CONTAINER_CLI ?= podman
 CLUSTER_CLI ?= oc
 
 # Default bundle image tag
