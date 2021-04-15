@@ -17,16 +17,6 @@ metadata:
               }
             ]
           }
-        },
-        {
-          "apiVersion": "examplecnf.openshift.io/v1",
-          "kind": "TestPMDMac",
-          "metadata": {
-            "name": "testpmdmac-sample"
-          },
-          "spec": {
-            "foo": "bar"
-          }
         }
       ]
     capabilities: Basic Install
@@ -38,9 +28,6 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
-    - kind: TestPMDMac
-      name: testpmdmacs.examplecnf.openshift.io
-      version: v1
     - kind: TestPMD
       name: testpmds.examplecnf.openshift.io
       version: v1
@@ -89,19 +76,6 @@ spec:
           resources:
           - testpmds
           - testpmds/status
-          verbs:
-          - create
-          - delete
-          - get
-          - list
-          - patch
-          - update
-          - watch
-        - apiGroups:
-          - examplecnf.openshift.io
-          resources:
-          - testpmdmacs
-          - testpmdmacs/status
           verbs:
           - create
           - delete

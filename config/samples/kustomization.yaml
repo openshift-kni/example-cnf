@@ -1,5 +1,4 @@
 ## Append samples you want in your CSV to this file as resources ##
 resources:
 - examplecnf_v1_testpmd.yaml
-- examplecnf_v1_testpmdmac.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

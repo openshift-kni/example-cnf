@@ -3,5 +3,4 @@
 # It should be run by config/default
 resources:
 - bases/examplecnf.openshift.io_testpmds.yaml
-- bases/examplecnf.openshift.io_testpmdmacs.yaml
 # +kubebuilder:scaffold:crdkustomizeresource

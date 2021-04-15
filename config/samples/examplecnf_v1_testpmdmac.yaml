@@ -1,6 +1,0 @@
-apiVersion: examplecnf.openshift.io/v1
-kind: TestPMDMac
-metadata:
-  name: testpmdmac-sample
-spec:
-  foo: bar
