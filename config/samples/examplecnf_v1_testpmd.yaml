@@ -2,6 +2,4 @@ apiVersion: examplecnf.openshift.io/v1
 kind: TestPMD
 metadata:
   name: testpmd-sample
-spec:
-  networks:
-  - name: vfdpdk1
+spec: {}
