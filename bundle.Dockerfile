@@ -15,8 +15,8 @@ LABEL operators.operatorframework.io.metrics.project_layout=ansible.sdk.operator
 LABEL operators.operatorframework.io.test.mediatype.v1=scorecard+v1
 LABEL operators.operatorframework.io.test.config.v1=tests/scorecard/
 
-LABEL com.redhat.openshift.versions="v4.5,v4.6,v4.7"
-LABEL com.redhat.delivery.backport=true
+LABEL com.redhat.openshift.versions="v4.6"
+LABEL com.redhat.delivery.backport=false
 LABEL com.redhat.delivery.operator.bundle=true
 
 # Copy files to locations specified by labels.
