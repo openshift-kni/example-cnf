@@ -1,5 +1,4 @@
-#FROM quay.io/krsacme/centos:8.2.2004
-FROM centos:8.2.2004
+FROM quay.io/centos/centos:8
 
 # Install prerequisite packages
 RUN yum install -y wget numactl numactl-devel make cmake git wget gcc gcc-c++ kernel-headers glibc-devel net-tools \
