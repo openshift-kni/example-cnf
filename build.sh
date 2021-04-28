@@ -27,9 +27,6 @@ if [[ $1 == "all" || $1 == "testpmd" ]]; then
         popd
     fi
 fi
-if [[ $1 == "all" || $1 == "monitor" ]]; then
-    LIST="${LIST} monitor"
-fi
 if [[ $1 == "all" || $1 == "mac" ]]; then
     LIST="${LIST} mac"
 fi
