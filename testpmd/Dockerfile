@@ -1,5 +1,4 @@
-FROM quay.io/krsacme/centos:8.2.2004
-#FROM quay.io/krsacme/centos:8.1.1911
+FROM quay.io/centos/centos:8
 
 ENV DPDK_VER 19.11
 ENV DPDK_DIR /usr/src/dpdk-${DPDK_VER}
