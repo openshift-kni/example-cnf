@@ -2,7 +2,7 @@
 
 set -e
 
-TAG=${TAG:-"v0.2.1"}
+TAG=${TAG:-"v0.2.2"}
 
 CLI=${CLI:="docker"}
 ORG=${ORG:="rh-nfv-int"}
