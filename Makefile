@@ -49,11 +49,11 @@ undeploy: kustomize
 
 # Build the docker image
 docker-build:
-	docker build . -t ${IMG}
+	podman build . -t ${IMG}
 
 # Push the docker image
 docker-push: docker-build
-	docker push ${IMG}
+	podman push ${IMG}
 
 PATH  := $(PATH):$(PWD)/bin
 SHELL := env PATH=$(PATH) /bin/sh
@@ -103,5 +103,5 @@ bundle: bundle-check kustomize
 # Build the bundle image.
 .PHONY: bundle-build
 bundle-build:
-	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
-	docker push $(BUNDLE_IMG)
+	podman build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+	podman push $(BUNDLE_IMG)
