@@ -3,9 +3,12 @@ layout: go.kubebuilder.io/v2
 projectName: cnf-app-mac-operator
 repo: github.com/rh-nfv-int/cnf-app-mac-operator
 resources:
-- group: examplecnf
+-
+  controller: true
+  domain: openshift.io
+  group: examplecnf
   kind: CNFAppMac
   version: v1
-version: 3-alpha
+version: "3"
 plugins:
   go.sdk.operatorframework.io/v2-alpha: {}
