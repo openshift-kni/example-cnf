@@ -10,13 +10,26 @@ metadata:
           "metadata": {
             "name": "testpmd-sample"
           },
-          "spec": {}
+          "spec": {
+            "ethpeerMaclist": [
+              "20:04:0f:f1:89:01",
+              "20:04:0f:f1:89:02"
+            ],
+            "image_testpmd": "registry.redhat.io/openshift4/dpdk-base-rhel8:v4.6",
+            "networks": [
+              {
+                "count": 2,
+                "name": "intel-numa0-net1"
+              }
+            ],
+            "size": 1
+          }
         }
       ]
     capabilities: Basic Install
     operators.operatorframework.io/builder: operator-sdk-v1.4.0+git
     operators.operatorframework.io/project_layout: ansible.sdk.operatorframework.io/v1
-  name: testpmd-operator.v0.2.3
+  name: testpmd-operator.v0.2.4
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -94,7 +107,7 @@ spec:
           - securitycontextconstraints
           verbs:
           - use
-        serviceAccountName: default
+        serviceAccountName: testpmd-operator-controller-manager
       deployments:
       - name: testpmd-operator-controller-manager
         spec:
@@ -117,10 +130,23 @@ spec:
                 env:
                 - name: ANSIBLE_GATHERING
                   value: explicit
-                image: quay.io/rh-nfv-int/testpmd-operator:v0.2.3
+                image: quay.io/rh-nfv-int/testpmd-operator:v0.2.4
                 imagePullPolicy: IfNotPresent
+                livenessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: 6789
+                  initialDelaySeconds: 15
+                  periodSeconds: 20
                 name: manager
+                readinessProbe:
+                  httpGet:
+                    path: /readyz
+                    port: 6789
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
                 resources: {}
+              serviceAccountName: testpmd-operator-controller-manager
               terminationGracePeriodSeconds: 10
       permissions:
       - rules:
@@ -143,7 +169,7 @@ spec:
           verbs:
           - create
           - patch
-        serviceAccountName: default
+        serviceAccountName: testpmd-operator-controller-manager
     strategy: deployment
   installModes:
   - supported: true
@@ -167,4 +193,4 @@ spec:
   maturity: alpha
   provider:
     name: Red Hat
-  version: 0.2.3
+  version: 0.2.4

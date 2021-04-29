@@ -2,4 +2,10 @@ apiVersion: examplecnf.openshift.io/v1
 kind: TestPMD
 metadata:
   name: testpmd-sample
-spec: {}
+spec:
+  image_testpmd: registry.redhat.io/openshift4/dpdk-base-rhel8:v4.6
+  size: 1
+  ethpeerMaclist: ["20:04:0f:f1:89:01","20:04:0f:f1:89:02"]
+  networks:
+  - name: intel-numa0-net1
+    count: 2

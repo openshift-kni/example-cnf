@@ -38,6 +38,7 @@ spec:
                 values:
                 - lb-app
             topologyKey: kubernetes.io/hostname
+      serviceAccountName: testpmd-operator-controller-manager
       containers:
       - name: testpmd
         command:
