@@ -131,7 +131,7 @@ def completed_stats(stats, warnings, port_a, port_b, profile, rate, duration):
     if lost <= 0 and not warnings:
         passed = True
         packets = stats[port_a]["opackets"] + stats[port_b]["opackets"]
-        data['msg'] = ("Test has Passed with no loss, total packets %s".format(packets))
+        data['msg'] = ("Test has Passed with no loss, total packets {}".format(packets))
         data['reason'] = 'TestPassed'
     else:
         data['msg'] = ("Test has failed with packets loss of {} pkts".format(lost))
