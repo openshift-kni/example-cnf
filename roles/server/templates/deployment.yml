@@ -50,6 +50,7 @@ spec:
                 - cnf-app
 {% endif %}
             topologyKey: kubernetes.io/hostname
+      serviceAccountName: trex-operator-controller-manager
       containers:
 {% if trex_server|bool %}
       - name: trex-server

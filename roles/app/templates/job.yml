@@ -11,6 +11,7 @@ spec:
         example-cnf-type: pkt-gen-app
     spec:
       restartPolicy: Never
+      serviceAccountName: trex-operator-controller-manager
       containers:
       - name: trex-app
         image: "{{ image_app }}"
