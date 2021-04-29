@@ -4,10 +4,10 @@ set -e
 
 TAG=${TAG:-"v0.2.2"}
 
-CLI=${CLI:="docker"}
+CLI=${CLI:="podman"}
 ORG=${ORG:="rh-nfv-int"}
 REGISTRY="quay.io/${ORG}"
-PULL=${PULL:="1"}
+PULL=${PULL:="0"}
 
 EXTRA=""
 if [[ $2 == "force" ]]; then
