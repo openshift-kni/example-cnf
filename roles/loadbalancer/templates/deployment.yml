@@ -39,6 +39,7 @@ spec:
                 - cnf-app
                 - pkt-gen
             topologyKey: kubernetes.io/hostname
+      serviceAccountName: testpmd-lb-operator-controller-manager
       containers:
       - name: loadbalancer
         command: ["testpmd-wrapper"]

@@ -2,7 +2,13 @@ domain: openshift.io
 layout: ansible.sdk.operatorframework.io/v1
 projectName: testpmd-lb-operator
 resources:
-- group: examplecnf
+-
+  controller: true
+  domain: openshift.io
+  group: examplecnf
   kind: LoadBalancer
   version: v1
-version: 3-alpha
+version: "3"
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}

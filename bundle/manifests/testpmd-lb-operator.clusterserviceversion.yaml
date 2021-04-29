@@ -16,9 +16,9 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    operators.operatorframework.io/builder: operator-sdk-v1.2.0
+    operators.operatorframework.io/builder: operator-sdk-v1.4.0+git
     operators.operatorframework.io/project_layout: ansible.sdk.operatorframework.io/v1
-  name: testpmd-lb-operator.v0.2.2
+  name: testpmd-lb-operator.v0.2.4
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -80,7 +80,31 @@ spec:
           - patch
           - update
           - watch
-        serviceAccountName: default
+        - apiGroups:
+          - examplecnf.openshift.io
+          resources:
+          - cnfappmacs
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - k8s.cni.cncf.io
+          resources:
+          - network-attachment-definitions
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - security.openshift.io
+          resourceNames:
+          - privileged
+          resources:
+          - securitycontextconstraints
+          verbs:
+          - use
+        serviceAccountName: testpmd-lb-operator-controller-manager
       deployments:
       - name: testpmd-lb-operator-controller-manager
         spec:
@@ -101,9 +125,22 @@ spec:
                 env:
                 - name: ANSIBLE_GATHERING
                   value: explicit
-                image: quay.io/rh-nfv-int/testpmd-lb-operator:v0.2.2
+                image: quay.io/rh-nfv-int/testpmd-lb-operator:v0.2.4
+                livenessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: 6789
+                  initialDelaySeconds: 15
+                  periodSeconds: 20
                 name: manager
+                readinessProbe:
+                  httpGet:
+                    path: /readyz
+                    port: 6789
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
                 resources: {}
+              serviceAccountName: testpmd-lb-operator-controller-manager
               terminationGracePeriodSeconds: 10
       permissions:
       - rules:
@@ -126,7 +163,7 @@ spec:
           verbs:
           - create
           - patch
-        serviceAccountName: default
+        serviceAccountName: testpmd-lb-operator-controller-manager
     strategy: deployment
   installModes:
   - supported: true
@@ -152,5 +189,4 @@ spec:
   maturity: alpha
   provider:
     name: Red Hat
-  replaces: testpmd-lb-operator.v0.2.1
-  version: 0.2.2
+  version: 0.2.4
