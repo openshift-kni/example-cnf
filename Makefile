@@ -7,8 +7,10 @@ DEFAULT_CHANNEL ?= alpha
 CONTAINER_CLI ?= podman
 CLUSTER_CLI ?= oc
 
+OPERATOR_NAME = testpmd-operator
+
 # Default bundle image tag
-BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/testpmd-operator-bundle:v$(VERSION)
+BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME)-bundle:v$(VERSION)
 # Options for 'bundle-build'
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
@@ -19,7 +21,7 @@ endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 # Image URL to use all building/pushing image targets
-IMG ?= $(REGISTRY)/$(ORG)/testpmd-operator:v$(VERSION)
+IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME):v$(VERSION)
 
 all: docker-build docker-push
 
@@ -100,6 +102,9 @@ bundle: kustomize
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+	${CONTAINER_CLI} pull $(IMG)
+	$(eval DIGEST = $(shell ${CONTAINER_CLI} inspect $(IMG) | jq -r '.[]["Digest"]'))
+	sed -i -e 's/\(\s*image: .*\):v'$(VERSION)'/\1@'$(DIGEST)'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	operator-sdk bundle validate ./bundle
 
 # Build the bundle image.
