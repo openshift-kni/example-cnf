@@ -30,6 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
@@ -38,6 +39,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+
+	//netv1 "github.com/k8snetworkplumbingwg/network-attachment-definition-client/pkg/apis/k8s.cni.cncf.io/v1"
 
 	examplecnfv1 "github.com/rh-nfv-int/cnf-app-mac-operator/api/v1"
 )
@@ -111,15 +114,29 @@ func (r *CNFAppMacReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, nil
 	}
 
-	// Check if the pod has additional networks via NetworkAttachmentDefinitions
-	networkStr, ok := pod.Annotations["k8s.v1.cni.cncf.io/networks"]
-	if !ok {
+	lbl, ok := pod.Labels["example-cnf-type"]
+	if !ok || lbl != "cnf-app" {
 		return ctrl.Result{}, nil
 	}
+
+	log.Info("Reconcile cnf application")
+
+	// Check if the pod has additional networks via NetworkAttachmentDefinitions
+	networkStr, ok := pod.Annotations["k8s.v1.cni.cncf.io/networks"]
 	var networks []map[string]interface{}
-	json.Unmarshal([]byte(networkStr), &networks)
-	if len(networks) == 0 {
-		return ctrl.Result{}, nil
+	if ok {
+		json.Unmarshal([]byte(networkStr), &networks)
+		if len(networks) == 0 {
+			return ctrl.Result{}, nil
+		}
+	} else {
+		// CNF application, but does not have required annotations
+		// This can be case of shift-on-stack where sriov-cnf will not work with annotations
+		// Try alternate method
+		err = r.getNetworksFromResources(req, pod, &networks)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 	}
 
 	// Check if one of the nework has hardcode mac, pod will be skipped
@@ -145,6 +162,7 @@ func (r *CNFAppMacReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	var nwNameList []string
 	log.Info("Pod Info", "Node", pod.Spec.NodeName)
+	log.Info("Length", "l2", len(networks))
 	for _, item := range networks {
 		log.Info("Newtorks", "name", item["name"])
 		if !containsString(nwNameList, item["name"].(string)) {
@@ -194,6 +212,46 @@ func (r *CNFAppMacReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	log.Info("Job created")
 	return ctrl.Result{}, nil
+}
+
+func (r *CNFAppMacReconciler) getNetworksFromResources(req ctrl.Request, pod *corev1.Pod, networks *[]map[string]interface{}) error {
+	ctx := context.Background()
+	log := r.Log.WithValues("cnfappmac", req.NamespacedName)
+
+	log.Info("getNet")
+
+	// Get resources and networks via net-attach-def
+	listObj := &unstructured.UnstructuredList{}
+	opts := []client.ListOption{}
+	listObj.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "k8s.cni.cncf.io",
+		Version: "v1",
+		Kind:    "NetworkAttachmentDefinitionList",
+	})
+	err := r.List(ctx, listObj, opts...)
+	if err != nil {
+		return err
+	}
+
+	for k, _ := range pod.Spec.Containers[0].Resources.Limits {
+		netName, ok := r.getNetworkName(k, listObj)
+		if ok {
+			entry := map[string]interface{}{"name": netName}
+			*networks = append(*networks, entry)
+		}
+	}
+	return nil
+}
+
+func (r *CNFAppMacReconciler) getNetworkName(resource corev1.ResourceName, listObj *unstructured.UnstructuredList) (string, bool) {
+	for _, net := range listObj.Items {
+		for _, v := range net.GetAnnotations() {
+			if v == string(resource) {
+				return net.GetName(), true
+			}
+		}
+	}
+	return "", false
 }
 
 func (r *CNFAppMacReconciler) removeCR(req ctrl.Request) {

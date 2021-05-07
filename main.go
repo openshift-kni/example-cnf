@@ -78,7 +78,7 @@ func main() {
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
-		MetricsBindAddress: metricsAddr,
+		MetricsBindAddress: ":8091",
 		Port:               9443,
 		LeaderElection:     enableLeaderElection,
 		LeaderElectionID:   "34092d78.openshift.io",
