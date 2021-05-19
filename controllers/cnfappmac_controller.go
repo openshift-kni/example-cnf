@@ -31,6 +31,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
@@ -135,6 +136,7 @@ func (r *CNFAppMacReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		// Try alternate method
 		err = r.getNetworksFromResources(req, pod, &networks)
 		if err != nil {
+			log.Error(err, "Failed to get Networks from Resources")
 			return ctrl.Result{}, err
 		}
 	}
@@ -162,7 +164,6 @@ func (r *CNFAppMacReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	var nwNameList []string
 	log.Info("Pod Info", "Node", pod.Spec.NodeName)
-	log.Info("Length", "l2", len(networks))
 	for _, item := range networks {
 		log.Info("Newtorks", "name", item["name"])
 		if !containsString(nwNameList, item["name"].(string)) {
@@ -171,6 +172,7 @@ func (r *CNFAppMacReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	var resources []string
+	var resourcesMapList []map[string]interface{}
 	podName := req.NamespacedName.Name
 	namespace := req.NamespacedName.Namespace
 	for _, nwName := range nwNameList {
@@ -199,30 +201,97 @@ func (r *CNFAppMacReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		pciValue = strings.TrimSuffix(pciValue, "\r")
 		pciList := strings.Split(pciValue, ",")
 		resource := nwName + "," + netAttach.GetAnnotations()["k8s.v1.cni.cncf.io/resourceName"]
+		resourcesMap := map[string]interface{}{
+			"name": nwName,
+			"res":  netAttach.GetAnnotations()["k8s.v1.cni.cncf.io/resourceName"],
+			"pci":  pciList,
+		}
+		resourcesMapList = append(resourcesMapList, resourcesMap)
 		for _, pci := range pciList {
 			resource += "," + pci
 		}
 		resources = append(resources, resource)
 	}
 
-	err = r.createMacFetchJob(req, pod.Spec.NodeName, resources)
+	macStr, err := getContainerLogValue(req.NamespacedName.Name, req.NamespacedName.Namespace)
+	//err = r.createMacFetchJob(req, pod.Spec.NodeName, resources)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
-	log.Info("Job created")
+	macs := strings.Split(strings.ReplaceAll(macStr, "\r\n", "\n"), "\n")
+
+	err = r.createCR(req, pod.UID, pod.Spec.NodeName, resourcesMapList, macs)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
 	return ctrl.Result{}, nil
+}
+
+func (r *CNFAppMacReconciler) createCR(req ctrl.Request, uid types.UID, nodename string, resourcesMapList []map[string]interface{}, macs []string) error {
+	//log := r.Log.WithValues("cnfappmac", req.NamespacedName)
+	resInterface := []interface{}{}
+	macIdx := 0
+	for _, item := range resourcesMapList {
+		pciList := item["pci"].([]string)
+		devInterface := []interface{}{}
+		for _, pci := range pciList {
+			dev := map[string]interface{}{
+				"pci": pci,
+				"mac": macs[macIdx],
+			}
+			macIdx++
+			devInterface = append(devInterface, dev)
+		}
+		res := map[string]interface{}{
+			"name":    item["name"],
+			"devices": devInterface,
+		}
+		resInterface = append(resInterface, res)
+	}
+
+	name := req.NamespacedName.Name
+	namespace := req.NamespacedName.Namespace
+	owners := []interface{}{}
+	owner := map[string]interface{}{
+		"apiVersion":         "v1",
+		"controller":         true,
+		"blockOwnerDeletion": false,
+		"kind":               "Pod",
+		"name":               name,
+		"uid":                uid,
+	}
+	owners = append(owners, owner)
+
+	macCR := &unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"apiVersion": "examplecnf.openshift.io/v1",
+			"kind":       "CNFAppMac",
+			"metadata": map[string]interface{}{
+				"name":            name,
+				"namespace":       namespace,
+				"ownerReferences": owners,
+			},
+			"spec": map[string]interface{}{
+				"resources": resInterface,
+				"node":      nodename,
+				"hostname":  name,
+			},
+		},
+	}
+	err := r.Create(context.Background(), macCR)
+	return err
 }
 
 func (r *CNFAppMacReconciler) getNetworksFromResources(req ctrl.Request, pod *corev1.Pod, networks *[]map[string]interface{}) error {
 	ctx := context.Background()
-	log := r.Log.WithValues("cnfappmac", req.NamespacedName)
-
-	log.Info("getNet")
 
 	// Get resources and networks via net-attach-def
 	listObj := &unstructured.UnstructuredList{}
-	opts := []client.ListOption{}
+	opts := []client.ListOption{
+		client.InNamespace(req.NamespacedName.Namespace),
+	}
 	listObj.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   "k8s.cni.cncf.io",
 		Version: "v1",
@@ -341,7 +410,19 @@ func getContainerEnvValue(podName, namespace, envName string) (string, error) {
 		"-c",
 		"echo $" + envName,
 	}
+	return executeCmdOnContainer(cmd, podName, namespace)
+}
 
+func getContainerLogValue(podName, namespace string) (string, error) {
+	cmd := []string{
+		"sh",
+		"-c",
+		"egrep 'Port [0-9]:' /var/log/testpmd/app.log | sed 's/Port [0-9]: //'",
+	}
+	return executeCmdOnContainer(cmd, podName, namespace)
+}
+
+func executeCmdOnContainer(cmd []string, podName, namespace string) (string, error) {
 	config, err := config.GetConfig()
 	if err != nil {
 		return "", err

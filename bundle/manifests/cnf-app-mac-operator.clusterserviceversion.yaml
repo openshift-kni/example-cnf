@@ -30,7 +30,7 @@ metadata:
     capabilities: Basic Install
     operators.operatorframework.io/builder: operator-sdk-v1.4.0+git
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
-  name: cnf-app-mac-operator.v0.2.4
+  name: cnf-app-mac-operator.v0.2.5
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -71,7 +71,7 @@ spec:
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.annotations['olm.targetNamespaces']
-                image: quay.io/rh-nfv-int/cnf-app-mac-operator:v0.2.4
+                image: quay.io/rh-nfv-int/cnf-app-mac-operator:v0.2.5
                 imagePullPolicy: Always
                 name: manager
                 resources:
@@ -199,4 +199,4 @@ spec:
   maturity: alpha
   provider:
     name: Red Hat
-  version: 0.2.4
+  version: 0.2.5
