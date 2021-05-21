@@ -11,3 +11,5 @@ enable_lb: true
 lb_macs: []
 trex_server: true
 trex_app: false
+
+skip_annot: false

@@ -14,6 +14,7 @@ spec:
 {% endif %}
   template:
     metadata:
+{% if not skip_annot %}
       annotations:
         k8s.v1.cni.cncf.io/networks: |
           [
@@ -30,6 +31,7 @@ spec:
 {% endfor %}
 {% endfor %}
           ]
+{% endif %}
       labels:
 {% if trex_server|bool %}
         example-cnf-type: pkt-gen

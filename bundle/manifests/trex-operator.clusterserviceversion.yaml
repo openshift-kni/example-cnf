@@ -40,7 +40,7 @@ metadata:
     capabilities: Basic Install
     operators.operatorframework.io/builder: operator-sdk-v1.4.0+git
     operators.operatorframework.io/project_layout: ansible.sdk.operatorframework.io/v1
-  name: trex-operator.v0.2.4
+  name: trex-operator.v0.2.5
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -167,6 +167,25 @@ spec:
           - securitycontextconstraints
           verbs:
           - use
+        - apiGroups:
+          - examplecnf.openshift.io
+          resources:
+          - cnfappmacs
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+        - apiGroups:
+          - k8s.cni.cncf.io
+          resources:
+          - network-attachment-definitions
+          verbs:
+          - get
+          - list
+          - watch
         serviceAccountName: trex-operator-controller-manager
       deployments:
       - name: trex-operator-controller-manager
@@ -187,7 +206,7 @@ spec:
                 - --enable-leader-election
                 - --leader-election-id=trex-operator
                 - --max-concurrent-reconciles=1
-                image: quay.io/rh-nfv-int/trex-operator:v0.2.4
+                image: quay.io/rh-nfv-int/trex-operator:v0.2.5
                 imagePullPolicy: IfNotPresent
                 livenessProbe:
                   httpGet:
@@ -250,4 +269,4 @@ spec:
   maturity: alpha
   provider:
     name: Red Hat
-  version: 0.2.4
+  version: 0.2.5
