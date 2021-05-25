@@ -36,3 +36,4 @@ tx_descriptors: 1024
 networks: []
 
 ethpeer_maclist: []
+skip_annot: false

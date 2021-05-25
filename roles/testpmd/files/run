@@ -82,7 +82,8 @@ function sig_term() {
 trap sig_term SIGTERM
 
 if [[ $RUN_APP == "1" ]]; then
-    ${CMD}
+    ${CMD} 2>&1 | tee /var/log/testpmd/app.log
 else
+    echo ${CMD} > /var/lib/testpmd/cmd
     sleep infinity
 fi

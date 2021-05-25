@@ -29,7 +29,7 @@ metadata:
     capabilities: Basic Install
     operators.operatorframework.io/builder: operator-sdk-v1.4.0+git
     operators.operatorframework.io/project_layout: ansible.sdk.operatorframework.io/v1
-  name: testpmd-operator.v0.2.4
+  name: testpmd-operator.v0.2.5
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -130,7 +130,7 @@ spec:
                 env:
                 - name: ANSIBLE_GATHERING
                   value: explicit
-                image: quay.io/rh-nfv-int/testpmd-operator@sha256:1bf57e43272796996f7617307d721c7764454a656484bb618eb945971c117e1a
+                image: quay.io/rh-nfv-int/testpmd-operator@sha256:a725658acee30dd0d3782a2f4efee9cb949d10cf99dfd56250a8b7be34330bc7
                 imagePullPolicy: IfNotPresent
                 livenessProbe:
                   httpGet:
@@ -193,4 +193,4 @@ spec:
   maturity: alpha
   provider:
     name: Red Hat
-  version: 0.2.4
+  version: 0.2.5

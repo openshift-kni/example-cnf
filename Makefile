@@ -1,5 +1,5 @@
 # Current Operator version
-VERSION ?= 0.2.4
+VERSION ?= 0.2.5
 REGISTRY ?= quay.io
 ORG ?= rh-nfv-int
 DEFAULT_CHANNEL ?= alpha
@@ -23,7 +23,7 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 # Image URL to use all building/pushing image targets
 IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME):v$(VERSION)
 
-all: docker-build docker-push
+all: docker-build bundle-build
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: ansible-operator
@@ -50,10 +50,6 @@ undeploy: kustomize
 # Build the docker image
 docker-build:
 	${CONTAINER_CLI} build . -t ${IMG}
-
-# Push the docker image
-docker-push:
-	${CONTAINER_CLI} push ${IMG}
 
 PATH  := $(PATH):$(PWD)/bin
 SHELL := env PATH=$(PATH) /bin/sh
@@ -96,19 +92,22 @@ ANSIBLE_OPERATOR = $(shell which ansible-operator)
 endif
 endif
 
+# Push the docker image
+docker-push-with-bundle:
+	${CONTAINER_CLI} push ${IMG}
+
 # Generate bundle manifests and metadata, then validate generated files.
 .PHONY: bundle
-bundle: kustomize
+bundle: kustomize docker-push-with-bundle
 	operator-sdk generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
-	${CONTAINER_CLI} pull $(IMG)
-	$(eval DIGEST = $(shell ${CONTAINER_CLI} inspect $(IMG) | jq -r '.[]["Digest"]'))
+	$(eval DIGEST = $(shell skopeo inspect docker://$(IMG) | jq -r '.Digest'))
 	sed -i -e 's/\(\s*image: .*\):v'$(VERSION)'/\1@'$(DIGEST)'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	operator-sdk bundle validate ./bundle
 
 # Build the bundle image.
 .PHONY: bundle-build
-bundle-build:
+bundle-build: bundle
 	${CONTAINER_CLI} build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
 	${CONTAINER_CLI} push $(BUNDLE_IMG)

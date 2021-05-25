@@ -10,6 +10,7 @@ spec:
       example-cnf-type: cnf-app
   template:
     metadata:
+{% if not skip_annot|bool %}
       annotations:
         k8s.v1.cni.cncf.io/networks: '[
 {% for network in networks %}
@@ -25,6 +26,7 @@ spec:
 {% endfor %}
 {% endfor %}
         ]'
+{% endif %}
       labels:
         example-cnf-type: cnf-app
     spec:
