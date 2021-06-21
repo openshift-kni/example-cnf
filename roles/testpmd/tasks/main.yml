@@ -2,12 +2,6 @@
 - set_fact:
     network_resources: {}
     network_name_list: []
-    mac_workaround_image: "{{ registry }}/{{ org }}/testpmd-container-app-mac:{{ version }}"
-
-- name: use centos image if image_testpmd is undefined
-  set_fact:
-    image_testpmd: "{{ registry }}/{{ org }}/testpmd-container-app-testpmd:{{ version }}"
-  when: image_testpmd is undefined
 
 - name: Validate the CPUs and forwarding cores
   fail:

@@ -104,6 +104,7 @@ bundle: kustomize docker-push-with-bundle
 	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
 	$(eval DIGEST = $(shell skopeo inspect docker://$(IMG) | jq -r '.Digest'))
 	sed -i -e 's/\(\s*image: .*\):v'$(VERSION)'/\1@'$(DIGEST)'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
+	cat relatedImages.yaml >> bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	operator-sdk bundle validate ./bundle
 
 # Build the bundle image.

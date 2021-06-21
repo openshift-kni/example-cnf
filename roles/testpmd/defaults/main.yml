@@ -7,7 +7,8 @@ privileged: false
 network_defintions: ""
 network_resources: {}
 environments: {}
-image_testpmd: registry.redhat.io/openshift4/dpdk-base-rhel8:v4.6
+image_testpmd: registry.redhat.io/openshift4/dpdk-base-rhel8@sha256:9af03fb4c5ae1c51f71ad04f02fee8e9458aa73c3f4324e984c731d07896c4e1
+mac_workaround_image: quay.io/rh-nfv-int/testpmd-container-app-mac@sha256:edc9bb4724d792d415df492aea1768d4127f7fe412d99e0bee8918a8008fcbce
 
 # mac workaround variables
 mac_workaround_enable: false
