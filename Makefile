@@ -1,5 +1,5 @@
 # Current Operator version
-VERSION         := 0.2.5
+VERSION         := 0.2.6
 TAG             := v$(VERSION)
 REGISTRY        ?= quay.io
 ORG             ?= rh-nfv-int
