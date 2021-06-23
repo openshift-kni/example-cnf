@@ -1,4 +1,4 @@
-FROM quay.io/operator-framework/ansible-operator:v1.5.0
+FROM quay.io/operator-framework/ansible-operator:v1.7.2
 
 MAINTAINER skramaja@redhat.com
 
