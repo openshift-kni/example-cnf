@@ -1,0 +1,5 @@
+  relatedImages:
+    - name: trex-container-server
+      image: "quay.io/rh-nfv-int/trex-container-server@sha256:57ab22022c81d6556c5c11acda05e823ebfabb3b539242519868c7a5b8213e48"
+    - name: trex-container-app
+      image: "quay.io/rh-nfv-int/trex-container-app@sha256:b78cf57524d298f08a3ad480417b1d150eec70a31d36ad3bb4fc796534d8c7f4"

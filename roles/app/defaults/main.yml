@@ -1,7 +1,5 @@
 ---
-version: ''
-registry: quay.io
-org: rh-nfv-int
+image_app: "quay.io/rh-nfv-int/trex-container-app@sha256:b78cf57524d298f08a3ad480417b1d150eec70a31d36ad3bb4fc796534d8c7f4" # v0.2.2
 image_pull_policy: Always
 command: ["trex-wrapper"]
 environments: {}

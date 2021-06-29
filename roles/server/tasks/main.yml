@@ -1,14 +1,8 @@
 ---
-- name: fail if version is not provided
-  fail:
-    msg: "application 'version' in CR is required"
-  when: "version|length == 0"
-
-- set_fact:
+- name: Set default newtork facts
+  set_fact:
     network_resources: {}
     network_name_list: []
-    image_server: "{{ registry }}/{{ org }}/trex-container-server:{{ version }}"
-    image_app: "{{ registry }}/{{ org }}/trex-container-app:{{ version }}"
 
 - name: Check if networks parameter is empty
   fail:
@@ -38,11 +32,11 @@
         selector:
           example-cnf-type: pkt-gen
         ports:
-        - port: 4500
-          protocol: TCP
-          targetPort: 4500
-          name: async
-        - port: 4501
-          protocol: TCP
-          targetPort: 4501
-          name: sync
+          - port: 4500
+            protocol: TCP
+            targetPort: 4500
+            name: async
+          - port: 4501
+            protocol: TCP
+            targetPort: 4501
+            name: sync
