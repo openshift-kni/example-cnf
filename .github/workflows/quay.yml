@@ -1,0 +1,29 @@
+name: Quay
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-[0-9]+"
+  workflow_dispatch:
+
+env:
+  REGISTRY: quay.io
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Registry login
+        run: echo "${{ secrets.QUAY_TOKEN }}" | podman login ${REGISTRY} -u ${{ secrets.QUAY_USER }} --password-stdin
+
+      - name: Build and Push images
+        run: |
+          ORG=${GITHUB_REPOSITORY%/*}
+          TAG=$(git tag --points-at HEAD)
+          VERSION=${TAG/v/}
+          make all ORG=${ORG} VERSION=${VERSION}

@@ -1,14 +1,15 @@
 # Current Operator version
-VERSION ?= 0.2.4
-REGISTRY ?= quay.io
-ORG ?= rh-nfv-int
+VERSION         := 0.2.4
+TAG             := v$(VERSION)
+REGISTRY        ?= quay.io
+ORG             ?= rh-nfv-int
 DEFAULT_CHANNEL ?= alpha
-
-CONTAINER_CLI ?= podman
-CLUSTER_CLI ?= oc
+CONTAINER_CLI   ?= podman
+CLUSTER_CLI     ?= oc
+OPERATOR_NAME   := testpmd-lb-operator
 
 # Default bundle image tag
-BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/testpmd-lb-operator-bundle:v$(VERSION)
+BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME)-bundle:$(TAG)
 # Options for 'bundle-build'
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
@@ -19,9 +20,15 @@ endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 # Image URL to use all building/pushing image targets
-IMG ?= $(REGISTRY)/$(ORG)/testpmd-lb-operator:v$(VERSION)
+IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME):$(TAG)
 
-all: docker-build
+all: operator-all bundle-all
+
+# Operator build and push
+operator-all: operator-build operator-push
+
+# Bundle build and push
+bundle-all: bundle-build bundle-push
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: ansible-operator
@@ -29,24 +36,27 @@ run: ansible-operator
 
 # Install CRDs into a cluster
 install: kustomize
-	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+	$(KUSTOMIZE) build config/crd | ${CLUSTER_CLI} apply -f -
 
 # Uninstall CRDs from a cluster
 uninstall: kustomize
-	$(KUSTOMIZE) build config/crd | kubectl delete -f -
+	$(KUSTOMIZE) build config/crd | ${CLUSTER_CLI} delete -f -
 
 # Deploy controller in the configured Kubernetes cluster in ~/.kube/config
 deploy: kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | kubectl apply -f -
+	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} apply -f -
 
 # Undeploy controller in the configured Kubernetes cluster in ~/.kube/config
 undeploy: kustomize
-	$(KUSTOMIZE) build config/default | kubectl delete -f -
+	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} delete -f -
 
-# Build the docker image
-docker-build:
-	${CONTAINER_CLI} build . -t ${IMG}
+# Build the operator image
+operator-build:
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . -t ${IMG}
+
+# Push the operator image
+operator-push:
 	${CONTAINER_CLI} push ${IMG}
 
 PATH  := $(PATH):$(PWD)/bin
@@ -73,6 +83,23 @@ KUSTOMIZE=$(shell which kustomize)
 endif
 endif
 
+# Installs operator-sdk if is not available
+.PHONY: operator-sdk
+OPERATOR_SDK = $(shell pwd)/bin/operator-sdk
+operator-sdk:
+ifeq (,$(wildcard $(OPERATOR_SDK)))
+ifeq (,$(shell which operator-sdk 2>/dev/null))
+	@{ \
+	set -e ;\
+	mkdir -p $(dir $(OPERATOR_SDK)) ;\
+	curl -sLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/v1.7.2/operator-sdk_$(OS)_$(ARCH) ; \
+	chmod u+x $(OPERATOR_SDK) ; \
+	}
+else
+OPERATOR_SDK=$(shell which operator-sdk)
+endif
+endif
+
 # Download ansible-operator locally if necessary, preferring the $(pwd)/bin path over global if both exist.
 .PHONY: ansible-operator
 ANSIBLE_OPERATOR = $(shell pwd)/bin/ansible-operator
@@ -92,14 +119,25 @@ endif
 
 # Generate bundle manifests and metadata, then validate generated files.
 .PHONY: bundle
-bundle: kustomize
-	operator-sdk generate kustomize manifests -q
+bundle: kustomize operator-sdk
+	$(OPERATOR_SDK) generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
-	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
-	operator-sdk bundle validate ./bundle
+	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+	DIGEST=$$(skopeo inspect docker://$(IMG) | jq -r '.Digest') && sed -i -e 's/\(\s*image: .*\):v'$(VERSION)'/\1@'$${DIGEST}'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
+	sed -i -e '/^# Copy.*/i LABEL com.redhat.openshift.versions="v4.6"\nLABEL com.redhat.delivery.backport=false\nLABEL com.redhat.delivery.operator.bundle=true' bundle.Dockerfile
+	cat relatedImages.yaml >> bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
+	$(OPERATOR_SDK) bundle validate ./bundle
 
-# Build the bundle image.
+# Build the bundle image, using local bundle image name
 .PHONY: bundle-build
-bundle-build:
-	${CONTAINER_CLI} build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+bundle-build: bundle
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Dockerfile \
+		-t bundle .
+
+# Tag local bundle image with our registry BUNDLE_IMG
+bundle-tag:
+	${CONTAINER_CLI} tag bundle $(BUNDLE_IMG)
+
+# Push the BUNDLE_IMG
+bundle-push: bundle-tag
 	${CONTAINER_CLI} push $(BUNDLE_IMG)

@@ -1,14 +1,11 @@
 ---
-registry: quay.io
-org: rh-nfv-int
-version: v0.2.0
 image_pull_policy: IfNotPresent
 privileged: false
 network_defintions: ""
 environments: {}
 
-image_testpmd: "{{ registry }}/{{ org }}/testpmd-container-app-testpmd:{{ version }}"
-image_listener: "{{ registry }}/{{ org }}/testpmd-container-app-listener:{{ version }}"
+image_testpmd: "quay.io/rh-nfv-int/testpmd-container-app-testpmd@sha256:22e45c9b3414e801cc65cc1411e27a51d4775fa3ee8a8893ea6026b2f246f6" # v0.2.0
+image_listener: "quay.io/rh-nfv-int/testpmd-container-app-listener@sha256:b592ff00f09b3290a3abc33367817439d970f55754c9eb4467e003c4d329bde0" # v0.2.0
 
 hugepage_1gb_count: 4Gi
 memory: 1000Mi
