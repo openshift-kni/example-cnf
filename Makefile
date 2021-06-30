@@ -1,16 +1,13 @@
-REGISTRY ?= quay.io
-ORG ?= rh-nfv-int
+VERSION         := 0.2.5
+TAG             := v$(VERSION)
+REGISTRY        ?= quay.io
+ORG             ?= rh-nfv-int
 DEFAULT_CHANNEL ?= alpha
-
-CONTAINER_CLI ?= podman
-CLUSTER_CLI ?= oc
-
-# VERSION defines the project version for the bundle.
-# Update this value when you upgrade the version of your project.
-# To re-generate a bundle for another specific version without changing the standard setup, you can:
-# - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
-# - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION ?= 0.2.5
+CONTAINER_CLI   ?= podman
+CLUSTER_CLI     ?= oc
+OPERATOR_NAME   := cnf-app-mac-operator
+OS    = $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ARCH  = $(shell uname -m | sed 's/x86_64/amd64/')
 
 # CHANNELS define the bundle channels used in the bundle.
 # Add a new line here if you would like to change its default config. (E.g CHANNELS = "preview,fast,stable")
@@ -33,10 +30,10 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 # BUNDLE_IMG defines the image:tag used for the bundle.
 # You can use it as an arg. (E.g make bundle-build BUNDLE_IMG=<some-registry>/<project-name-bundle>:<tag>)
-BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/cnf-app-mac-operator-bundle:v$(VERSION)
+BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME)-bundle:$(TAG)
 
 # Image URL to use all building/pushing image targets
-IMG ?= $(REGISTRY)/$(ORG)/cnf-app-mac-operator:v$(VERSION)
+IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME):$(TAG)
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
 
@@ -47,7 +44,13 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
-all: build
+all: operator-all bundle-all
+
+# Operator build and push
+operator-all: operator-build operator-push
+
+# Bundle build and push
+bundle-all: bundle-build bundle-push
 
 ##@ General
 
@@ -112,6 +115,13 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} delete -f -
 
+# Build the operator image
+operator-build:
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . -t ${IMG}
+
+# Push the operator image
+operator-push:
+	${CONTAINER_CLI} push ${IMG}
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.
@@ -120,6 +130,23 @@ controller-gen: ## Download controller-gen locally if necessary.
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.
 	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
+
+# Installs operator-sdk if is not available
+.PHONY: operator-sdk
+OPERATOR_SDK = $(shell pwd)/bin/operator-sdk
+operator-sdk:
+ifeq (,$(wildcard $(OPERATOR_SDK)))
+ifeq (,$(shell which operator-sdk 2>/dev/null))
+	@{ \
+	set -e ;\
+	mkdir -p $(dir $(OPERATOR_SDK)) ;\
+	curl -sLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/v1.7.2/operator-sdk_$(OS)_$(ARCH) ; \
+	chmod u+x $(OPERATOR_SDK) ; \
+	}
+else
+OPERATOR_SDK=$(shell which operator-sdk)
+endif
+endif
 
 # go-get-tool will 'go get' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
@@ -135,14 +162,25 @@ rm -rf $$TMP_DIR ;\
 }
 endef
 
-.PHONY: bundle ## Generate bundle manifests and metadata, then validate generated files.
-bundle: manifests kustomize
-	operator-sdk generate kustomize manifests -q
+# Generate bundle manifests and metadata, then validate generated files.
+.PHONY: bundle
+bundle: manifests kustomize operator-sdk
+	$(OPERATOR_SDK) generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
-	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
-	operator-sdk bundle validate ./bundle
+	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+	DIGEST=$$(skopeo inspect docker://$(IMG) | jq -r '.Digest') && sed -i -e 's/\(\s*image: .*\):v'$(VERSION)'/\1@'$${DIGEST}'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
+	$(OPERATOR_SDK) bundle validate ./bundle
 
-.PHONY: bundle-build ## Build the bundle image.
-bundle-build:
-	${CONTAINER_CLI} build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
-	${CONTAINER_CLI} push  $(BUNDLE_IMG)
+# Build the bundle image, using local bundle image name
+.PHONY: bundle-build
+bundle-build: bundle
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Dockerfile \
+		-t bundle .
+
+# Tag local bundle image with our registry BUNDLE_IMG
+bundle-tag:
+	${CONTAINER_CLI} tag bundle $(BUNDLE_IMG)
+
+# Push the BUNDLE_IMG
+bundle-push: bundle-tag
+	${CONTAINER_CLI} push $(BUNDLE_IMG)
