@@ -20,14 +20,14 @@ index-build: opm
 	@{ \
 	set -e ;\
 	source ./$(OPERATORS_LIST) ;\
-	BUNDLES_DIGESTS=() ;\
+	BUNDLES_DIGESTS='' ;\
 	for OPERATOR in $${OPERATORS[@]}; do \
     	operator_bundle=$${OPERATOR/:*}-bundle ;\
     	operator_version=$${OPERATOR/*:} ;\
     	operator_digest=$$(skopeo inspect docker://$(REGISTRY)/$(ORG)/$${operator_bundle}:$${operator_version} | jq -r '.Digest') ;\
-	BUNDLES_DIGESTS+=($(REGISTRY)/$(ORG)/$${operator_bundle}@$${operator_digest}) ;\
+	BUNDLES_DIGESTS+=$(REGISTRY)/$(ORG)/$${operator_bundle}@$${operator_digest}, ;\
 	done ;\
-	$(OPM) index add --bundles $${BUNDLES_DIGESTS[@]} --tag $(INDEX_IMG) ;\
+	$(OPM) index add --bundles $${BUNDLES_DIGESTS%,} --tag $(INDEX_IMG) ;\
 	}
 
 # Push the index image
