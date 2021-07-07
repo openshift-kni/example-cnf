@@ -6,7 +6,7 @@
 - name: Validate the CPUs and forwarding cores
   fail:
     msg: "{{ forwarding_cores }} should be lesser than {{ cpus }}"
-  when: forwarding_cores >= cpu
+  when: forwarding_cores|int >= cpu|int
 
 - debug: var=networks
 
