@@ -40,7 +40,7 @@ jobs:
           TAG=$(git tag --points-at HEAD)
           NAME="${TAG}"
           CANONICAL_NAME="${REPO_NAME}:${TAG}"
-          TYPE="operator-index"
+          TYPE="nfv-example-cnf-index"
           CONTAINER_URL="${REGISTRY}/${GITHUB_REPOSITORY}"
           DATA='{"url": "'${CONTAINER_URL}'"}'
           TEAM_ID=$( dcictl --format json team-list | jq -r '.teams[]|.id' )
