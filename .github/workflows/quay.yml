@@ -32,6 +32,7 @@ jobs:
       - name: Add component to DCI (distributed-ci.io)
         run: |
           REPO_NAME=${GITHUB_REPOSITORY/*\/}
+          INDEX_NAME=nfv-example-cnf-catalog
           pip install dciclient
           source <(cat <<EOF
           ${{ secrets.DCI_REMOTECI }}
@@ -41,7 +42,7 @@ jobs:
           NAME="${TAG}"
           CANONICAL_NAME="${REPO_NAME}:${TAG}"
           TYPE="nfv-example-cnf-index"
-          CONTAINER_URL="${REGISTRY}/${GITHUB_REPOSITORY}"
+          CONTAINER_URL="${REGISTRY}/${REPO_NAME}/${INDEX_NAME}"
           DATA='{"url": "'${CONTAINER_URL}'"}'
           TEAM_ID=$( dcictl --format json team-list | jq -r '.teams[]|.id' )
           for ocp_version in ${OCP_VERSIONS}; do
