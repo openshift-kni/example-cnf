@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.6-1] - 2021-07-29
+
+- No changes, just aligning all other operators (testpmd, cnf-app-mac, trex)
+
 ## [0.2.6] - 2021-07-28
 
 - No changes, just bumping version to align to other operators (testpmd, cnf-app-mac, trex)
