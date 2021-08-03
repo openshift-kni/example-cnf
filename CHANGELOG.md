@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [0.2.8] - 2021-08-03
+
+- Added support for vhostuser ports, which does not use sriovnetwork objects
+
 ## [0.2.6-1] - 2021-07-29
 
 - No changes, just aligning all other operators (testpmd, testpmd-lb, trex)
