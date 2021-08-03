@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 
@@ -122,6 +123,19 @@ func (r *CNFAppMacReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	log.Info("Reconcile cnf application")
 
+	// Check if the Mac CR is already created for this pod
+	macCR := &examplecnfv1.CNFAppMac{}
+	err = r.Get(ctx, req.NamespacedName, macCR)
+	if err == nil {
+		// CNFAppMac CR is found for this pod, skip further processing
+		return ctrl.Result{}, nil
+	} else if !errors.IsNotFound(err) {
+		log.Error(err, "Failed to get cr")
+		return ctrl.Result{}, err
+	}
+	podName := req.NamespacedName.Name
+	namespace := req.NamespacedName.Namespace
+
 	// Check if the pod has additional networks via NetworkAttachmentDefinitions
 	networkStr, ok := pod.Annotations["k8s.v1.cni.cncf.io/networks"]
 	var networks []map[string]interface{}
@@ -129,6 +143,12 @@ func (r *CNFAppMacReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		json.Unmarshal([]byte(networkStr), &networks)
 		if len(networks) == 0 {
 			return ctrl.Result{}, nil
+		}
+		// Check if one of the nework has hardcode mac, pod will be skipped
+		for _, item := range networks {
+			if _, ok = item["mac"]; ok {
+				return ctrl.Result{}, nil
+			}
 		}
 	} else {
 		// CNF application, but does not have required annotations
@@ -141,80 +161,49 @@ func (r *CNFAppMacReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		}
 	}
 
-	// Check if one of the nework has hardcode mac, pod will be skipped
-	for _, item := range networks {
-		if _, ok = item["mac"]; ok {
-			return ctrl.Result{}, nil
-		}
-	}
-
-	// Check if one of the network is SR-IOV Network
-	// TODO(skramaja)
-
-	// Check if the Mac CR is already created for this pod
-	macCR := &examplecnfv1.CNFAppMac{}
-	err = r.Get(ctx, req.NamespacedName, macCR)
-	if err == nil {
-		// CNFAppMac CR is found for this pod, skip further processing
-		return ctrl.Result{}, nil
-	} else if !errors.IsNotFound(err) {
-		log.Error(err, "Failed to get cr")
-		return ctrl.Result{}, err
-	}
-
-	var nwNameList []string
 	log.Info("Pod Info", "Node", pod.Spec.NodeName)
-	for _, item := range networks {
-		log.Info("Newtorks", "name", item["name"])
-		if !containsString(nwNameList, item["name"].(string)) {
-			nwNameList = append(nwNameList, item["name"].(string))
-		}
-	}
 
-	var resources []string
 	var resourcesMapList []map[string]interface{}
-	podName := req.NamespacedName.Name
-	namespace := req.NamespacedName.Namespace
-	for _, nwName := range nwNameList {
-		// Get Resource name from the network name
-		netAttach := &unstructured.Unstructured{}
-		netAttach.SetKind("NetworkAttachmentDefinition")
-		netAttach.SetAPIVersion("k8s.cni.cncf.io/v1")
-		nmName := req.NamespacedName
-		nmName.Name = nwName
-		err = r.Get(ctx, nmName, netAttach)
-		if err != nil {
-			return ctrl.Result{}, err
+	if len(networks) > 0 {
+		var nwNameList []string
+		for _, item := range networks {
+			log.Info("Newtorks", "name", item["name"])
+			if !containsString(nwNameList, item["name"].(string)) {
+				nwNameList = append(nwNameList, item["name"].(string))
+			}
 		}
-		resName := netAttach.GetAnnotations()["k8s.v1.cni.cncf.io/resourceName"]
-		resName = strings.ReplaceAll(resName, "/", "_")
-		resName = strings.ReplaceAll(resName, "-", "_")
-		resName = strings.ReplaceAll(resName, ".", "_")
-		resName = strings.ToUpper(resName)
-		envName := "PCIDEVICE_" + resName
 
-		pciValue, err := getContainerEnvValue(podName, namespace, envName)
+		for _, nwName := range nwNameList {
+			// Get Resource name from the network name
+			netAttach := &unstructured.Unstructured{}
+			netAttach.SetKind("NetworkAttachmentDefinition")
+			netAttach.SetAPIVersion("k8s.cni.cncf.io/v1")
+			nmName := req.NamespacedName
+			nmName.Name = nwName
+			err = r.Get(ctx, nmName, netAttach)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+			resName := netAttach.GetAnnotations()["k8s.v1.cni.cncf.io/resourceName"]
+			resourcesMap, _ := r.getResMap(resName, podName, namespace, nwName)
+			resourcesMapList = append(resourcesMapList, resourcesMap)
+		}
+	} else {
+		resStr, err := getContainerEnvValue(podName, namespace, "NETWORK_NAME_LIST")
+		log.Info("Resources", "NETWORK_NAME_LIST", resStr)
 		if err != nil {
+			log.Error(err, "Failed to get env NETWORK_NAME_LIST")
 			return ctrl.Result{}, err
 		}
-		pciValue = strings.TrimSuffix(pciValue, "\n")
-		pciValue = strings.TrimSuffix(pciValue, "\r")
-		pciList := strings.Split(pciValue, ",")
-		resource := nwName + "," + netAttach.GetAnnotations()["k8s.v1.cni.cncf.io/resourceName"]
-		resourcesMap := map[string]interface{}{
-			"name": nwName,
-			"res":  netAttach.GetAnnotations()["k8s.v1.cni.cncf.io/resourceName"],
-			"pci":  pciList,
+		resList := strings.Split(strings.ReplaceAll(resStr, "\r\n", ""), ",")
+		for _, resName := range resList {
+			resourcesMap, _ := r.getResMap(resName, podName, namespace, resName)
+			resourcesMapList = append(resourcesMapList, resourcesMap)
 		}
-		resourcesMapList = append(resourcesMapList, resourcesMap)
-		for _, pci := range pciList {
-			resource += "," + pci
-		}
-		resources = append(resources, resource)
 	}
 
-	macStr, err := getContainerLogValue(req.NamespacedName.Name, req.NamespacedName.Namespace)
 	//err = r.createMacFetchJob(req, pod.Spec.NodeName, resources)
+	macStr, err := getContainerLogValue(req.NamespacedName.Name, req.NamespacedName.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -227,6 +216,29 @@ func (r *CNFAppMacReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *CNFAppMacReconciler) getResMap(resName, podName, namespace, nwName string) (map[string]interface{}, error) {
+	resName = strings.ReplaceAll(resName, "/", "_")
+	resName = strings.ReplaceAll(resName, "-", "_")
+	resName = strings.ReplaceAll(resName, ".", "_")
+	resName = strings.ToUpper(resName)
+	envName := "PCIDEVICE_" + resName
+
+	pciValue, err := getContainerEnvValue(podName, namespace, envName)
+	if err != nil {
+		return nil, err
+	}
+	pciValue = strings.TrimSuffix(pciValue, "\n")
+	pciValue = strings.TrimSuffix(pciValue, "\r")
+	fmt.Println(pciValue)
+	pciList := strings.Split(pciValue, ",")
+	resourcesMap := map[string]interface{}{
+		"name": nwName,
+		"res":  resName,
+		"pci":  pciList,
+	}
+	return resourcesMap, nil
 }
 
 func (r *CNFAppMacReconciler) createCR(req ctrl.Request, uid types.UID, nodename string, resourcesMapList []map[string]interface{}, macs []string) error {
