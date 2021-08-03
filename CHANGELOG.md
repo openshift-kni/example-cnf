@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.8] - 2021-08-03
+
+- Bump version to align with vhostuser changes on testpmd and cnf-app-mac operators
+
 ## [0.2.6-1] - 2021-07-29
 
 - No changes, just aligning all other operators (testpmd, cnf-app-mac, trex)
