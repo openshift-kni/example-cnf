@@ -1,2 +1,4 @@
 bin
 *sync.sh
+build.sh
+bundle
