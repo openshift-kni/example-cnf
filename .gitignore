@@ -4,3 +4,4 @@ bin
 *sync.sh
 build.sh
 bundle
+bundle.Dockerfile
