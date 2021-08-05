@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"strings"
 
@@ -167,7 +166,7 @@ func (r *CNFAppMacReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if len(networks) > 0 {
 		var nwNameList []string
 		for _, item := range networks {
-			log.Info("Newtorks", "name", item["name"])
+			log.Info("Networks", "name", item["name"])
 			if !containsString(nwNameList, item["name"].(string)) {
 				nwNameList = append(nwNameList, item["name"].(string))
 			}
@@ -231,7 +230,6 @@ func (r *CNFAppMacReconciler) getResMap(resName, podName, namespace, nwName stri
 	}
 	pciValue = strings.TrimSuffix(pciValue, "\n")
 	pciValue = strings.TrimSuffix(pciValue, "\r")
-	fmt.Println(pciValue)
 	pciList := strings.Split(pciValue, ",")
 	resourcesMap := map[string]interface{}{
 		"name": nwName,
