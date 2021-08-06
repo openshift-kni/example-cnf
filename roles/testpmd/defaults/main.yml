@@ -35,6 +35,7 @@ tx_descriptors: 1024
 # pci devices for "-w" parameter should be obtained from this networks
 # testpmd application entrypoint script should get pci and then run testpmd
 networks: []
+resources: []
 
 ethpeer_maclist: []
 skip_annot: false

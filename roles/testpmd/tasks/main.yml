@@ -8,12 +8,20 @@
     msg: "{{ forwarding_cores }} should be lesser than {{ cpus }}"
   when: forwarding_cores|int >= cpu|int
 
-- debug: var=networks
+- name: print network list
+  debug:
+    var: networks
+
+- name: print resource list
+  debug:
+    var: resources
 
 - name: Check if networks parameter is empty
   fail:
-    msg: "networks parameter is empty"
-  when: networks|length == 0
+    msg: "networks or resources parameter is required"
+  when: 
+    - networks|length == 0
+    - resources|length == 0
 
 - name: initialize eth_peer var
   set_fact:
@@ -25,7 +33,7 @@
   loop_control:
     index_var: idx
 - name: create configmap with cnf-app run script
-  k8s:
+  community.kubernetes.k8s:
     name: cnf-run
     namespace: "{{ ansible_operator_meta.namespace }}"
     kind: ConfigMap
@@ -34,11 +42,24 @@
         run: |
           {{ lookup('file', 'run') }}
 
-- name: "Parse network {{ network_item }}"
+- name: "Parse network"
   include_tasks: network-parse.yaml
+  when: networks|default([])|length > 0
   loop: "{{ networks }}"
   loop_control:
     loop_var: network_item
+
+- name: "Parse resources if defined and when sriov network is not defined"
+  set_fact: 
+    network_resources: "{{ network_resources | combine({item.name: item.count}) }}"
+  loop: "{{ resources }}"
+  when:
+    - networks|default([])|length == 0
+    - resources|default([])|length > 0
+
+- name: print network resources map
+  debug:
+    var: network_resources
 
 - name: MAC workaround block
   when: mac_workaround_enable|bool
@@ -48,12 +69,12 @@
         mac_fix_ds_name: "{{ ansible_operator_meta.name }}-mac-fix-sriov-cni"
 
     - name: Create DaemonSet for mac workaround of sriov-cni
-      k8s:
+      community.kubernetes.k8s:
         state: present
         definition: "{{ lookup('template', 'daemonset.yml') }}"
 
     - name: Check if DaemonSet is completed
-      k8s_info:
+      community.kubernetes.k8s_info:
         name: "{{ mac_fix_ds_name }}"
         namespace: "{{ ansible_operator_meta.namespace }}"
         kind: DaemonSet
@@ -62,7 +83,7 @@
     - debug: var=ds_info
 
     - name: Check if DaemonSet is completed
-      k8s_info:
+      community.kubernetes.k8s_info:
         name: "{{ mac_fix_ds_name }}"
         namespace: "{{ ansible_operator_meta.namespace }}"
         kind: DaemonSet
@@ -78,6 +99,6 @@
         - "ds_info.resources[0].status.desiredNumberScheduled != ds_info.resources[0].status.numberReady"
 
 - name: Create TestPMD deployment
-  k8s:
+  community.kubernetes.k8s:
     state: present
     definition: "{{ lookup('template', 'deployment.yml') }}"

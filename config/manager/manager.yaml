@@ -16,8 +16,12 @@ spec:
         control-plane: controller-manager
         example-cnf-type: testpmd-operator
     spec:
+      securityContext:
+        runAsNonRoot: true
       containers:
         - name: manager
+          securityContext:
+            allowPrivilegeEscalation: false
           args:
             - "--enable-leader-election"
             - "--leader-election-id=testpmd-operator"
