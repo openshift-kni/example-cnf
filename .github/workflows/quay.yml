@@ -28,18 +28,3 @@ jobs:
           TAG=$(git tag --points-at HEAD)
           VERSION=${TAG/v/}
           make all ORG=${ORG} VERSION=${VERSION}
-
-      - name: Login, Build and Push Operator to connect.redhat.com
-        run: |
-          echo "${{ secrets.CONNECT_TOKEN_OPERATOR }}" | podman login ${CONNECT_REGISTRY} -u ${{ secrets.CONNECT_USER }} --password-stdin
-          TAG=$(git tag --points-at HEAD)
-          VERSION=${TAG/v/}
-          make operator-all REGISTRY=${CONNECT_REGISTRY} ORG=${{ secrets.CONNECT_OSPID_OPERATOR }} VERSION=${VERSION}
-
-      - name: Login, Build and Push Bundle to connect.redhat.com
-        run: |
-          podman logout ${CONNECT_REGISTRY}
-          echo "${{ secrets.CONNECT_TOKEN_BUNDLE }}" | podman login ${CONNECT_REGISTRY} -u ${{ secrets.CONNECT_USER }} --password-stdin
-          TAG=$(git tag --points-at HEAD)
-          VERSION=${TAG/v/}
-          make bundle-push REGISTRY=${CONNECT_REGISTRY} ORG=${{ secrets.CONNECT_OSPID_BUNDLE }} VERSION=${VERSION}
