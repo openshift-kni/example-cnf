@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Updated ansible requirements
   - community.kubernetes 1.2.1
   - operator_sdk.util 0.2.0
+- Updated ansible-operator  to v1.10.0
 - Updated application versions
   - testpmd-container-app-testpmd v0.2.3
   - testpmd-container-app-listener v0.2.3
