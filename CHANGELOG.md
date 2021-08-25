@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.9] - 2021-08-25
+
+- Updated ansible requirements
+  - community.kubernetes 1.2.1
+  - operator_sdk.util 0.2.0
+- Updated application versions
+  - testpmd-container-app-testpmd v0.2.3
+  - testpmd-container-app-listener v0.2.3
+
 ## [0.2.8] - 2021-08-03
 
 - Bump version to align with vhostuser changes on testpmd and cnf-app-mac operators

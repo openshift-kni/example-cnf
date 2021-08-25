@@ -1,5 +1,5 @@
   relatedImages:
     - name: testpmd-container-app-testpmd
-      image: "quay.io/rh-nfv-int/testpmd-container-app-testpmd@sha256:78e8ba58edc28cbac5888f3545383cbb3872171207aaffbf7972a5af8d07830a" # v0.2.2
+      image: "quay.io/rh-nfv-int/testpmd-container-app-testpmd@sha256:eca74e7cb50612e38a7712450ed123a7ed49f305b88f5e3b59d6368394535603"  # v0.2.3
     - name: testpmd-container-app-listener
-      image: "quay.io/rh-nfv-int/testpmd-container-app-listener@sha256:7e2528c1b4e072dfcd8380fb784397067d79ee8a0a7d28883207f8dab22f6d2c" # v0.2.2
+      image: "quay.io/rh-nfv-int/testpmd-container-app-listener@sha256:050c5f7117bd6135af48cf742600bd30ab8448fe12fcab44960c1508c10327b1" # v0.2.3
