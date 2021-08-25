@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.9] - 2021-08-25
+
+- Use operator versions 0.2.9
+
+## [0.2.8] - 2021-08-08
+
+- Use operator versions to 0.2.8
 ## [0.2.7] - 2021-07-28
 
 - [testpmd-lb-operator:v0.2.6](https://github.com/rh-nfv-int/testpmd-lb-operator/blob/master/CHANGELOG.md#026---2021-07-28)
