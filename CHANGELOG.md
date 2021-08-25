@@ -1,5 +1,12 @@
 # Change Log
+
 All notable changes to this project will be documented in this file.
+
+## [Unreleased] -
+
+## [0.2.9] - 2021-08-25
+
+- No changes, just aligning all other operators (testpmd, testpmd-lb, trex)
 
 ## [0.2.8] - 2021-08-03
 
