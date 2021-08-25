@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.9] - 2021-08-25
+
+- Updated application versions
+  - testpmd-container-app-mac v0.2.3
+
 ## [0.2.8] - 2021-08-03
 
 - Added support for shift-on-stack vhostuser ports (which does not have sriovnetwork objects)
