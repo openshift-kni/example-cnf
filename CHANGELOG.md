@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.9] - 2021-08-25
+
+- Updated ansible requirements
+  - community.kubernetes 1.2.1
+  - operator_sdk.util 0.2.0
+- Updated ansible-operator  to v1.10.0
+- Updated application versions
+  - trex-container-server v0.2.3
+  - trex-container-app v0.2.3
 ## [0.2.8] - 2021-08-03
 
 - Bump version to align with vhostuser changes on testpmd and cnf-app-mac operators
