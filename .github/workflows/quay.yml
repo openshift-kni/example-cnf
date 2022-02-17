@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: quay.io
-  OCP_VERSIONS: "4.5 4.6 4.7 4.8 4.9 4.10"
+  OCP_VERSIONS: "4.7 4.8 4.9 4.10 4.11"
 
 jobs:
   build:
