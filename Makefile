@@ -6,7 +6,8 @@ CONTAINER_CLI  ?= podman
 CLUSTER_CLI    ?= oc
 INDEX_NAME     := nfv-example-cnf-catalog
 INDEX_IMG      ?= $(REGISTRY)/$(ORG)/$(INDEX_NAME):$(TAG)
-OPM_VERSION    ?= latest
+# Don't use latest until FBC has been sorted out
+OPM_VERSION    ?= 1.19.5
 OPM_REPO       ?= https://github.com/operator-framework/operator-registry
 OS             := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH           := $(shell uname -m | sed 's/x86_64/amd64/')
