@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.3.0] - 2022-03-24
+
+- Build catalog using [FBC](https://github.com/redhat-openshift-ecosystem/community-operators-prod/discussions/512)
+
 ## [0.2.9] - 2021-08-25
 
 - Use operator versions 0.2.9
