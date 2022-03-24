@@ -16,6 +16,10 @@ SHELL          := /bin/bash
 
 all: index-build index-push
 
+# Clean up
+clean:
+	@rm -rf $(BUILD_PATH)
+
 # Build the index image
 index-build: opm
 	@{ \
@@ -27,9 +31,10 @@ index-build: opm
 		operator_bundle=$${OPERATOR/:*}-bundle ;\
 		operator_version=$${OPERATOR/*:} ;\
 		operator_name=$${OPERATOR/:*} ;\
-		operator_digest=$$(skopeo inspect docker://$(REGISTRY)/$(ORG)/$${operator_bundle}:$${operator_version} | jq -r '.Digest') ;\
+		operator_manifest=$$(skopeo inspect docker://$(REGISTRY)/$(ORG)/$${operator_bundle}:$${operator_version}) ;\
+		operator_digest=$$(jq -r '.Digest' <<< $${operator_manifest}) ;\
 		bundle_digest=$(REGISTRY)/$(ORG)/$${operator_bundle}@$${operator_digest} ;\
-		default_channel=$$(podman inspect $${bundle_digest} | jq -r '.[].Labels."operators.operatorframework.io.bundle.channel.default.v1"') ;\
+		default_channel=$$(jq -r '.Labels."operators.operatorframework.io.bundle.channel.default.v1"' <<< $${operator_manifest}) ;\
 		channel="---\nschema: olm.channel\npackage: $${operator_name}\nname: $${default_channel}\nentries:\n  - name: $${operator_name}.$${operator_version}" ;\
 		$(OPM) init $${operator_name} --default-channel=$${default_channel} --output=yaml >> $(BUILD_PATH)/$(INDEX_NAME)/index.yml ;\
 		$(OPM) render $${bundle_digest} --output=yaml >> $(BUILD_PATH)/$(INDEX_NAME)/index.yml ;\
