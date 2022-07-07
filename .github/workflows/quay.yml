@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: quay.io
-  OCP_VERSIONS: "4.7 4.8 4.9 4.10 4.11"
+  OCP_VERSIONS: "all"
 
 jobs:
   build:
@@ -29,30 +29,27 @@ jobs:
           VERSION=${TAG/v/}
           make all ORG=${ORG} VERSION=${VERSION}
 
-      - name: Add component to DCI (distributed-ci.io)
+      - name: Get repo name
+        run: echo "::set-output name=name::${GITHUB_REPOSITORY/*\/}"
+        id: repo
+
+      - name: Create DCI components
+        uses: tonyskapunk/dci-component@v0.2.0
+        with:
+          dciClientId: ${{ secrets.DCI_CLIENT_ID }}
+          dciApiSecret: ${{ secrets.DCI_API_SECRET }}
+          dciTopicVersion: ${{ env.OCP_VERSIONS }}
+          componentName: ${{ github.ref_name }}
+          componentCanonicalName: ${{ steps.repo.outputs.name }}:${{ github.ref_name }}
+          componentType: nfv-example-cnf-index
+          componentData: '{"url":"${{ env.REGISTRY }}/${{ github.repository_owner }}/nfv-example-cnf-catalog"}'
+        id: dci
+
+      - name: Results
         run: |
-          ORG=${GITHUB_REPOSITORY%/*}
-          REPO_NAME=${GITHUB_REPOSITORY/*\/}
-          INDEX_NAME=nfv-example-cnf-catalog
-          pip install dciclient
-          source <(cat <<EOF
-          ${{ secrets.DCI_REMOTECI }}
-          EOF
-          )
-          TAG=$(git tag --points-at HEAD)
-          NAME="${TAG}"
-          CANONICAL_NAME="${REPO_NAME}:${TAG}"
-          TYPE="nfv-example-cnf-index"
-          CONTAINER_URL="${REGISTRY}/${ORG}/${INDEX_NAME}"
-          DATA='{"url": "'${CONTAINER_URL}'"}'
-          TEAM_ID=$( dcictl --format json team-list | jq -r '.teams[]|.id' )
-          for ocp_version in ${OCP_VERSIONS}; do
-            topic_id=$( dcictl --format json topic-list | jq -r '.topics[]| select(.name=="OCP-'${ocp_version}'")|.id' )
-            dcictl component-create \
-              --topic-id ${topic_id} \
-              --team-id ${TEAM_ID} \
-              --name ${NAME} \
-              --canonical_project_name ${CANONICAL_NAME} \
-              --type ${TYPE} \
-              --data "${DATA}"
-          done
+          echo "## DCI components" >> ${GITHUB_STEP_SUMMARY}
+          echo "" >> ${GITHUB_STEP_SUMMARY}
+          echo "```JSON" >> ${GITHUB_STEP_SUMMARY}
+          <<<'${{ steps.dci.outputs.components }}' jq . >> ${GITHUB_STEP_SUMMARY} 
+          echo "```" >> ${GITHUB_STEP_SUMMARY}
+          echo "" >> ${GITHUB_STEP_SUMMARY}
