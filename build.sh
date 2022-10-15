@@ -2,7 +2,23 @@
 
 set -e
 
-TAG="${TAG:-v0.2.2}"
+if [[ "$1" == "-h" ]] ; then
+    echo "A tool that allows you to build TRex application containers."
+    echo
+    echo "Usage:"
+    echo "    `basename $0` [list of containers to build] [extra options]"
+    echo
+    echo "List of containers to build:"
+    echo "    all: build two containers: server and app"
+    echo "    app: build app container"
+    echo "    server: build server container"
+    echo
+    echo "Extra options:"
+    echo "    force: use --no-cache for the image build"
+    exit 0
+fi
+
+TAG="${TAG:-v0.2.4}"
 
 CLI=${CLI:="podman"}
 ORG=${ORG:="rh-nfv-int"}

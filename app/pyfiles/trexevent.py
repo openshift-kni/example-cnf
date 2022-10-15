@@ -1,6 +1,6 @@
 import random
 import string
-from kubernetes import client, config, watch
+from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 from kubernetes.config.config_exception import ConfigException
 
@@ -48,7 +48,7 @@ def create_event(data):
     evtName = trex_config_name + '-' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
 
     cr = {
-            'apiVersion': 'events.k8s.io/v1beta1',
+            'apiVersion': 'events.k8s.io/v1',
             'kind': 'Event',
             'metadata': {
                'name': evtName,
@@ -57,8 +57,9 @@ def create_event(data):
             },
             'type': 'Normal',
             'eventTime': evtTimeMicro,
-            'deprecatedLastTimestamp': evtTime,
-            'deprecatedFirstTimestamp': evtTime,
+            'series': {
+                'lastObservedTime': evtTime
+            },
             'reason': data['reason'],
             'action': data['reason'],
             'note': data['msg'],
@@ -80,7 +81,9 @@ def create_event(data):
             'controller': True
         })
 
-    events_api = client.EventsV1beta1Api()
+    log.info("CR to be used for the event creation: {}".format(cr))
+
+    events_api = client.EventsV1Api()
     try:
         resp = events_api.create_namespaced_event(namespace, cr)
     except ApiException as e:
