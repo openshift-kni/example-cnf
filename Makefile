@@ -1,13 +1,14 @@
-VERSION         := 0.2.9
-TAG             := v$(VERSION)
-REGISTRY        ?= quay.io
-ORG             ?= rh-nfv-int
-DEFAULT_CHANNEL ?= alpha
-CONTAINER_CLI   ?= podman
-CLUSTER_CLI     ?= oc
-OPERATOR_NAME   := cnf-app-mac-operator
-OS    = $(shell uname -s | tr '[:upper:]' '[:lower:]')
-ARCH  = $(shell uname -m | sed 's/x86_64/amd64/')
+VERSION          := 0.2.9
+TAG              := v$(VERSION)
+REGISTRY         ?= quay.io
+ORG              ?= rh-nfv-int
+DEFAULT_CHANNEL  ?= alpha
+CONTAINER_CLI    ?= podman
+CLUSTER_CLI      ?= oc
+OPERATOR_NAME    := cnf-app-mac-operator
+OPERATOR_SDK_VER := 1.7.2
+OS               = $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ARCH             = $(shell uname -m | sed 's/x86_64/amd64/')
 
 # CHANNELS define the bundle channels used in the bundle.
 # Add a new line here if you would like to change its default config. (E.g CHANNELS = "preview,fast,stable")
@@ -131,21 +132,17 @@ KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize: ## Download kustomize locally if necessary.
 	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v3.8.7)
 
-# Installs operator-sdk if is not available
+# Installs operator-sdk if is not available in $(pwd)/bin
 .PHONY: operator-sdk
 OPERATOR_SDK = $(shell pwd)/bin/operator-sdk
 operator-sdk:
 ifeq (,$(wildcard $(OPERATOR_SDK)))
-ifeq (,$(shell which operator-sdk 2>/dev/null))
 	@{ \
 	set -e ;\
 	mkdir -p $(dir $(OPERATOR_SDK)) ;\
-	curl -sLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/v1.7.2/operator-sdk_$(OS)_$(ARCH) ; \
+	curl -sLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/v$(OPERATOR_SDK_VER)/operator-sdk_$(OS)_$(ARCH) ; \
 	chmod u+x $(OPERATOR_SDK) ; \
 	}
-else
-OPERATOR_SDK=$(shell which operator-sdk)
-endif
 endif
 
 # go-get-tool will 'go get' any package $2 and install it to $1.
