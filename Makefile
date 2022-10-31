@@ -1,12 +1,13 @@
 # Current Operator version
-VERSION         := 0.2.9
-TAG             := v$(VERSION)
-REGISTRY        ?= quay.io
-ORG             ?= rh-nfv-int
-DEFAULT_CHANNEL ?= alpha
-CONTAINER_CLI   ?= podman
-CLUSTER_CLI     ?= oc
-OPERATOR_NAME   := testpmd-operator
+VERSION          := 0.2.9
+TAG              := v$(VERSION)
+REGISTRY         ?= quay.io
+ORG              ?= rh-nfv-int
+DEFAULT_CHANNEL  ?= alpha
+CONTAINER_CLI    ?= podman
+CLUSTER_CLI      ?= oc
+OPERATOR_NAME    := testpmd-operator
+OPERATOR_SDK_VER := 1.7.2
 
 # Default bundle image tag
 BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME)-bundle:$(TAG)
@@ -84,21 +85,17 @@ KUSTOMIZE=$(shell which kustomize)
 endif
 endif
 
-# Installs operator-sdk if is not available
+# Installs operator-sdk if is not available in $(pwd)/bin
 .PHONY: operator-sdk
 OPERATOR_SDK = $(shell pwd)/bin/operator-sdk
 operator-sdk:
 ifeq (,$(wildcard $(OPERATOR_SDK)))
-ifeq (,$(shell which operator-sdk 2>/dev/null))
 	@{ \
 	set -e ;\
 	mkdir -p $(dir $(OPERATOR_SDK)) ;\
-	curl -sLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/v1.7.2/operator-sdk_$(OS)_$(ARCH) ; \
+	curl -sLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/v$(OPERATOR_SDK_VER)/operator-sdk_$(OS)_$(ARCH) ; \
 	chmod u+x $(OPERATOR_SDK) ; \
 	}
-else
-OPERATOR_SDK=$(shell which operator-sdk)
-endif
 endif
 
 # Download ansible-operator locally if necessary, preferring the $(pwd)/bin path over global if both exist.
