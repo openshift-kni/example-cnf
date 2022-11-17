@@ -8,6 +8,7 @@ CONTAINER_CLI    ?= podman
 CLUSTER_CLI      ?= oc
 OPERATOR_NAME    := testpmd-operator
 OPERATOR_SDK_VER := 1.7.2
+KUSTOMIZE_VER    := 3.5.4
 
 # Default bundle image tag
 BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME)-bundle:$(TAG)
@@ -68,21 +69,17 @@ ARCH  = $(shell uname -m | sed 's/x86_64/amd64/')
 OSOPER   = $(shell uname -s | tr '[:upper:]' '[:lower:]' | sed 's/darwin/apple-darwin/' | sed 's/linux/linux-gnu/')
 ARCHOPER = $(shell uname -m )
 
-# Download kustomize locally if necessary, preferring the $(pwd)/bin path over global if both exist.
+# Download kustomize locally if necessary in $(pwd)/bin
 .PHONY: kustomize
 KUSTOMIZE = $(shell pwd)/bin/kustomize
 kustomize:
 ifeq (,$(wildcard $(KUSTOMIZE)))
-ifeq (,$(shell which kustomize 2>/dev/null))
 	@{ \
 	set -e ;\
 	mkdir -p $(dir $(KUSTOMIZE)) ;\
-	curl -sSLo - https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v3.5.4/kustomize_v3.5.4_$(OS)_$(ARCH).tar.gz | \
+	curl -sSLo - https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v$(KUSTOMIZE_VER)/kustomize_v$(KUSTOMIZE_VER)_$(OS)_$(ARCH).tar.gz | \
 	tar xzf - -C bin/ ;\
 	}
-else
-KUSTOMIZE=$(shell which kustomize)
-endif
 endif
 
 # Installs operator-sdk if is not available in $(pwd)/bin
@@ -98,21 +95,17 @@ ifeq (,$(wildcard $(OPERATOR_SDK)))
 	}
 endif
 
-# Download ansible-operator locally if necessary, preferring the $(pwd)/bin path over global if both exist.
+# Download ansible-operator locally if necessary in $(pwd)/bin
 .PHONY: ansible-operator
 ANSIBLE_OPERATOR = $(shell pwd)/bin/ansible-operator
 ansible-operator:
 ifeq (,$(wildcard $(ANSIBLE_OPERATOR)))
-ifeq (,$(shell which ansible-operator 2>/dev/null))
 	@{ \
 	set -e ;\
 	mkdir -p $(dir $(ANSIBLE_OPERATOR)) ;\
-	curl -sSLo $(ANSIBLE_OPERATOR) https://github.com/operator-framework/operator-sdk/releases/download/v1.3.0/ansible-operator_$(OS)_$(ARCH) ;\
+	curl -sSLo $(ANSIBLE_OPERATOR) https://github.com/operator-framework/operator-sdk/releases/download/v$(OPERATOR_SDK_VER)/ansible-operator_$(OS)_$(ARCH) ;\
 	chmod +x $(ANSIBLE_OPERATOR) ;\
 	}
-else
-ANSIBLE_OPERATOR = $(shell which ansible-operator)
-endif
 endif
 
 # Generate bundle manifests and metadata, then validate generated files.
