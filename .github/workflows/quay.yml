@@ -1,4 +1,4 @@
-name: Quay
+name: Publish images and create DCI components
 
 on:
   push:
@@ -9,7 +9,6 @@ on:
 
 env:
   REGISTRY: quay.io
-  OCP_VERSIONS: "all"
 
 jobs:
   build:
@@ -17,10 +16,14 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Registry login
-        run: echo "${{ secrets.QUAY_TOKEN }}" | podman login ${REGISTRY} -u ${{ secrets.QUAY_USER }} --password-stdin
+      - name: Log in to Quay.io
+        uses: redhat-actions/podman-login@v1.4
+        with:
+          username: ${{ secrets.QUAY_USER }}
+          password: ${{ secrets.QUAY_TOKEN }}
+          registry: ${{ env.REGISTRY }}
 
       - name: Build and Push the index image
         run: |
@@ -34,15 +37,19 @@ jobs:
         id: repo
 
       - name: Create DCI components
-        uses: tonyskapunk/dci-component@v0.2.0
+        uses: dci-labs/dci-component@v1.0.1
         with:
           dciClientId: ${{ secrets.DCI_CLIENT_ID }}
           dciApiSecret: ${{ secrets.DCI_API_SECRET }}
-          dciTopicVersion: ${{ env.OCP_VERSIONS }}
-          componentName: ${{ github.ref_name }}
-          componentCanonicalName: ${{ steps.repo.outputs.name }}:${{ github.ref_name }}
-          componentType: nfv-example-cnf-index
+          dciTopics: '
+          OCP-4.11,
+          OCP-4.12,
+          OCP-4.13
+          '
+          componentName: nfv-example-cnf-index
+          componentVersion: ${{ github.ref_name }}
           componentData: '{"url":"${{ env.REGISTRY }}/${{ github.repository_owner }}/nfv-example-cnf-catalog"}'
+          componentRelease: ga
         id: dci
 
       - name: Results
