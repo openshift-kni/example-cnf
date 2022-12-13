@@ -42,6 +42,10 @@ jobs:
           dciClientId: ${{ secrets.DCI_CLIENT_ID }}
           dciApiSecret: ${{ secrets.DCI_API_SECRET }}
           dciTopics: '
+          OCP-4.7,
+          OCP-4.8,
+          OCP-4.9,
+          OCP-4.10,
           OCP-4.11,
           OCP-4.12,
           OCP-4.13
