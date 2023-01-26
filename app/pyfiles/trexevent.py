@@ -58,7 +58,8 @@ def create_event(data):
             'type': 'Normal',
             'eventTime': evtTimeMicro,
             'series': {
-                'lastObservedTime': evtTime
+                'lastObservedTime': evtTime,
+                'count': 2
             },
             'reason': data['reason'],
             'action': data['reason'],
