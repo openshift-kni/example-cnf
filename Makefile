@@ -1,4 +1,4 @@
-VERSION        := 0.3.2
+VERSION        := 0.3.3
 TAG            := v$(VERSION)
 REGISTRY       ?= quay.io
 ORG            ?= rh-nfv-int
@@ -34,12 +34,14 @@ index-build: opm
 		operator_manifest=$$(skopeo inspect docker://$(REGISTRY)/$(ORG)/$${operator_bundle}:$${operator_version}) ;\
 		operator_digest=$$(jq -r '.Digest' <<< $${operator_manifest}) ;\
 		bundle_digest=$(REGISTRY)/$(ORG)/$${operator_bundle}@$${operator_digest} ;\
+		echo "operator = $${operator_name}, operator_digest = $${operator_digest}" ;\
 		default_channel=$$(jq -r '.Labels."operators.operatorframework.io.bundle.channel.default.v1"' <<< $${operator_manifest}) ;\
 		channel="---\nschema: olm.channel\npackage: $${operator_name}\nname: $${default_channel}\nentries:\n  - name: $${operator_name}.$${operator_version}" ;\
 		$(OPM) init $${operator_name} --default-channel=$${default_channel} --output=yaml >> $(BUILD_PATH)/$(INDEX_NAME)/index.yml ;\
 		$(OPM) render $${bundle_digest} --output=yaml >> $(BUILD_PATH)/$(INDEX_NAME)/index.yml ;\
 		echo -e $${channel} >> $(BUILD_PATH)/$(INDEX_NAME)/index.yml ;\
 	done ;\
+	echo "validating the catalog" ;\
 	$(OPM) validate $(BUILD_PATH)/$(INDEX_NAME) ;\
 	BUILDAH_FORMAT=docker podman build $(BUILD_PATH) -f $(BUILD_PATH)/$(INDEX_NAME).Dockerfile -t $(INDEX_IMG) ;\
 	rm -rf $(BUILD_PATH) ;\

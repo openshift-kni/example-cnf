@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.3.3] - 2023-02-01
+
+- Use a new trex-operator with the v1 version of the events API
+
 ## [0.3.2] - 2022-12-13
 
 - Rebuild to create DCI components for the upcoming release OCP 4.13
