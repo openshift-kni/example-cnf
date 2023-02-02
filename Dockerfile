@@ -1,12 +1,12 @@
 FROM quay.io/operator-framework/ansible-operator:v1.10.0
 
-MAINTAINER skramaja@redhat.com
+MAINTAINER telcoci@redhat.com
 
 LABEL name="NFV Example CNF TRex Operator" \
-      maintainer="skramaja@redhat.com" \
+      maintainer="telcoci@redhat.com" \
       vendor="fredco" \
-      version="v0.2.3" \
-      release="v0.2.3" \
+      version="v0.2.6" \
+      release="v0.2.6" \
       summary="An example CNF for platform valiation" \
       description="An example CNF for platform valiation"
 
