@@ -2,9 +2,10 @@ name: Quay
 
 on:
   push:
-    branches:
-      - master
-      - gha_push #TODO: Remove once validated
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-[0-9]+"
+  workflow_dispatch:
 
 env:
   REGISTRY: quay.io
