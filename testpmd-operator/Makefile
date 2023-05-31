@@ -26,6 +26,10 @@ IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME):$(TAG)
 
 all: operator-all bundle-all
 
+build-all: operator-build bundle-build
+
+push-all: operator-push bundle-push
+
 # Operator build and push
 operator-all: operator-build operator-push
 

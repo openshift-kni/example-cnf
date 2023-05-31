@@ -28,11 +28,11 @@ RUN sed -i -e 's/EAL_IGB_UIO=y/EAL_IGB_UIO=n/' \
 
 # Build it
 RUN cd ${DPDK_DIR} && \
-    make install T=${RTE_TARGET} DESTDIR=${RTE_SDK} -j 8
+    make install T=${RTE_TARGET} DESTDIR=${RTE_SDK} -j $(nproc)
 
 RUN cp -af $(pwd)testpmd-as-load-balancer/v19.11/test-pmd ${DPDK_DIR}/app/test-pmd && \
     cd ${DPDK_DIR}/app/test-pmd && \
-    make -j 8 && \
+    make -j $(nproc) && \
     cp testpmd /usr/local/bin
 
 ## testpmd image

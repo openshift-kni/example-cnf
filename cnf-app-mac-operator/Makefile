@@ -49,6 +49,10 @@ endif
 
 all: operator-all bundle-all
 
+build-all: kustomize operator-build bundle-build
+
+push-all: operator-push bundle-push
+
 # Operator build and push
 operator-all: operator-build operator-push
 
@@ -115,11 +119,11 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} apply -f -
 
-undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
+undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} delete -f -
 
 # Build the operator image
-operator-build:
+operator-build: kustomize
 	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . -t ${IMG}
 
 # Push the operator image
@@ -133,28 +137,20 @@ controller-gen: ## Download controller-gen locally if necessary.
 # Download kustomize locally if necessary, preferring the $(pwd)/bin path over global if both exist.
 .PHONY: kustomize
 KUSTOMIZE = $(shell pwd)/bin/kustomize
-kustomize:
-ifeq (,$(shell which kustomize 2>/dev/null))
-	@{ \
-	set -e ;\
-	mkdir -p $(dir $(KUSTOMIZE)) ;\
-	curl -sSLo - https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v$(KUSTOMIZE_VER)/kustomize_v$(KUSTOMIZE_VER)_$(OS)_$(ARCH).tar.gz | \
-	tar xzf - -C bin/ ;\
-	}
-endif
+kustomize: bin/kustomize
+
+bin/kustomize:
+	mkdir -p bin && curl -sSLo - https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v$(KUSTOMIZE_VER)/kustomize_v$(KUSTOMIZE_VER)_$(OS)_$(ARCH).tar.gz | tar xzf - -C bin/
 
 # Installs operator-sdk if is not available in $(pwd)/bin
 .PHONY: operator-sdk
 OPERATOR_SDK = $(shell pwd)/bin/operator-sdk
-operator-sdk:
-ifeq (,$(wildcard $(OPERATOR_SDK)))
-	@{ \
-	set -e ;\
-	mkdir -p $(dir $(OPERATOR_SDK)) ;\
-	curl -sLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/v$(OPERATOR_SDK_VER)/operator-sdk_$(OS)_$(ARCH) ; \
-	chmod u+x $(OPERATOR_SDK) ; \
-	}
-endif
+operator-sdk: bin/operator-sdk
+
+bin/operator-sdk:
+	mkdir -p $(dir $(OPERATOR_SDK)) && \
+	curl -sLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/v$(OPERATOR_SDK_VER)/operator-sdk_$(OS)_$(ARCH) && \
+	chmod u+x $(OPERATOR_SDK)
 
 # go-install-tool will 'go install' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
@@ -167,7 +163,7 @@ endef
 
 # Generate bundle manifests and metadata, then validate generated files.
 .PHONY: bundle
-bundle: manifests kustomize operator-sdk
+bundle: kustomize manifests operator-sdk
 	$(OPERATOR_SDK) generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)

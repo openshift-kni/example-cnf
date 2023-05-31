@@ -3,7 +3,7 @@ testpmd-operator
 
 Ansible based operator to deploy TestPMD application in OpenShift.
 
-Container images for the TestPMD application is built using [testpmd-container-app](https://github.com/krsacme/testpmd-container-app). 
+Container images for the TestPMD application is built using [testpmd-container-app](https://github.com/openshift-kni/example-cnf/testpmd-container-app). 
 
 Preparation
 ----------

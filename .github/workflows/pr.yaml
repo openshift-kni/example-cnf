@@ -1,0 +1,35 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: "Force building images from a branch"
+        required: true
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: quay.io
+
+jobs:
+  validate-pr:
+    # Build only when the PR comes from a branch in the same repo or forced
+    if: github.repository == github.event.pull_request.head.repo.full_name || inputs.force_build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Build All
+        run: |
+          set -x
+          echo ${{ github.event.pull_request.base.sha }}
+          SHA=$(cut -c1-8 <<< ${{ github.event.pull_request.base.sha }})
+          DATE=$(date --utc +%Y%m%d%H%M)
+          make build-all SHA=${SHA} DATE=${DATE} PREFIX=pr-${{ github.event.number }}

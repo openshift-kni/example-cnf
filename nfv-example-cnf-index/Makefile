@@ -16,6 +16,10 @@ SHELL          := /bin/bash
 
 all: index-build index-push
 
+build-all: index-build
+
+push-all: index-push
+
 # Clean up
 clean:
 	@rm -rf $(BUILD_PATH)
