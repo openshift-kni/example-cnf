@@ -5,3 +5,4 @@ bin
 build.sh
 bundle
 bundle.Dockerfile
+relatedImages.yaml

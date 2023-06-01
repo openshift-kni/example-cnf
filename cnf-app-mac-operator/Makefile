@@ -1,5 +1,8 @@
-VERSION          := 0.2.9
-TAG              := v$(VERSION)
+SHELL            := /bin/bash
+DATE             ?= $(shell date --utc +%Y%m%d%H%M)
+SHA              ?= $(shell git rev-parse --short HEAD)
+VERSION          := 0.2.10
+TAG              := $(VERSION)-$(DATE).$(SHA)
 REGISTRY         ?= quay.io
 ORG              ?= rh-nfv-int
 DEFAULT_CHANNEL  ?= alpha
@@ -33,10 +36,11 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 # BUNDLE_IMG defines the image:tag used for the bundle.
 # You can use it as an arg. (E.g make bundle-build BUNDLE_IMG=<some-registry>/<project-name-bundle>:<tag>)
-BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME)-bundle:$(TAG)
+BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME)-bundle:v$(TAG)
+REL_BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME)-bundle:v$(VERSION)
 
 # Image URL to use all building/pushing image targets
-IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME):$(TAG)
+IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME):v$(TAG)
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
 
@@ -166,8 +170,8 @@ endef
 bundle: kustomize manifests operator-sdk
 	$(OPERATOR_SDK) generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
-	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
-	DIGEST=$$(skopeo inspect docker://$(IMG) | jq -r '.Digest') && sed -i -e 's/\(\s*image: .*\):v'$(VERSION)'/\1@'$${DIGEST}'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
+	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(TAG) $(BUNDLE_METADATA_OPTS)
+	DIGEST=$$(skopeo inspect docker://$(IMG) | jq -r '.Digest') && sed -i -e 's/\(\s*image: .*\):v'$(TAG)'/\1@'$${DIGEST}'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	$(OPERATOR_SDK) bundle validate ./bundle
 
 # Build the bundle image, using local bundle image name
@@ -179,7 +183,17 @@ bundle-build: bundle
 # Tag local bundle image with our registry BUNDLE_IMG
 bundle-tag:
 	${CONTAINER_CLI} tag bundle $(BUNDLE_IMG)
+	if [ -n "$(RELEASE)" ]; then \
+	${CONTAINER_CLI} tag bundle $(REL_BUNDLE_IMG); \
+	fi
 
 # Push the BUNDLE_IMG
 bundle-push: bundle-tag
 	${CONTAINER_CLI} push $(BUNDLE_IMG)
+	if [ -n "$(RELEASE)" ]; then \
+	${CONTAINER_CLI} push $(REL_BUNDLE_IMG); \
+	fi
+
+.PHONY: version # Display the version
+version:
+	@echo $(VERSION)

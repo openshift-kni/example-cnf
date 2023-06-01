@@ -8,12 +8,13 @@ targets:
 	@awk -F: '/^.PHONY/ {print $$2}' Makefile | grep -v targets | column -t -s '#'
 
 .PHONY: all # Build and push all images
-all: build-all push-all
+all:
+	@set -ex; for d in $(shell ./generate-versions.sh "versions.cfg" "${DATE}.${SHA}"); do make -C $$d all SHA=$(SHA) DATE=$(DATE) RELEASE=${RELEASE}; done
 
 .PHONY: build-all # Build all images
 build-all:
-	@set -ex; for d in $(DIRS); do make -C $$d build-all SHA=$(SHA); done
+	@set -ex; for d in $(shell ./generate-versions.sh "versions.cfg" "${DATE}.${SHA}"); do make -C $$d build-all SHA=$(SHA) DATE=$(DATE) RELEASE=${RELEASE}; done
 
-.PHONY: push-all # Push all images
-push-all:
-	@set -ex; for d in $(DIRS); do make -C $$d push-all SHA=$(SHA); done
+.PHONY: version # Display all the versions
+version:
+	@for d in $(DIRS); do echo -n "$$d: "; make -sC $$d version; done
