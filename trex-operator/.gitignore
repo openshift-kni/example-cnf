@@ -2,3 +2,4 @@ bin
 *sync.sh
 build.sh
 bundle*
+relatedImages.yaml
