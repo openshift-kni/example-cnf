@@ -20,8 +20,8 @@ echo "declare -A VERSIONS" > "$VERSIONS"
 
 count=0
 for d in $DIRS; do
-    vers=$(cd $d; make -s version)
-    if grep -q "$d/" <<< $FILES; then
+    vers="$(cd "$d" || exit 1; make -s version)"
+    if [ "$FORCE" == true ] || grep -q "$d/" <<< "$FILES"; then
         echo "VERSIONS[$d]=$vers-$EXTRA" >> "$VERSIONS"
         echo "$d"
         count=$((count + 1))

@@ -22,6 +22,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Dump GitHub context
+        id: github_context_step
+        run: echo '${{ toJSON(github) }}'
+
       - name: Log in to Quay.io
         uses: redhat-actions/podman-login@v1
         with:
@@ -32,8 +36,7 @@ jobs:
       - name: Build All
         run: |
           set -x
-          echo ${{ github.event.pull_request.head.sha }}
-          SHA=$(cut -c1-8 <<< ${{ github.event.pull_request.head.sha }})
+          SHA=$(git rev-parse --short HEAD)
           DATE=$(date --utc +%Y%m%d%H%M)
           make version
-          make all SHA=${SHA} DATE=${DATE} RELEASE=1
+          make all SHA=${SHA} DATE=${DATE} RELEASE=1 FORCE=true
