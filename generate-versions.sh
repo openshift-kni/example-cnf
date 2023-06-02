@@ -19,18 +19,16 @@ echo "declare -A VERSIONS" > "$VERSIONS"
 count=0
 for d in $DIRS; do
     vers="$(cd "$d" || exit 1; make -s version)"
-    if [ "$FORCE" == true ] || grep -q "$d/" <<< "$FILES"; then
+    # Force nfv-example-cnf-index to be displayed if at least one
+    # change to the subdirs has been detected. This will force the
+    # index to be generated. TODO: force the operators to be rebuilt
+    # if there is a change in the apps.
+    if [ "$FORCE_BUILD" == true ] || grep -q "$d/" <<< "$FILES" || { [ "$d" == nfv-example-cnf-index ] && [ "$count" -gt 0 ]; }; then
         echo "VERSIONS[$d]=$vers-$EXTRA" >> "$VERSIONS"
         echo "$d"
         count=$((count + 1))
     else
         echo "VERSIONS[$d]=$vers" >> "$VERSIONS"
-        # Force nfv-example-cnf-index to be displayed if at least one
-        # change to the subdirs has been detected. This will force the
-        # index to be generated.
-        if [ "$d" == nfv-example-cnf-index ] && [ "$count" -gt 0 ]; then
-            echo "$d"
-        fi
     fi
 done
 

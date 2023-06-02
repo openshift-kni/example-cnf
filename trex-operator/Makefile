@@ -12,7 +12,7 @@ CLUSTER_CLI      ?= oc
 OPERATOR_NAME    := trex-operator
 OPERATOR_SDK_VER := 1.7.2
 KUSTOMIZE_VER    := 3.5.4
-TREX_VER         := v$(shell . ../versions.cfg; echo "$${VERSIONS[trex-container-app]}")
+TREX_VER         ?= v$(shell bash -c '. ../versions.cfg; echo "$${VERSIONS[trex-container-app]}"')
 
 # Default bundle image tag
 BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME)-bundle:v$(TAG)
@@ -28,6 +28,7 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 # Image URL to use all building/pushing image targets
 IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME):v$(TAG)
+REL_IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME):v$(VERSION)
 
 all: operator-all bundle-all
 
@@ -68,10 +69,17 @@ undeploy: kustomize
 
 # Build the operator image
 operator-build:
-	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . -t ${IMG}
+	if [ -n "$(RELEASE)" ]; then \
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . -t ${IMG}  -t ${REL_IMG} ;\
+	else \
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . -t ${IMG} ;\
+	fi
 
 # Push the operator image
 operator-push:
+	if [ -n "$(RELEASE)" ]; then \
+	${CONTAINER_CLI} push ${REL_IMG} ;\
+	fi
 	${CONTAINER_CLI} push ${IMG}
 
 PATH  := $(PATH):$(PWD)/bin
