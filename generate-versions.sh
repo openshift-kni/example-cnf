@@ -14,8 +14,6 @@ DIRS="testpmd-container-app trex-container-app cnf-app-mac-operator testpmd-lb-o
 
 FILES="$(git diff --name-only -r origin/${GITHUB_BASE_REF:-main}:)"
 
-[ -n "$FILES" ]
-
 echo "declare -A VERSIONS" > "$VERSIONS"
 
 count=0
