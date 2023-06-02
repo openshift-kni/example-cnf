@@ -30,7 +30,7 @@ clean:
 # Build the index image
 index-build: opm
 	@{ \
-	set -e ;\
+	set -ex ;\
 	mkdir -p $(BUILD_PATH)/$(INDEX_NAME) ;\
 	rm -f $(BUILD_PATH)/$(INDEX_NAME)/index.yml ;\
 	cp "$(INDEX_NAME).Dockerfile" $(BUILD_PATH)/ ;\

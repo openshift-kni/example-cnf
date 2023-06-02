@@ -39,4 +39,4 @@ jobs:
           SHA=$(git rev-parse --short HEAD)
           DATE=$(date --utc +%Y%m%d%H%M)
           make version
-          make all SHA=${SHA} DATE=${DATE} RELEASE=1 FORCE=true
+          make all SHA=${SHA} DATE=${DATE} RELEASE=1 FORCE_BUILD=true

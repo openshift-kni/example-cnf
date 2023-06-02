@@ -42,12 +42,12 @@ jobs:
           URL="${{ github.event.pull_request._links.self.href }}"
           echo "URL=$URL"
           if curl -s -L -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{ github.token }}" -H "X-GitHub-Api-Version: 2022-11-28" "$URL"|jq -r .body|grep -qi '^Test-Hints:.*force-build=true'; then
-              FORCE=true
+              FORCE_BUILD=true
           else
-              FORCE=false
+              FORCE_BUILD=false
           fi
           echo "sha=${{ github.event.pull_request.head.sha }}"
           SHA=$(cut -c1-8 <<< ${{ github.event.pull_request.head.sha }})
           make version
           echo "force_build=${{ github.event.inputs.force_build }}"
-          make all SHA=${SHA} DATE=pr${{ github.event.number }} FORCE=$FORCE
+          make all SHA=${SHA} DATE=pr${{ github.event.number }} FORCE_BUILD=$FORCE_BUILD

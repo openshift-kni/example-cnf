@@ -13,7 +13,7 @@ OPERATOR_NAME    := testpmd-operator
 OPERATOR_SDK_VER := 1.7.2
 KUSTOMIZE_VER    := 3.5.4
 DPDK_VER         ?= v4.6.3
-TESTPMD_VER      ?= v$(shell . ../versions.cfg; echo "$${VERSIONS[testpmd-container-app]}")
+TESTPMD_VER      ?= v$(shell bash -c '. ../versions.cfg; echo "$${VERSIONS[testpmd-container-app]}"')
 
 # Default bundle image tag
 BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME)-bundle:v$(TAG)

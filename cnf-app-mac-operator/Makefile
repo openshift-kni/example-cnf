@@ -41,6 +41,7 @@ REL_BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME)-bundle:v$(VERSION)
 
 # Image URL to use all building/pushing image targets
 IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME):v$(TAG)
+REL_IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME):v$(VERSION)
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
 
@@ -108,7 +109,12 @@ run: manifests generate fmt vet ## Run a controller from your host.
 	go run ./main.go
 
 docker-build: build ## Build docker image with the manager.
-	${CONTAINER_CLI} build -t ${IMG} .
+	if [ -n "$(RELEASE)" ]; then \
+	${CONTAINER_CLI} build -t ${IMG} -t $(REL_IMG) . ;\
+	${CONTAINER_CLI} push ${RELIMG} ;\
+	else \
+	${CONTAINER_CLI} build -t ${IMG} . ;\
+	fi
 	${CONTAINER_CLI} push ${IMG}
 
 ##@ Deployment
