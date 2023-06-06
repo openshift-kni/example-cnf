@@ -30,7 +30,7 @@ clean:
 # Build the index image
 index-build: opm
 	@{ \
-	set -ex ;\
+	set -e ;\
 	mkdir -p $(BUILD_PATH)/$(INDEX_NAME) ;\
 	rm -f $(BUILD_PATH)/$(INDEX_NAME)/index.yml ;\
 	cp "$(INDEX_NAME).Dockerfile" $(BUILD_PATH)/ ;\
@@ -46,9 +46,12 @@ index-build: opm
 		bundle_digest=$(REGISTRY)/$(ORG)/$${operator_bundle}@$${operator_digest} ;\
 		echo "operator=$${operator_name} operator_version=$${operator_version} operator_digest=$${operator_digest}" ;\
 		default_channel=$$(jq -r '.Labels."operators.operatorframework.io.bundle.channel.default.v1"' <<< $${operator_manifest}) ;\
-		channel="---\nschema: olm.channel\npackage: $${operator_name}\nname: $${default_channel}\nentries:\n  - name: $${operator_name}.$${operator_version}" ;\
 		$(OPM) init $${operator_name} --default-channel=$${default_channel} --output=yaml >> $(BUILD_PATH)/$(INDEX_NAME)/index.yml ;\
-		$(OPM) render $${bundle_digest} --output=yaml >> $(BUILD_PATH)/$(INDEX_NAME)/index.yml ;\
+		rendered=$$($(OPM) render $${bundle_digest} --output=yaml) ;\
+		echo "$${rendered}" >> $(BUILD_PATH)/$(INDEX_NAME)/index.yml ;\
+		operator_name_version=$$(sed -n -e 's/^name: //p'<<< "$$rendered") ;\
+		echo "$${operator_name_version}" ;\
+		channel="---\nschema: olm.channel\npackage: $${operator_name}\nname: $${default_channel}\nentries:\n  - name: $${operator_name_version}" ;\
 		echo -e $${channel} >> $(BUILD_PATH)/$(INDEX_NAME)/index.yml ;\
 	done ;\
 	echo "validating the catalog" ;\
