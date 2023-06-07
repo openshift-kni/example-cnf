@@ -34,7 +34,7 @@ build-testpmd: testpmd-dependencies
 	if [ -n "$(RELEASE)" ]; then \
 	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(VERSION)" $(CONTAINER_ARGS); \
 	else \
-	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" $(CONTAINER_ARGS); \
+	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile --label quay.expires-after=2w -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" $(CONTAINER_ARGS); \
 	fi
 
 .PHONY: build-mac # Build mac
@@ -42,7 +42,7 @@ build-mac:
 	if [ -n "$(RELEASE)" ]; then \
 	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(VERSION)" $(CONTAINER_ARGS); \
 	else \
-	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" $(CONTAINER_ARGS); \
+	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile --label quay.expires-after=2w -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" $(CONTAINER_ARGS); \
 	fi
 
 .PHONY: build-listener # Build listener
@@ -50,7 +50,7 @@ build-listener:
 	if [ -n "$(RELEASE)" ]; then \
 	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(VERSION)" $(CONTAINER_ARGS); \
 	else \
-	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" $(CONTAINER_ARGS); \
+	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile --label quay.expires-after=2w -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" $(CONTAINER_ARGS); \
 	fi
 
 .PHONY: clean # Delete untracked changes
