@@ -113,7 +113,7 @@ docker-build: build ## Build docker image with the manager.
 	${CONTAINER_CLI} build -t ${IMG} -t $(REL_IMG) . ;\
 	${CONTAINER_CLI} push ${RELIMG} ;\
 	else \
-	${CONTAINER_CLI} build -t ${IMG} . ;\
+	${CONTAINER_CLI} build -t ${IMG} . --label quay.expires-after=2w ;\
 	fi
 	${CONTAINER_CLI} push ${IMG}
 
@@ -134,8 +134,11 @@ undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.
 
 # Build the operator image
 operator-build: kustomize
-	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . -t ${IMG}
-
+	if [ -n "$(RELEASE)" ]; then \
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . -t ${IMG} -t $(REL_IMG); \
+	else \
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . --label quay.expires-after=2w -t ${IMG}; \
+	fi
 # Push the operator image
 operator-push:
 	${CONTAINER_CLI} push ${IMG}
@@ -183,8 +186,13 @@ bundle: kustomize manifests operator-sdk
 # Build the bundle image, using local bundle image name
 .PHONY: bundle-build
 bundle-build: bundle
+	if [ -n "$(RELEASE)" ]; then \
 	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Dockerfile \
-		-t bundle .
+		-t bundle . ; \
+	else \
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Dockerfile --label quay.expires-after=2w \
+		-t bundle . ; \
+	fi
 
 # Tag local bundle image with our registry BUNDLE_IMG
 bundle-tag:
