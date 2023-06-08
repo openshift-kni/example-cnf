@@ -1,0 +1,1683 @@
+diff -urN dpdk/app/test-pmd/config.c testpmd-as-load-balancer/v19.11/test-pmd/config.c
+--- dpdk/app/test-pmd/config.c	2023-06-08 05:47:34.604739644 +0200
++++ testpmd-as-load-balancer/v19.11/test-pmd/config.c	2023-06-08 05:42:01.535046013 +0200
+@@ -2115,6 +2115,139 @@
+ 	}
+ }
+ 
++static void
++lb_fwd_config_setup_sm(struct fwd_stream *fs, portid_t rxp, portid_t txp, portid_t rxp_index, queueid_t queue, uint8_t generate)
++{
++	fs->rx_port = rxp;
++	fs->rx_queue = queue;
++	fs->tx_port = txp;
++	fs->tx_queue = queue;
++	if (generate == 0)
++	{
++		fs->peer_addr = rxp_index;
++		fs->generate = 0;
++	}
++	else
++	{
++		fs->peer_addr = nb_fwd_ports;
++		fs->generate = 1;
++	}
++	fs->retry_enabled = retry_enabled;
++}
++
++static void
++lb_fwd_config_setup_4ports_bi(void)
++{
++	portid_t   rxp;
++	queueid_t  rxq;
++	queueid_t  nb_q;
++	streamid_t sm_id;
++	portid_t  *dut_fwd_ports, *gen_fwd_ports;
++	uint32_t   nb_dut_fwd_ports, nb_gen_fwd_ports;
++	uint32_t   i, j;
++	char name[RTE_ETH_NAME_MAX_LEN];
++	uint8_t dut_pci_found;
++	struct rte_pci_addr port_pci;
++
++	nb_q = nb_rxq;
++	if (nb_q > nb_txq)
++		nb_q = nb_txq;
++	cur_fwd_config.nb_fwd_lcores = (lcoreid_t) nb_fwd_lcores;
++	cur_fwd_config.nb_fwd_ports = nb_fwd_ports;
++	cur_fwd_config.nb_fwd_streams =
++		(streamid_t) (nb_q * cur_fwd_config.nb_fwd_ports);
++
++	if (cur_fwd_config.nb_fwd_streams < cur_fwd_config.nb_fwd_lcores)
++		cur_fwd_config.nb_fwd_lcores =
++			(lcoreid_t)cur_fwd_config.nb_fwd_streams;
++
++	/* reinitialize forwarding streams */
++	init_fwd_streams();
++
++	if (2 * nb_lb_dut_pcis != nb_fwd_ports)
++	{
++		printf("Number of ports: %u\n", nb_fwd_ports);
++		printf("Number of DUT PCIs: %u\n", nb_lb_dut_pcis);
++		rte_exit(-1, "Number DUT ports should be half of total number of ports\n");
++		return;
++	}
++
++	dut_fwd_ports = malloc(nb_lb_dut_pcis * sizeof(portid_t));
++	nb_dut_fwd_ports = 0;
++	gen_fwd_ports = malloc(nb_lb_dut_pcis * sizeof(portid_t));
++	nb_gen_fwd_ports = 0;
++	for (i = 0; i < nb_fwd_ports; i++)
++	{
++		rte_eth_dev_get_name_by_port(fwd_ports_ids[i], name);
++		printf("Port(%u) PCI(%s)\n", i, name);
++	}
++	for (i = 0; i < nb_fwd_ports; i++)
++	{
++		dut_pci_found = 0;
++		rte_eth_dev_get_name_by_port(fwd_ports_ids[i], name);
++		rte_pci_addr_parse(name, &port_pci);
++		for (j = 0; j < nb_lb_dut_pcis; j++)
++		{
++			if (0 == rte_pci_addr_cmp(&port_pci, &lb_dut_pcis[j]))
++			{
++				dut_pci_found = 1;
++			}
++		}
++
++		if (dut_pci_found == 1)
++			dut_fwd_ports[nb_dut_fwd_ports++] = fwd_ports_ids[i];
++		else
++			gen_fwd_ports[nb_gen_fwd_ports++] = fwd_ports_ids[i];
++	}
++
++	if (nb_dut_fwd_ports != nb_gen_fwd_ports)
++	{
++		rte_exit(1, "Packet generator and DUT ports should match");
++		return;
++	}
++
++	setup_fwd_config_of_each_lcore(&cur_fwd_config);
++	rxp = 0; rxq = 0;
++	for (sm_id = 0; sm_id < cur_fwd_config.nb_fwd_streams - 1; sm_id++, sm_id++) {
++		struct fwd_stream *fs_gen, *fs_dut;
++
++		fs_gen = fwd_streams[sm_id];
++		fs_dut = fwd_streams[sm_id + 1];
++
++		lb_fwd_config_setup_sm(fs_gen, gen_fwd_ports[rxp], dut_fwd_ports[rxp], rxp, rxq, 1);
++		lb_fwd_config_setup_sm(fs_dut, dut_fwd_ports[rxp], gen_fwd_ports[rxp], rxp, rxq, 0);
++
++		rxp++;
++		if (rxp < nb_dut_fwd_ports)
++			continue;
++		rxp = 0;
++		rxq++;
++	}
++}
++
++/**
++ * For TestPMD as load balancer setup
++ * Possible combinations:
++ * 4 Ports Bi  - 2 ports connected to Packet Generator, 2 ports connected to DUT
++ * 4 Ports Uni - Each port with with Packet Gen input, DUT input, DUT output, Packet Gen output in single direction
++ * 2 Ports Bi  - 2 ports connected to both Packet Generator and DUT
++ * 2 Ports Bi DSR - 2 ports connected to both Packet Generator and DUT. DUT return path is direct to Packet Gen
++ */
++static void
++lb_fwd_config_setup(void)
++{
++	if (nb_fwd_ports % 4 == 0)
++	{
++		printf("4 ports configured for load balancer with bi-directional traffic\n");
++		lb_fwd_config_setup_4ports_bi();
++	}
++	else
++	{
++		rte_exit(1, "configuration is not supported");
++		return;
++	}
++}
++
+ /**
+  * For the RSS forwarding test all streams distributed over lcores. Each stream
+  * being composed of a RX queue to poll on a RX port for input messages,
+@@ -2373,7 +2506,9 @@
+ 	}
+ #endif
+ 
+-	if ((nb_rxq > 1) && (nb_txq > 1)){
++	if (lb_enabled == 1)
++		lb_fwd_config_setup();
++	else if ((nb_rxq > 1) && (nb_txq > 1)){
+ 		if (dcb_config)
+ 			dcb_fwd_config_setup();
+ 		else
+diff -urN dpdk/app/test-pmd/hashget.c testpmd-as-load-balancer/v19.11/test-pmd/hashget.c
+--- dpdk/app/test-pmd/hashget.c	1970-01-01 01:00:00.000000000 +0100
++++ testpmd-as-load-balancer/v19.11/test-pmd/hashget.c	2023-06-08 05:42:01.536046012 +0200
+@@ -0,0 +1,138 @@
++#include "hashget.h"
++#include "hashring.h"
++
++#define MAC_LEN (6)
++#define HASH_CLONE_MARK_SWEEP_MAX (16)
++
++volatile struct hash_ring_clone_t *hash_clone_new;
++struct hash_ring_clone_t *hash_clone_mark_sweep[HASH_CLONE_MARK_SWEEP_MAX];
++struct hash_ring_clone_t **hash_clone_list;
++uint32_t nb_hash_clone_list;
++
++/////////////////// hashget - TestPMD Main Thread operations///////////////////
++
++/* Called from TestPMD main thread before starting PMD (withing start hook)
++ * Stores the list of clones to be used by different PMD threads.
++ * It is used to identify used clone instances by PMD threads to free the
++ * unused clones.
++ */
++void
++hash_ring_clone_init(struct hash_ring_clone_t **clone_list, uint32_t nb)
++{
++	hash_clone_list = clone_list;
++	nb_hash_clone_list = nb;
++}
++
++// Called from TestPMD LB Listen Thread when DUT is added/removed
++void
++hash_ring_clone_trigger(struct hash_ring_clone_t *new_clone)
++{
++	struct hash_ring_clone_t *old_clone;
++	uint32_t i, j, found;
++
++	if (new_clone == NULL)
++		return;
++
++
++	/* Update the volatile pointer to be accessed by PMD threads */
++	old_clone = (struct hash_ring_clone_t *)(uintptr_t)hash_clone_new;
++	hash_clone_new = new_clone;
++
++	for (i = 0; i < HASH_CLONE_MARK_SWEEP_MAX; i++)
++	{
++		if (hash_clone_mark_sweep[i] == NULL)
++		{
++			hash_clone_mark_sweep[i] = old_clone;
++			break;
++		}
++	}
++
++	for (i = 0; i < HASH_CLONE_MARK_SWEEP_MAX; i++)
++	{
++		found = 0;
++		if (hash_clone_mark_sweep[i] == NULL)
++			continue;
++		for (j = 0; j < nb_hash_clone_list; j++)
++		{
++			if (hash_clone_list[j] == NULL)
++				continue;
++			if (hash_clone_mark_sweep[i] == hash_clone_list[j])
++			{
++				found = 1;
++			}
++		}
++
++		if (found == 0)
++		{
++			hash_ring_clone_destroy(hash_clone_mark_sweep[i]);
++			hash_clone_mark_sweep[i] = NULL;
++		}
++	}
++}
++
++/////////////////// hashget - PMD Thread operations///////////////////
++
++// Called from the PMD thread
++uint32_t
++hash_tuple(uint8_t *smac, uint8_t *dmac, uint32_t sip, uint32_t dip, uint16_t sport, uint16_t dport)
++{
++	uint32_t idx = 0;
++	uint32_t hash_val = 0;
++	uint32_t i;
++	uint8_t buffer[32];
++
++	memcpy(&buffer[idx], smac, MAC_LEN);
++	idx += MAC_LEN;
++	memcpy(&buffer[idx], dmac, MAC_LEN);
++	idx += MAC_LEN;
++	memcpy(&buffer[idx], &sip, 4);
++	idx += 4;
++	memcpy(&buffer[idx], &dip, 4);
++	idx += 4;
++	memcpy(&buffer[idx], &sport, 2);
++	idx += 2;
++	memcpy(&buffer[idx], &dport, 2);
++	idx += 2;
++
++        hash_val = rte_jhash(buffer, idx, 0);
++/*
++        for (i = 0; i < idx; i++)
++                hash_val += (buffer[i] * 353535);
++*/
++                /*hash_val += (buffer[i] * 365365365);*/
++
++	return hash_val;
++}
++
++// Called from the PMD Thread
++int
++hash_ring_clone_get_mac(struct hash_ring_clone_t *clone, uint32_t key, uint8_t *mac)
++{
++	uint32_t i;
++
++        if (clone == NULL)
++        {
++                return -2;
++        }
++
++        if (mac == NULL)
++        {
++                return -3;
++        }
++
++        if (clone->length == 0)
++        {
++                return -4;
++        }
++
++        for (i = 0; i < clone->length; i++)
++        {
++                if (key < clone->list[i].key)
++                {
++                        memcpy(mac, clone->list[i].mac, MAC_LEN);
++                        return 0;
++                }
++        }
++        memcpy(mac, clone->list[clone->length - 1].mac, MAC_LEN);
++        return 0;
++}
+diff -urN dpdk/app/test-pmd/hashget.h testpmd-as-load-balancer/v19.11/test-pmd/hashget.h
+--- dpdk/app/test-pmd/hashget.h	1970-01-01 01:00:00.000000000 +0100
++++ testpmd-as-load-balancer/v19.11/test-pmd/hashget.h	2023-06-08 05:42:01.536046012 +0200
+@@ -0,0 +1,56 @@
++#ifndef _HASHGET_H_
++#define _HASHGET_H_
++
++#include <stdlib.h>
++#include <stdarg.h>
++#include <string.h>
++#include <stdio.h>
++#include <errno.h>
++#include <stdint.h>
++#include <unistd.h>
++#include <inttypes.h>
++
++#include <sys/queue.h>
++#include <sys/stat.h>
++
++#include <rte_common.h>
++#include <rte_byteorder.h>
++#include <rte_log.h>
++#include <rte_debug.h>
++#include <rte_cycles.h>
++#include <rte_memory.h>
++#include <rte_memcpy.h>
++#include <rte_launch.h>
++#include <rte_eal.h>
++#include <rte_per_lcore.h>
++#include <rte_lcore.h>
++#include <rte_jhash.h>
++#include <rte_ether.h>
++
++struct hash_ring_clone_t
++{
++    uint32_t length;
++    struct hash_ring_key_map_t *list;
++};
++
++struct hash_ring_key_map_t
++{
++    uint32_t key;
++    uint8_t mac[RTE_ETHER_ADDR_LEN];
++};
++
++extern volatile struct hash_ring_clone_t *hash_clone_new;
++
++void
++hash_ring_clone_init(struct hash_ring_clone_t **clone_holders, uint32_t nb);
++
++int
++hash_ring_clone_get_mac(struct hash_ring_clone_t *clone, uint32_t key, uint8_t *mac);
++
++void
++hash_ring_clone_trigger(struct hash_ring_clone_t *new_clone);
++
++uint32_t
++hash_tuple(uint8_t *smac, uint8_t *dmac, uint32_t sip, uint32_t dip, uint16_t sport, uint16_t dport);
++
++#endif /* _HASHGET_H_ */
+diff -urN dpdk/app/test-pmd/hashring.c testpmd-as-load-balancer/v19.11/test-pmd/hashring.c
+--- dpdk/app/test-pmd/hashring.c	1970-01-01 01:00:00.000000000 +0100
++++ testpmd-as-load-balancer/v19.11/test-pmd/hashring.c	2023-06-08 05:42:01.536046012 +0200
+@@ -0,0 +1,434 @@
++#include "hashring.h"
++#include "hashget.h"
++
++
++/////////////////// hashring ///////////////////
++struct hash_ring_t *
++hash_ring_create(uint32_t replicas)
++{
++    struct hash_ring_t *ring = malloc(sizeof(struct hash_ring_t));
++
++    if (ring != NULL)
++    {
++        ring->node_replicas = replicas;
++        ring->node_length = 0;
++        ring->nodes = NULL;
++        ring->items = NULL;
++        ring->item_length = 0;
++    }
++    return ring;
++}
++
++void
++hash_ring_destroy(struct hash_ring_t *ring)
++{
++    uint32_t i;
++    struct hash_ring_node_ll_t *ll_entry;
++
++    if (ring != NULL)
++    {
++        ll_entry = ring->nodes;
++        while (ring->nodes != NULL)
++        {
++            ll_entry = ring->nodes;
++            ring->nodes = ll_entry->next;
++            free(ll_entry);
++        }
++
++        if (ring->items != NULL)
++        {
++            for (i = 0; i < ring->item_length; i++)
++            {
++                if (ring->items[i] != NULL)
++                    free(ring->items[i]);
++            }
++            free(ring->items);
++        }
++
++        free(ring);
++    }
++}
++
++static struct hash_ring_node_t *
++hash_ring_ll_add_node(struct hash_ring_t *ring, struct hash_ring_node_t *node_in)
++{
++    struct hash_ring_node_t *new_node;
++    struct hash_ring_node_ll_t *entry;
++
++    new_node = malloc(sizeof(struct hash_ring_node_t));
++    if (new_node == NULL)
++    {
++        perror("failed to allocate memory for node");
++        return NULL;
++    }
++
++    new_node->name = malloc(sizeof(uint8_t) * node_in->name_length);
++    if (new_node->name == NULL)
++    {
++        perror("failed to allocate memory for node name");
++        free(new_node);
++        return NULL;
++    }
++    memcpy(new_node->name, node_in->name, node_in->name_length);
++    new_node->name_length = node_in->name_length;
++    memcpy(new_node->mac, node_in->mac, MAC_LEN);
++
++    entry = malloc(sizeof(struct hash_ring_node_ll_t));
++    if (entry == NULL)
++    {
++        free(new_node->name);
++        free(new_node);
++        perror("failed to allocat memory for ll node");
++        return NULL;
++    }
++
++    entry->next = ring->nodes;
++    entry->node = new_node;
++    ring->nodes = entry;
++    ring->node_length++;
++    return new_node;
++}
++
++static int
++hash_ring_compare_node(struct hash_ring_node_t *node_a, struct hash_ring_node_t *node_b)
++{
++    int cmp_value = 0;
++
++    if (node_a->name_length != node_b->name_length)
++    {
++        return -1;
++    }
++
++    cmp_value |= memcmp(node_a->name, node_b->name, node_a->name_length);
++    cmp_value |= memcmp(node_a->mac, node_b->mac, MAC_LEN);
++    return cmp_value;
++}
++
++static void
++hash_ring_ll_remove_node(struct hash_ring_t *ring, struct hash_ring_node_t *node)
++{
++    struct hash_ring_node_ll_t *ll_entry;
++    struct hash_ring_node_ll_t *ll_prev = NULL;
++    int cmp_value;
++
++    ll_entry = ring->nodes;
++    while (ll_entry != NULL)
++    {
++        cmp_value = hash_ring_compare_node(node, ll_entry->node);
++        if (cmp_value == 0)
++        {
++            if (ll_prev != NULL)
++                ll_prev->next = ll_entry->next;
++            else
++                ring->nodes = ll_entry->next;
++
++            free(ll_entry->node->name);
++            free(ll_entry->node);
++            free(ll_entry);
++            ring->node_length--;
++            return;
++
++        }
++        ll_prev = ll_entry;
++        ll_entry = ll_entry->next;
++    }
++}
++
++static uint32_t
++hash_ring_create_node_hash(struct hash_ring_node_t *node, uint32_t round)
++{
++    uint8_t *buffer;
++    uint32_t length = 0;
++    uint32_t start = 0;
++
++    length += (node->name_length * sizeof(uint8_t));
++    length += (MAC_LEN * sizeof(uint8_t));
++    length += sizeof(uint32_t);
++
++    buffer = malloc(length);
++    if (buffer != NULL)
++    {
++        start = 0;
++        memcpy(buffer + start, node->name, node->name_length);
++        start += node->name_length;
++        memcpy(buffer + start, node->mac, MAC_LEN);
++        start += MAC_LEN;
++        memcpy(buffer + start, &round, sizeof(uint32_t));
++        start += sizeof(uint32_t);
++        return rte_jhash(buffer, length, 0);
++    }
++    return 0;
++}
++
++static int
++item_sort(const void *a, const void *b)
++{
++    const struct hash_ring_item_t *item_a = *(const struct hash_ring_item_t**)(uintptr_t)a;
++    const struct hash_ring_item_t *item_b = *(const struct hash_ring_item_t**)(uintptr_t)b;
++
++    if (item_a == NULL)
++       return 1;
++    if (item_b == NULL)
++       return -1;
++
++    if(item_a->key < item_b->key)
++        return -1;
++    else if(item_a->key > item_b->key)
++        return 1;
++    else
++        return 0;
++}
++
++static int
++hash_ring_add_items(struct hash_ring_t *ring, struct hash_ring_node_t *node)
++{
++    uint32_t item_length = ring->node_replicas * ring->node_length;
++    uint32_t item_start, i;
++    struct hash_ring_item_t **resized;
++    struct hash_ring_item_t *item_entry;
++
++    resized = realloc(ring->items, item_length * sizeof(struct hash_ring_item_t*));
++    if (resized == NULL)
++    {
++        perror("failed to allocate memory for items");
++        return -1;
++    }
++
++    ring->items = resized;
++    item_start = item_length - ring->node_replicas;
++    for (i = item_start; i < item_length; i++)
++    {
++        item_entry = malloc(sizeof(struct hash_ring_item_t));
++        if (item_entry == NULL)
++        {
++            perror("failed to allocate memory for an item");
++            return -1;
++        }
++        item_entry->node = node;
++        item_entry->key = hash_ring_create_node_hash(node, i);
++        if (item_entry->key == 0)
++        {
++            free(item_entry);
++            perror("failed to create hash for node item");
++            return -1;
++        }
++        ring->items[i] = item_entry;
++    }
++    ring->item_length = item_length;
++
++    qsort((void**)ring->items, ring->item_length, sizeof(struct hash_ring_item_t*), item_sort);
++    return 0;
++}
++
++static void
++hash_ring_remove_items(struct hash_ring_t *ring, struct hash_ring_node_t *node)
++{
++    uint32_t i;
++
++    for (i = 0; i < ring->item_length; i++)
++    {
++        if (ring->items[i]->node == node)
++        {
++            free(ring->items[i]);
++            ring->items[i] = NULL;
++        }
++    }
++
++    qsort((void**)ring->items, ring->item_length, sizeof(struct hash_ring_item_t*), item_sort);
++    ring->item_length -= ring->node_replicas;
++}
++
++static struct hash_ring_node_t *
++hash_ring_find_node(struct hash_ring_t *ring, struct hash_ring_node_t *node_in)
++{
++    struct hash_ring_node_ll_t *ll_entry;
++    int cmp_value;
++
++    ll_entry = ring->nodes;
++    while (ll_entry != NULL)
++    {
++        cmp_value = hash_ring_compare_node(node_in, ll_entry->node);
++        if (cmp_value == 0)
++            return ll_entry->node;
++
++        ll_entry = ll_entry->next;
++    }
++    return NULL;
++}
++
++void
++hash_ring_remove_node(struct hash_ring_t *ring, struct hash_ring_node_t *node_in)
++{
++    struct hash_ring_node_t* node;
++
++    node = hash_ring_find_node(ring, node_in);
++    if (node != NULL)
++    {
++        hash_ring_remove_items(ring,node);
++        hash_ring_ll_remove_node(ring, node);
++    }
++}
++
++void
++hash_ring_add_node(struct hash_ring_t *ring, struct hash_ring_node_t *node_in)
++{
++    struct hash_ring_node_t *node;
++    int ret;
++
++    node = hash_ring_find_node(ring, node_in);
++    if (node != NULL)
++    {
++        return;
++    }
++
++    // Add new node to the linked list of ring
++    node = hash_ring_ll_add_node(ring, node_in);
++    if (node == NULL)
++    {
++        perror("failed to allocate node");
++        return;
++    }
++
++    // Re-alloc items array of struct hash_ring_item_t with new node
++    // Create hash key for new node items
++    ret = hash_ring_add_items(ring, node);
++    if (ret != 0)
++    {
++        perror("failed to add items");
++        hash_ring_remove_node(ring, node);
++        return;
++    }
++}
++
++void
++hash_ring_updated(struct hash_ring_t *ring)
++{
++	struct hash_ring_clone_t *new_clone;
++
++	new_clone = hash_ring_clone_create(ring);
++	if (new_clone == NULL)
++	{
++		perror("failed to create a new clone\n");
++		return;
++	}
++	hash_ring_clone_trigger(new_clone);
++}
++
++/*
++static struct hash_ring_node_t *
++hash_ring_get_node(struct hash_ring_t *ring, uint32_t key)
++{
++    int i;
++
++    for (i = 0; i < ring->item_length; i++)
++    {
++        if (key < ring->items[i]->key)
++        {
++            return ring->items[i]->node;
++        }
++    }
++    return ring->items[ring->item_length - 1]->node;
++}
++*/
++
++void
++hash_ring_dump(struct hash_ring_t *ring)
++{
++    struct hash_ring_node_ll_t *entry;
++    uint8_t buffer[128];
++    uint8_t *mac;
++    uint32_t i;
++
++    printf("----------------------------------------------\n");
++    printf("Nodes Count: %u\n", ring->node_length);
++    printf("Items Count: %u\n", ring->item_length);
++    printf("Replicas   : %u\n", ring->node_replicas);
++
++    entry = ring->nodes;
++    if (entry != NULL)
++    {
++        while (entry != NULL)
++        {
++            memset(buffer, 0, 128);
++            memcpy(buffer, entry->node->name, entry->node->name_length);
++            mac = entry->node->mac;
++            printf("Name(%s) Mac(%02x:%02x:%02x:%02x:%02x:%02x)\n", buffer, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
++            entry = entry->next;
++        }
++        printf("\n");
++        for (i = 0; i < ring->item_length; i++)
++        {
++            memset(buffer, 0, 128);
++            memcpy(buffer, ring->items[i]->node->name, ring->items[i]->node->name_length);
++            printf("Item(%03d) key(%010u) Node(%s)\n", i, ring->items[i]->key, buffer);
++        }
++    }
++    else
++    {
++        printf("No nodes available\n");
++    }
++    printf("----------------------------------------------\n");
++}
++
++/////////////////// hasget ///////////////////
++struct hash_ring_clone_t *
++hash_ring_clone_create(struct hash_ring_t *ring)
++{
++    void *alloc;
++    uint32_t array_mem, items_mem, i;
++    struct hash_ring_clone_t *clone;
++
++    if (ring->item_length == 0)
++    {
++	    printf("no items to clone\n");
++	    return NULL;
++    }
++
++    // Array
++    array_mem = ring->item_length * sizeof(struct hash_ring_item_t*);
++    // Actual Items
++    items_mem = ring->item_length * sizeof(struct hash_ring_item_t);
++
++    alloc = malloc(array_mem + items_mem);
++    if (alloc == NULL)
++    {
++        perror("failed to clone the items");
++        return NULL;
++    }
++    memset(alloc, 0, array_mem + items_mem);
++    clone = alloc;
++    clone->length = ring->item_length;
++    clone->list = (struct hash_ring_key_map_t *)((uint8_t *)alloc + sizeof(struct hash_ring_clone_t));
++
++    for (i = 0; i < ring->item_length; i++)
++    {
++        clone->list[i].key = ring->items[i]->key;
++        memcpy(clone->list[i].mac, ring->items[i]->node->mac, MAC_LEN);
++    }
++    return clone;
++}
++
++void
++hash_ring_clone_destroy(struct hash_ring_clone_t *clone)
++{
++    if (clone != NULL)
++        free(clone);
++}
++
++void
++hash_ring_clone_dump(struct hash_ring_clone_t *clone)
++{
++    uint32_t i;
++    uint8_t *mac;
++
++    printf("----------------------------------------------\n");
++    printf("Count: %u\n", clone->length);
++
++    for (i = 0; i < clone->length; i++)
++    {
++        mac = clone->list[i].mac;
++        printf("Item(%03d) key(%010u) Mac(%02x:%02x:%02x:%02x:%02x:%02x)\n",
++                i, clone->list[i].key, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
++    }
++    printf("----------------------------------------------\n");
++}
+diff -urN dpdk/app/test-pmd/hashring.h testpmd-as-load-balancer/v19.11/test-pmd/hashring.h
+--- dpdk/app/test-pmd/hashring.h	1970-01-01 01:00:00.000000000 +0100
++++ testpmd-as-load-balancer/v19.11/test-pmd/hashring.h	2023-06-08 05:42:01.537046011 +0200
+@@ -0,0 +1,89 @@
++#ifndef _HASHRING_H_
++#define _HASHRING_H_
++
++#include <stdlib.h>
++#include <stdarg.h>
++#include <string.h>
++#include <stdio.h>
++#include <errno.h>
++#include <stdint.h>
++#include <unistd.h>
++#include <inttypes.h>
++
++#include <sys/queue.h>
++#include <sys/stat.h>
++
++#include <rte_common.h>
++#include <rte_byteorder.h>
++#include <rte_log.h>
++#include <rte_debug.h>
++#include <rte_cycles.h>
++#include <rte_memory.h>
++#include <rte_memcpy.h>
++#include <rte_launch.h>
++#include <rte_eal.h>
++#include <rte_per_lcore.h>
++#include <rte_lcore.h>
++#include <rte_jhash.h>
++
++#define MAC_LEN (6)
++
++struct hash_ring_node_t
++{
++    uint8_t *name;
++    uint32_t name_length;
++    uint8_t mac[MAC_LEN];
++    // possibility to add IP
++};
++
++struct hash_ring_node_ll_t
++{
++    struct hash_ring_node_t *node;
++    struct hash_ring_node_ll_t *next;
++};
++
++struct hash_ring_item_t
++{
++    uint32_t key;
++    struct hash_ring_node_t *node;
++};
++
++struct hash_ring_t
++{
++    uint32_t node_replicas;
++    uint32_t node_length;
++    struct hash_ring_node_ll_t *nodes;
++    struct hash_ring_item_t **items;
++    uint32_t item_length;
++};
++
++struct hash_ring_clone_t;
++
++struct hash_ring_t *
++hash_ring_create(uint32_t replicas);
++
++void
++hash_ring_destroy(struct hash_ring_t *ring);
++
++void
++hash_ring_remove_node(struct hash_ring_t *ring, struct hash_ring_node_t *node_in);
++
++void
++hash_ring_add_node(struct hash_ring_t *ring, struct hash_ring_node_t *node_in);
++
++void
++hash_ring_updated(struct hash_ring_t *ring);
++
++void
++hash_ring_dump(struct hash_ring_t *ring);
++
++struct hash_ring_clone_t *
++hash_ring_clone_create(struct hash_ring_t *ring);
++
++void
++hash_ring_clone_destroy(struct hash_ring_clone_t *clone);
++
++void
++hash_ring_clone_dump(struct hash_ring_clone_t *clone);
++
++#endif /* _HASHRING_H_ */
+diff -urN dpdk/app/test-pmd/lbfwd.c testpmd-as-load-balancer/v19.11/test-pmd/lbfwd.c
+--- dpdk/app/test-pmd/lbfwd.c	1970-01-01 01:00:00.000000000 +0100
++++ testpmd-as-load-balancer/v19.11/test-pmd/lbfwd.c	2023-06-08 05:42:01.538046010 +0200
+@@ -0,0 +1,397 @@
++/* SPDX-License-Identifier: BSD-3-Clause
++ * Copyright(c) 2010-2014 Intel Corporation
++ */
++
++#include <stdarg.h>
++#include <string.h>
++#include <stdio.h>
++#include <errno.h>
++#include <stdint.h>
++#include <unistd.h>
++#include <inttypes.h>
++
++#include <sys/queue.h>
++#include <sys/stat.h>
++
++#include <rte_common.h>
++#include <rte_byteorder.h>
++#include <rte_log.h>
++#include <rte_debug.h>
++#include <rte_cycles.h>
++#include <rte_memory.h>
++#include <rte_memcpy.h>
++#include <rte_launch.h>
++#include <rte_eal.h>
++#include <rte_per_lcore.h>
++#include <rte_lcore.h>
++#include <rte_atomic.h>
++#include <rte_branch_prediction.h>
++#include <rte_mempool.h>
++#include <rte_mbuf.h>
++#include <rte_interrupts.h>
++#include <rte_pci.h>
++#include <rte_ether.h>
++#include <rte_ethdev.h>
++#include <rte_ip.h>
++#include <rte_string_fns.h>
++#include <rte_flow.h>
++
++#include "testpmd.h"
++#include "hashget.h"
++
++#define uint32_t_to_char(ip, a, b, c, d) do {\
++                *a = (unsigned char)(ip >> 24 & 0xff);\
++                *b = (unsigned char)(ip >> 16 & 0xff);\
++                *c = (unsigned char)(ip >> 8 & 0xff);\
++                *d = (unsigned char)(ip & 0xff);\
++        } while (0)
++#define UNUSED(x)	(void)(x)
++#define MAC_FOR_EACH_PACKET
++
++struct hash_ring_clone_t *hash_clone[RTE_MAX_LCORE];
++uint32_t nb_hash_clone;
++
++extern void
++lb_listen_init(void);
++extern void
++lb_listen_deinit(void);
++
++static void
++pkt_burst_lb_forward_begin(portid_t pi)
++{
++	UNUSED(pi);
++	nb_hash_clone = RTE_MAX_LCORE;
++	hash_ring_clone_init(hash_clone, nb_hash_clone);
++	lb_listen_init();
++}
++
++static void
++pkt_burst_lb_forward_end(portid_t pi)
++{
++	UNUSED(pi);
++	lb_listen_deinit();
++}
++
++static uint32_t
++generate_hash_key(struct rte_ether_hdr *eth_hdr)
++{
++	uint32_t key;
++	uint8_t *smac, *dmac;
++	uint16_t ethertype;
++	struct rte_ipv4_hdr *ipv4_hdr;
++	struct rte_ipv6_hdr *ipv6_hdr;
++	struct rte_vlan_hdr *vlan_hdr;
++	struct rte_tcp_hdr *tcp_hdr;
++	struct rte_udp_hdr *udp_hdr;
++	uint32_t offset = 0;
++        uint16_t sport, dport;
++        uint8_t l4_proto;
++        uint32_t dip, sip;
++
++	offset += sizeof(struct rte_ether_hdr);
++	smac = eth_hdr->s_addr.addr_bytes;
++	dmac = eth_hdr->d_addr.addr_bytes;
++	ethertype = eth_hdr->ether_type;
++
++	// L2 (VLAN Header)
++	if (ethertype == htons(RTE_ETHER_TYPE_VLAN))
++	{
++		vlan_hdr = (struct rte_vlan_hdr *)(eth_hdr + 1);
++		offset += sizeof(struct rte_vlan_hdr);
++		ethertype = vlan_hdr->eth_proto;
++	}
++
++	// L3 (IP Header)
++	if (ethertype == htons(RTE_ETHER_TYPE_IPV4))
++	{
++		ipv4_hdr = (struct rte_ipv4_hdr *)((char *)eth_hdr + offset);
++		offset += (ipv4_hdr->version_ihl & 0x0f) * 4;
++		sip = ipv4_hdr->src_addr;
++		dip = ipv4_hdr->dst_addr;
++
++		// L4 (TCP/UDP Port Header)
++		l4_proto = ipv4_hdr->next_proto_id;
++		if (l4_proto == IPPROTO_TCP)
++		{
++			tcp_hdr = (struct rte_tcp_hdr *)((char *)eth_hdr + offset);
++			sport = tcp_hdr->src_port;
++			dport = tcp_hdr->dst_port;
++		}
++		else if (l4_proto == IPPROTO_UDP)
++		{
++			udp_hdr = (struct rte_udp_hdr *)((char *)eth_hdr + offset);
++			sport = udp_hdr->src_port;
++			dport = udp_hdr->dst_port;
++		}
++		else
++		{
++			sport = 0;
++			dport = 0;
++		}
++	}
++	else if (ethertype == htons(RTE_ETHER_TYPE_IPV6))
++	{
++		// Not implemented
++		//printf("ipv6 ethertype (0x%x) is not supported\n", ethertype);
++		ipv6_hdr = (struct rte_ipv6_hdr *)((char *)eth_hdr + offset);
++                offset += ipv6_hdr->proto;
++		return 0;
++	}
++	else
++	{
++		return 0;
++	}
++
++	key = hash_tuple(smac, dmac, sip, dip, sport, dport);
++	return key;
++}
++
++#ifdef PACKET_DUMP
++static void
++pkt_dump(struct rte_mbuf *mb, portid_t port, int inout)
++{
++	// Logging
++	char smac_str[32];
++	char dmac_str[32];
++	unsigned char a, b, c, d;
++	char sip_str[32];
++	char dip_str[32];
++
++	uint8_t *smac, *dmac;
++	uint16_t ethertype;
++	struct rte_ether_hdr *eth_hdr;
++	struct rte_ipv4_hdr *ipv4_hdr;
++	struct rte_ipv6_hdr *ipv6_hdr;
++	struct rte_vlan_hdr *vlan_hdr;
++	struct rte_tcp_hdr *tcp_hdr;
++	struct rte_udp_hdr *udp_hdr;
++	uint32_t offset = 0;
++        uint16_t sport, dport;
++        uint8_t l4_proto;
++        uint32_t dip, sip;
++	char l4_proto_str[4];
++
++	// L2 (Ethernet Header)
++	eth_hdr = rte_pktmbuf_mtod(mb, struct rte_ether_hdr *);
++	offset += sizeof(struct rte_ether_hdr);
++	smac = eth_hdr->s_addr.addr_bytes;
++	dmac = eth_hdr->d_addr.addr_bytes;
++	sprintf(smac_str, "%02x:%02x:%02x:%02x:%02x:%02x", smac[0], smac[1], smac[2], smac[3], smac[4], smac[5]);
++	sprintf(dmac_str, "%02x:%02x:%02x:%02x:%02x:%02x", dmac[0], dmac[1], dmac[2], dmac[3], dmac[4], dmac[5]);
++	ethertype = eth_hdr->ether_type;
++
++	// L2 (VLAN Header)
++	if (ethertype == htons(RTE_ETHER_TYPE_VLAN))
++	{
++		vlan_hdr = (struct rte_vlan_hdr *)(eth_hdr + 1);
++		offset += sizeof(struct rte_vlan_hdr);
++		ethertype = vlan_hdr->eth_proto;
++	}
++
++	// L3 (IP Header)
++	if (ethertype == htons(RTE_ETHER_TYPE_IPV4))
++	{
++		ipv4_hdr = (struct rte_ipv4_hdr *)((char *)eth_hdr + offset);
++		offset += (ipv4_hdr->version_ihl & 0x0f) * 4;
++		sip = ipv4_hdr->src_addr;
++		dip = ipv4_hdr->dst_addr;
++
++		// L4 (TCP/UDP Port Header)
++		l4_proto = ipv4_hdr->next_proto_id;
++		if (l4_proto == IPPROTO_TCP)
++		{
++			strcpy(l4_proto_str, "TCP");
++			tcp_hdr = (struct rte_tcp_hdr *)((char *)eth_hdr + offset);
++			sport = tcp_hdr->src_port;
++			dport = tcp_hdr->dst_port;
++		}
++		else if (l4_proto == IPPROTO_UDP)
++		{
++			strcpy(l4_proto_str, "TCP");
++			udp_hdr = (struct rte_udp_hdr *)((char *)eth_hdr + offset);
++			sport = udp_hdr->src_port;
++			dport = udp_hdr->dst_port;
++		}
++		else
++		{
++			sport = 0;
++			dport = 0;
++		}
++	}
++	else if (ethertype == htons(RTE_ETHER_TYPE_IPV6))
++	{
++		// Not implemented
++		ipv6_hdr = (struct rte_ipv6_hdr *)((char *)eth_hdr + offset);
++                offset += ipv6_hdr->proto;
++		return;
++	}
++	else
++	{
++                if (inout == 0)
++                        printf("port(%u): %s->%s \n", port, smac_str, dmac_str);
++                else
++                        printf(">>> port(%u): %s->%s \n", port, smac_str, dmac_str);
++		return;
++	}
++
++	uint32_t_to_char(rte_bswap32(sip), &a, &b, &c, &d);
++	sprintf(sip_str, "%hhu.%hhu.%hhu.%hhu", a, b, c, d);
++	uint32_t_to_char(rte_bswap32(dip), &a, &b, &c, &d);
++	sprintf(dip_str, "%hhu.%hhu.%hhu.%hhu", a, b, c, d);
++	UNUSED(dport);
++	UNUSED(sport);
++	if (inout == 0)
++		printf("port(%u): %s->%s, %s->%s, %s:%u, %u\n", port, smac_str,
++			dmac_str, sip_str, dip_str, l4_proto_str, sport, dport);
++	else
++		printf(">>> port(%u): %s->%s, %s->%s, %s:%u, %u\n", port, smac_str,
++			dmac_str, sip_str, dip_str, l4_proto_str, sport, dport);
++
++}
++#endif /* PACKET_DUMP */
++
++/*
++ * Forwarding of packets in LB mode.
++ * Change the source and the destination Ethernet addressed of packets
++ * before forwarding them.
++ */
++static void
++pkt_burst_lb_forward(struct fwd_stream *fs)
++{
++	struct rte_mbuf  *pkts_burst[MAX_PKT_BURST];
++	struct rte_port  *txp;
++	struct rte_mbuf  *mb;
++	struct rte_ether_hdr *eth_hdr = NULL;
++	uint32_t retry;
++	uint16_t nb_rx;
++	uint16_t nb_tx;
++	uint16_t i;
++	uint64_t ol_flags = 0;
++	uint64_t tx_offloads;
++#ifdef RTE_TEST_PMD_RECORD_CORE_CYCLES
++	uint64_t start_tsc;
++	uint64_t end_tsc;
++	uint64_t core_cycles;
++#endif
++        struct rte_ether_addr mac;
++        uint32_t key = 0;
++	lcoreid_t lcore;
++	int ret = -1;
++
++#ifdef RTE_TEST_PMD_RECORD_CORE_CYCLES
++	start_tsc = rte_rdtsc();
++#endif
++
++	lcore = rte_lcore_id();
++	hash_clone[lcore] = (struct hash_ring_clone_t *)(uintptr_t)hash_clone_new;
++
++	/*
++	 * Receive a burst of packets and forward them.
++	 */
++	nb_rx = rte_eth_rx_burst(fs->rx_port, fs->rx_queue, pkts_burst,
++				 nb_pkt_per_burst);
++	if (unlikely(nb_rx == 0))
++		return;
++
++#ifdef RTE_TEST_PMD_RECORD_BURST_STATS
++	fs->rx_burst_stats.pkt_burst_spread[nb_rx]++;
++#endif
++	fs->rx_packets += nb_rx;
++	txp = &ports[fs->tx_port];
++	tx_offloads = txp->dev_conf.txmode.offloads;
++	if (tx_offloads	& DEV_TX_OFFLOAD_VLAN_INSERT)
++		ol_flags = PKT_TX_VLAN_PKT;
++	if (tx_offloads & DEV_TX_OFFLOAD_QINQ_INSERT)
++		ol_flags |= PKT_TX_QINQ_PKT;
++	if (tx_offloads & DEV_TX_OFFLOAD_MACSEC_INSERT)
++		ol_flags |= PKT_TX_MACSEC;
++	for (i = 0; i < nb_rx; i++) {
++		if (likely(i < nb_rx - 1))
++			rte_prefetch0(rte_pktmbuf_mtod(pkts_burst[i + 1],
++						       void *));
++		mb = pkts_burst[i];
++#ifdef PACKET_DUMP
++		pkt_dump(mb, fs->rx_port, 0);
++#endif
++		eth_hdr = rte_pktmbuf_mtod(mb, struct rte_ether_hdr *);
++		if (eth_hdr == NULL)
++		{
++			printf("eth_hdr of packet %u is NULL\n", i);
++			continue;
++		}
++		if (fs->generate == 1)
++		{
++#ifdef MAC_FOR_EACH_PACKET
++			/* Generate hash and find mac for each packet */
++			key = generate_hash_key(eth_hdr);
++			if (key != 0)
++				ret = hash_ring_clone_get_mac(hash_clone[lcore], key, mac.addr_bytes);
++#else
++			/* Generate hash and get mac once, and apply for all packets in a single read */
++                        if (key == 0)
++                        {
++                                key = generate_hash_key(mb);
++                                if (key != 0)
++                                        ret = hash_ring_clone_get_mac(hash_clone[lcore], key, mac.addr_bytes);
++                        }
++#endif
++                        if (ret == 0)
++                        {
++                                rte_ether_addr_copy(&ports[fs->tx_port].eth_addr,
++                                        &eth_hdr->s_addr);
++                                rte_ether_addr_copy(&mac, &eth_hdr->d_addr);
++                        }
++		}
++		else
++		{
++			rte_ether_addr_copy(&ports[fs->tx_port].eth_addr,
++				&eth_hdr->s_addr);
++			rte_ether_addr_copy(&peer_eth_addrs[fs->peer_addr],
++				&eth_hdr->d_addr);
++		}
++#ifdef PACKET_DUMP
++		pkt_dump(mb, fs->rx_port, 1);
++#endif
++		mb->ol_flags &= IND_ATTACHED_MBUF | EXT_ATTACHED_MBUF;
++		mb->ol_flags |= ol_flags;
++		mb->l2_len = sizeof(struct rte_ether_hdr);
++		mb->l3_len = sizeof(struct rte_ipv4_hdr);
++		mb->vlan_tci = txp->tx_vlan_id;
++		mb->vlan_tci_outer = txp->tx_vlan_id_outer;
++	}
++	nb_tx = rte_eth_tx_burst(fs->tx_port, fs->tx_queue, pkts_burst, nb_rx);
++	/*
++	 * Retry if necessary
++	 */
++	if (unlikely(nb_tx < nb_rx) && fs->retry_enabled) {
++		retry = 0;
++		while (nb_tx < nb_rx && retry++ < burst_tx_retry_num) {
++			rte_delay_us(burst_tx_delay_time);
++			nb_tx += rte_eth_tx_burst(fs->tx_port, fs->tx_queue,
++					&pkts_burst[nb_tx], nb_rx - nb_tx);
++		}
++	}
++
++	fs->tx_packets += nb_tx;
++#ifdef RTE_TEST_PMD_RECORD_BURST_STATS
++	fs->tx_burst_stats.pkt_burst_spread[nb_tx]++;
++#endif
++	if (unlikely(nb_tx < nb_rx)) {
++		fs->fwd_dropped += (nb_rx - nb_tx);
++		do {
++			rte_pktmbuf_free(pkts_burst[nb_tx]);
++		} while (++nb_tx < nb_rx);
++	}
++#ifdef RTE_TEST_PMD_RECORD_CORE_CYCLES
++	end_tsc = rte_rdtsc();
++	core_cycles = (end_tsc - start_tsc);
++	fs->core_cycles = (uint64_t) (fs->core_cycles + core_cycles);
++#endif
++}
++
++struct fwd_engine lb_fwd_engine = {
++	.fwd_mode_name  = "lb",
++	.port_fwd_begin = pkt_burst_lb_forward_begin,
++	.port_fwd_end   = pkt_burst_lb_forward_end,
++	.packet_fwd     = pkt_burst_lb_forward,
++};
+diff -urN dpdk/app/test-pmd/lb_listen.c testpmd-as-load-balancer/v19.11/test-pmd/lb_listen.c
+--- dpdk/app/test-pmd/lb_listen.c	1970-01-01 01:00:00.000000000 +0100
++++ testpmd-as-load-balancer/v19.11/test-pmd/lb_listen.c	2023-06-08 05:42:01.538046010 +0200
+@@ -0,0 +1,277 @@
++#ifndef _LB_LISTEN_H_
++#define _LB_LISTEN_H_
++
++#include <stdlib.h>
++#include <stdarg.h>
++#include <string.h>
++#include <stdio.h>
++#include <errno.h>
++#include <stdint.h>
++#include <unistd.h>
++#include <pthread.h>
++#include <sys/socket.h>
++#include <sys/un.h>
++
++#include "hashring.h"
++#include "hashget.h"
++
++#define UNUSED(x)       (void)(x)
++#define SOCKET_NAME     "/var/lib/testpmd/lb.sock"
++#define DUT_REPLICAS    (4)
++#define DUT_MAC_ADDED   (1)
++#define DUT_MAC_REMOVED (2)
++
++void
++lb_listen_init(void);
++void
++lb_listen_deinit(void);
++static void *
++lb_listen(void *arg);
++static void
++process_data(char *data);
++
++static pthread_t lb_thread;
++static uint8_t lb_listen_flag = 0;
++static int sock_conn, sock_data;
++static struct hash_ring_t *ring;
++
++void
++lb_listen_init(void)
++{
++	if (lb_listen_flag == 1)
++		return;
++	pthread_create(&lb_thread, NULL, lb_listen, NULL);
++	pthread_setname_np(lb_thread, "lb_listen");
++	lb_listen_flag = 1;
++	ring = hash_ring_create(DUT_REPLICAS);
++}
++
++void
++lb_listen_deinit(void)
++{
++	if (lb_listen_flag == 0)
++		return;
++	lb_listen_flag = 0;
++	printf("shuttindown socket %s \n", SOCKET_NAME);
++	shutdown(sock_conn, SHUT_RD);
++	close(sock_conn);
++	// TODO(skarama): Cleanup all the clones
++	if (ring != NULL)
++		hash_ring_destroy(ring);
++}
++
++static void *
++lb_listen(void *arg)
++{
++	char *buffer = NULL;
++	char *tokbuf = NULL;
++	char *token_save = NULL;
++	uint32_t size = 512;
++	struct sockaddr_un server;
++	int ret;
++	int len, partial;
++
++	UNUSED(arg);
++	buffer = malloc(size + 1);
++	if (buffer == NULL)
++		return NULL;
++
++	tokbuf = malloc(size + 1);
++	if (buffer == NULL)
++	{
++		free(buffer);
++		return NULL;
++	}
++
++	memset(buffer, 0, size + 1);
++	sock_conn = socket(AF_UNIX, SOCK_STREAM, 0);
++	if (sock_conn < 0)
++		return NULL;
++	server.sun_family = AF_UNIX;
++	strcpy(server.sun_path, SOCKET_NAME);
++
++	ret = bind(sock_conn, (struct sockaddr *) &server, sizeof(struct sockaddr_un));
++	if (ret < 0 )
++	{
++		printf("error in binding socket %s\n", SOCKET_NAME);
++		return NULL;
++	}
++
++	ret = listen(sock_conn, 32);
++	if (ret < 0 )
++		return NULL;
++
++	while (1)
++	{
++		sock_data = accept(sock_conn, NULL, NULL);
++		if (sock_data == -1 && lb_listen_flag == 0)
++		{
++			printf("exiting gracefully...\n");
++			break;
++		}
++		else if (sock_data == -1)
++		{
++			printf("exiting with socket accept error...\n");
++			exit(EXIT_FAILURE);
++		}
++
++		ret = 0;
++		while (1)
++		{
++			partial = 0;
++			len = 0;
++			memset(buffer, 0, size + 1);
++			ret = read(sock_data, buffer, size);
++			if (ret == -1)
++			{
++				printf("socket read error\n");
++				break;
++			}
++			else if (ret == 0)
++			{
++				printf("end of data\n");
++				break;
++			}
++
++			/* Parse Data */
++			len = strlen(buffer);
++			if (buffer[len - 1] != ';')
++				partial = 1;
++
++			printf("socket data received - len(%d) buffer(%s)\n", len, buffer);
++			char *token = strtok_r(buffer, ";", &token_save);
++			while (token != NULL)
++			{
++				strcpy(tokbuf, token);
++				process_data(tokbuf);
++				hash_ring_dump(ring);
++				token = strtok_r(NULL, ";", &token_save);
++			}
++
++			if (partial == 1)
++				printf("Pending Partial data implementation\n");
++
++		}
++		if (ret == -1)
++		{
++			printf("existing on failure to read socket data\n");
++			break;
++		}
++		close(sock_data);
++		hash_ring_updated(ring);
++
++	}
++	free(buffer);
++	free(tokbuf);
++	close(sock_conn);
++	unlink(SOCKET_NAME);
++	remove(SOCKET_NAME);
++	return NULL;
++}
++
++static void
++parse_mac(char *mac_str, uint8_t *mac)
++{
++	int offset = 0;
++	char *token = NULL;
++	char *token_save = NULL;
++
++	token = strtok_r(mac_str, ":", &token_save);
++	while (token != NULL)
++	{
++		mac[offset++] = strtol(token, NULL, 16);
++		token = strtok_r(NULL, ":", &token_save);
++	}
++}
++
++static void
++process_data(char *data)
++{
++	char *token = NULL;
++	char *token_save = NULL;
++	char *mac1_str = NULL;
++	char *mac2_str = NULL;
++	char *name = NULL;
++	int operation = 0;
++	struct hash_ring_node_t *node;
++
++	/* In the current data version, we are expecting only 1 comma (2 values) */
++	token = strtok_r(data, ",", &token_save);
++	if (token == NULL)
++		return;
++	operation = atoi(token);
++
++	token = strtok_r(NULL, ",", &token_save);
++	if (token != NULL)
++	{
++		mac1_str = malloc(strlen(token + 1));
++		if (mac1_str != NULL)
++			strcpy(mac1_str, token);
++	}
++	token = strtok_r(NULL, ",", &token_save);
++	if (token != NULL)
++	{
++		mac2_str = malloc(strlen(token + 1));
++		if (mac2_str != NULL)
++			strcpy(mac2_str, token);
++	}
++
++
++	token = strtok_r(NULL, ",", &token_save);
++	if (token != NULL)
++	{
++		name = malloc(strlen(token + 1));
++		if (name != NULL)
++			strcpy(name, token);
++	}
++
++	node = malloc(sizeof(struct hash_ring_node_t));
++	if (node != NULL && mac1_str != NULL && mac2_str != NULL)
++	{
++		node->name = (uint8_t*)name;
++		if (name != NULL)
++			node->name_length = strlen(name);
++		switch (operation)
++		{
++			case DUT_MAC_ADDED:
++				parse_mac(mac1_str, node->mac);
++				hash_ring_add_node(ring, node);
++				parse_mac(mac2_str, node->mac);
++				hash_ring_add_node(ring, node);
++				break;
++
++			case DUT_MAC_REMOVED:
++				parse_mac(mac1_str, node->mac);
++				hash_ring_remove_node(ring, node);
++				parse_mac(mac2_str, node->mac);
++				hash_ring_remove_node(ring, node);
++				break;
++
++			default:
++			{
++				printf("Operation(%d) is not handled\n", operation);
++				break;
++			}
++		}
++	}
++	else
++	{
++		if (node == NULL)
++			printf("ERROR: failed to allocate node memory\n");
++		if (mac1_str == NULL)
++			printf("ERROR: mac1 is not found\n");
++		if (mac2_str == NULL)
++			printf("ERROR: mac2 is not found\n");
++	}
++
++	if (node != NULL)
++		free(node);
++	if (name != NULL)
++		free(name);
++	if (mac1_str != NULL)
++		free(mac1_str);
++	if (mac2_str != NULL)
++		free(mac2_str);
++}
++
++#endif /* _LB_LISTEN_H */
+diff -urN dpdk/app/test-pmd/Makefile testpmd-as-load-balancer/v19.11/test-pmd/Makefile
+--- dpdk/app/test-pmd/Makefile	2023-06-08 05:47:34.599739649 +0200
++++ testpmd-as-load-balancer/v19.11/test-pmd/Makefile	2023-06-08 05:42:01.519046028 +0200
+@@ -34,6 +34,10 @@
+ SRCS-y += csumonly.c
+ SRCS-y += icmpecho.c
+ SRCS-y += noisy_vnf.c
++SRCS-y += hashring.c
++SRCS-y += hashget.c
++SRCS-y += lbfwd.c
++SRCS-y += lb_listen.c
+ SRCS-$(CONFIG_RTE_LIBRTE_IEEE1588) += ieee1588fwd.c
+ SRCS-$(CONFIG_RTE_LIBRTE_BPF) += bpf_cmd.c
+ SRCS-y += util.c
+diff -urN dpdk/app/test-pmd/parameters.c testpmd-as-load-balancer/v19.11/test-pmd/parameters.c
+--- dpdk/app/test-pmd/parameters.c	2023-06-08 05:47:34.605739643 +0200
++++ testpmd-as-load-balancer/v19.11/test-pmd/parameters.c	2023-06-08 05:42:01.539046009 +0200
+@@ -210,6 +210,8 @@
+ 	printf("  --noisy-lkup-num-writes=N: do N random reads and writes per packet\n");
+ 	printf("  --no-iova-contig: mempool memory can be IOVA non contiguous. "
+ 	       "valid only with --mp-alloc=anon\n");
++	printf("  --enable-lb: enable load balancer mode\n");
++	printf("  --dut-pci: PCI address of ports attached to DUT\n");
+ }
+ 
+ #ifdef RTE_LIBRTE_CMDLINE
+@@ -667,6 +669,8 @@
+ 		{ "noisy-lkup-num-reads",	1, 0, 0 },
+ 		{ "noisy-lkup-num-reads-writes", 1, 0, 0 },
+ 		{ "no-iova-contig",             0, 0, 0 },
++		{ "enable-lb",                  0, 0, 0 },
++		{ "dut-pci",                    1, 0, 0 },
+ 		{ 0, 0, 0, 0 },
+ 	};
+ 
+@@ -1356,6 +1360,13 @@
+ 			}
+ 			if (!strcmp(lgopts[opt_idx].name, "no-iova-contig"))
+ 				mempool_flags = MEMPOOL_F_NO_IOVA_CONTIG;
++			if (!strcmp(lgopts[opt_idx].name, "enable-lb"))
++				lb_enabled = 1;
++			if (!strcmp(lgopts[opt_idx].name, "dut-pci")) {
++				nb_lb_dut_pcis++;
++				lb_dut_pcis = realloc(lb_dut_pcis, nb_lb_dut_pcis * sizeof(struct rte_pci_addr));
++				rte_pci_addr_parse(optarg, &lb_dut_pcis[nb_lb_dut_pcis - 1]);
++			}
+ 			break;
+ 		case 'h':
+ 			usage(argv[0]);
+diff -urN dpdk/app/test-pmd/testpmd.c testpmd-as-load-balancer/v19.11/test-pmd/testpmd.c
+--- dpdk/app/test-pmd/testpmd.c	2023-06-08 05:47:34.606739642 +0200
++++ testpmd-as-load-balancer/v19.11/test-pmd/testpmd.c	2023-06-08 05:42:01.541046007 +0200
+@@ -184,6 +184,7 @@
+ #ifdef RTE_LIBRTE_IEEE1588
+ 	&ieee1588_fwd_engine,
+ #endif
++	&lb_fwd_engine,
+ 	NULL,
+ };
+ 
+@@ -418,6 +419,13 @@
+ #endif
+ 
+ /*
++ * TestPMD as Load Balancer is enabled in the commandline
++ */
++uint8_t lb_enabled;
++struct rte_pci_addr * lb_dut_pcis;
++uint32_t nb_lb_dut_pcis;
++
++/*
+  * Ethernet device configuration.
+  */
+ struct rte_eth_rxmode rx_mode = {
+@@ -3422,6 +3430,9 @@
+ #ifdef RTE_LIBRTE_LATENCY_STATS
+ 	latencystats_enabled = 0;
+ #endif
++	lb_enabled = 0;
++	lb_dut_pcis = NULL;
++	nb_lb_dut_pcis = 0;
+ 
+ 	/* on FreeBSD, mlockall() is disabled by default */
+ #ifdef RTE_EXEC_ENV_FREEBSD
+diff -urN dpdk/app/test-pmd/testpmd.h testpmd-as-load-balancer/v19.11/test-pmd/testpmd.h
+--- dpdk/app/test-pmd/testpmd.h	2023-06-08 05:47:34.606739642 +0200
++++ testpmd-as-load-balancer/v19.11/test-pmd/testpmd.h	2023-06-08 05:42:01.542046006 +0200
+@@ -114,6 +114,7 @@
+ 	portid_t   tx_port;   /**< forwarding port of received packets */
+ 	queueid_t  tx_queue;  /**< TX queue to send forwarded packets */
+ 	streamid_t peer_addr; /**< index of peer ethernet address of packets */
++        uint8_t    generate;  /**< Generate the destination parameters (mac) */
+ 
+ 	unsigned int retry_enabled;
+ 
+@@ -260,6 +261,7 @@
+ #ifdef RTE_LIBRTE_IEEE1588
+ extern struct fwd_engine ieee1588_fwd_engine;
+ #endif
++extern struct fwd_engine lb_fwd_engine;
+ 
+ extern struct fwd_engine * fwd_engines[]; /**< NULL terminated array. */
+ extern cmdline_parse_inst_t cmd_set_raw;
+@@ -416,6 +418,10 @@
+ extern lcoreid_t latencystats_lcore_id;
+ #endif
+ 
++extern uint8_t lb_enabled;
++extern struct rte_pci_addr *lb_dut_pcis;
++extern uint32_t nb_lb_dut_pcis;
++
+ #ifdef RTE_LIBRTE_BITRATE
+ extern lcoreid_t bitrate_lcore_id;
+ extern uint8_t bitrate_enabled;
