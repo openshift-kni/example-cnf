@@ -16,8 +16,8 @@ RUN wget http://fast.dpdk.org/rel/dpdk-${DPDK_VER}.tar.xz -P /usr/src && \
     tar -xpvf /usr/src/dpdk-${DPDK_VER}.tar.xz -C /usr/src && \
     rm -f /usr/src/dpdk-${DPDK_VER}.tar.xz
 
-# Download dependencies
-RUN git clone https://github.com/krsacme/testpmd-as-load-balancer.git $(pwd)/testpmd-as-load-balancer
+# Copy patch
+COPY dpdk-${DPDK_VER}-lb.patch /usr/src/
 
 # Configuration
 RUN sed -i -e 's/EAL_IGB_UIO=y/EAL_IGB_UIO=n/' \
@@ -30,7 +30,7 @@ RUN sed -i -e 's/EAL_IGB_UIO=y/EAL_IGB_UIO=n/' \
 RUN cd ${DPDK_DIR} && \
     make install T=${RTE_TARGET} DESTDIR=${RTE_SDK} -j $(nproc)
 
-RUN cp -af $(pwd)testpmd-as-load-balancer/v19.11/test-pmd ${DPDK_DIR}/app/test-pmd && \
+RUN cd ${DPDK_DIR}/app && patch -p2 < /usr/src/dpdk-${DPDK_VER}-lb.patch && \
     cd ${DPDK_DIR}/app/test-pmd && \
     make -j $(nproc) && \
     cp testpmd /usr/local/bin
