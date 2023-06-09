@@ -27,7 +27,7 @@ build-server:
 	if [ -n "$(RELEASE)" ]; then \
 	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(TAG)" -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(VERSION)" $(CONTAINER_ARGS); \
 	else \
-	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(TAG)" $(CONTAINER_ARGS); \
+	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile --label quay.expires-after=2w  -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(TAG)" $(CONTAINER_ARGS); \
 	fi
 
 .PHONY: build-app # Build TRex App
@@ -35,7 +35,7 @@ build-app:
 	if [ -n "$(RELEASE)" ]; then \
 	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(TAG)" -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(VERSION)" $(CONTAINER_ARGS); \
 	else \
-	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(TAG)" $(CONTAINER_ARGS); \
+	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile --label quay.expires-after=2w  -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(TAG)" $(CONTAINER_ARGS); \
 	fi
 
 .PHONY: push-all # Push ALL images

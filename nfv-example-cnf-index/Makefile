@@ -59,7 +59,7 @@ index-build: opm
 	if [ -n "$(RELEASE)" ]; then \
 	BUILDAH_FORMAT=docker podman build $(BUILD_PATH) -f $(BUILD_PATH)/$(INDEX_NAME).Dockerfile -t $(INDEX_IMG) -t $(REL_INDEX_IMG) ;\
 	else \
-	BUILDAH_FORMAT=docker podman build $(BUILD_PATH) -f $(BUILD_PATH)/$(INDEX_NAME).Dockerfile -t $(INDEX_IMG) ;\
+	BUILDAH_FORMAT=docker podman build $(BUILD_PATH) -f $(BUILD_PATH)/$(INDEX_NAME).Dockerfile --label quay.expires-after=2w -t $(INDEX_IMG) ;\
 	fi; \
 	rm -rf $(BUILD_PATH) ;\
 	}

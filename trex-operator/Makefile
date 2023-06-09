@@ -72,7 +72,7 @@ operator-build:
 	if [ -n "$(RELEASE)" ]; then \
 	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . -t ${IMG}  -t ${REL_IMG} ;\
 	else \
-	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . -t ${IMG} ;\
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . --label quay.expires-after=2w -t ${IMG} ;\
 	fi
 
 # Push the operator image
@@ -147,8 +147,13 @@ bundle: kustomize operator-sdk
 # Build the bundle image, using local bundle image name
 .PHONY: bundle-build
 bundle-build: bundle
+	if [ -n "$(RELEASE)" ]; then \
 	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Dockerfile \
-		-t bundle .
+		-t bundle . ; \
+	else \
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Dockerfile --label quay.expires-after=2w \
+		-t bundle . ; \
+	fi
 
 # Tag local bundle image with our registry BUNDLE_IMG
 bundle-tag:
