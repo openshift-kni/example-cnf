@@ -1,4 +1,4 @@
-name: PR Validation
+name: PR build
 
 on:
   pull_request:
@@ -13,10 +13,13 @@ defaults:
     shell: bash
 
 jobs:
-  validate-pr:
+  build_pr:
     # Build only when the PR comes from a branch in the same repo or forced
     if: github.repository == github.event.pull_request.head.repo.full_name || inputs.force_build
     runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.build.outputs.version }}
 
     steps:
       - name: Checkout repository
@@ -36,6 +39,7 @@ jobs:
           registry: ${{ env.REGISTRY }}
 
       - name: Build All
+        id: build
         run: |
           env
           set -x
@@ -51,3 +55,19 @@ jobs:
           make version
           echo "force_build=${{ github.event.inputs.force_build }}"
           make all SHA=${SHA} DATE=pr${{ github.event.number }} FORCE_BUILD=$FORCE_BUILD
+          . versions.cfg
+          echo "version=${VERSIONS[nfv-example-cnf-index]}" >> "$GITHUB_OUTPUT"
+
+      - name: Display output
+        run: |
+          cat "$GITHUB_OUTPUT"
+
+  display_version:
+    runs-on: ubuntu-latest
+
+    needs: build_pr
+
+    steps:
+      - name: Display version
+        run: |
+          echo "${{ needs.build_pr.outputs.version }}"
