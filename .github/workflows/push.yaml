@@ -54,6 +54,7 @@ jobs:
 
     steps:
       - name: Create DCI components
+        id: dci
         uses: dci-labs/dci-component@v1.0.1
         with:
           dciClientId: ${{ secrets.DCI_CLIENT_ID }}
@@ -72,4 +73,3 @@ jobs:
           componentVersion: ${{ needs.build_all.outputs.version }}
           componentData: '{"url":"${{ env.REGISTRY }}/rh-nfv-int/nfv-example-cnf-catalog"}'
           componentRelease: ga
-        id: dci
