@@ -1,4 +1,4 @@
-name: PR Validation
+name: Publish after push
 
 on:
   push:
@@ -13,8 +13,11 @@ defaults:
     shell: bash
 
 jobs:
-  release:
+  build_all:
     runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.build.outputs.version }}
 
     steps:
       - name: Checkout repository
@@ -34,9 +37,39 @@ jobs:
           registry: ${{ env.REGISTRY }}
 
       - name: Build All
+        id: build
         run: |
           set -x
           SHA=$(git rev-parse --short HEAD)
           DATE=$(date --utc +%Y%m%d%H%M)
           make version
           make all SHA=${SHA} DATE=${DATE} RELEASE=1 FORCE_BUILD=true
+          . versions.cfg
+          echo "version=${VERSIONS[nfv-example-cnf-index]}" >> "$GITHUB_OUTPUT"
+
+  publish_dci_component:
+    runs-on: ubuntu-latest
+
+    needs: build_all
+
+    steps:
+      - name: Create DCI components
+        uses: dci-labs/dci-component@v1.0.1
+        with:
+          dciClientId: ${{ secrets.DCI_CLIENT_ID }}
+          dciApiSecret: ${{ secrets.DCI_API_SECRET }}
+          dciTopics: '
+          OCP-4.7,
+          OCP-4.8,
+          OCP-4.9,
+          OCP-4.10,
+          OCP-4.11,
+          OCP-4.12,
+          OCP-4.13
+          OCP-4.14
+          '
+          componentName: nfv-example-cnf-index
+          componentVersion: ${{ needs.build_all.outputs.version }}
+          componentData: '{"url":"${{ env.REGISTRY }}/rh-nfv-int/nfv-example-cnf-catalog"}'
+          componentRelease: ga
+        id: dci

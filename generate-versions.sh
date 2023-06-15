@@ -12,7 +12,7 @@ EXTRA="$2"
 
 DIRS="testpmd-container-app trex-container-app cnf-app-mac-operator testpmd-lb-operator testpmd-operator trex-operator nfv-example-cnf-index"
 
-FILES="$(git diff --name-only -r origin/${GITHUB_BASE_REF:-main}:)"
+FILES="$(git diff --name-only -r origin/${GITHUB_BASE_REF:-main}:|grep -Fv /.git)"
 
 TESTPMD_APP=false
 TREX_APP=false
