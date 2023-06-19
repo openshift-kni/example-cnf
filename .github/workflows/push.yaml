@@ -70,6 +70,6 @@ jobs:
           OCP-4.14
           '
           componentName: nfv-example-cnf-index
-          componentVersion: ${{ needs.build_all.outputs.version }}
+          componentVersion: v${{ needs.build_all.outputs.version }}
           componentData: '{"url":"${{ env.REGISTRY }}/rh-nfv-int/nfv-example-cnf-catalog"}'
           componentRelease: ga
