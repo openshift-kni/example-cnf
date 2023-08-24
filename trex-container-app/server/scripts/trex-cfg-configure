@@ -10,6 +10,15 @@ import subprocess
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
+import logging
+
+# Add UTC timestamp to the logs
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+                    datefmt='%Y-%m-%dT%H:%M:%S%z')
+
+logger = logging.getLogger('trex-cfg-configure')
+
 trex_cfg_template = [{
     "version": 2,
     "interfaces": [],
@@ -38,10 +47,10 @@ def main():
     lb_mac_string = ''
     if len(sys.argv) >= 1:
         core_string = sys.argv[1]
-        print("INPUT: core_string: %s" % core_string)
+        logger.info(f"INPUT: core_string: {core_string}")
     if len(sys.argv) == 3:
         lb_mac_string = sys.argv[2]
-        print("INPUT: lb_mac_string: %s" % lb_mac_string)
+        logger.info(f"INPUT: lb_mac_string: {lb_mac_string}")
 
     cfg = trex_cfg_template.copy()
 
@@ -65,7 +74,7 @@ def main():
     for pci in cfg[0]['interfaces']:
         sock = get_pci_sock_info(pci, core_list[2:])
         if not sock:
-            print("ERROR: failed to get sock info for pci %s" % pci)
+            logger.error(f"Failed to get sock info for pci {pci}")
             sys.exit(1)
 
         match = False
@@ -80,29 +89,27 @@ def main():
     if not src_mac:
         src_mac = get_pci_mac(pci_list)
     if not src_mac:
-        print("ERROR: Source mac address is not available, exiting...")
+        logger.error("Source MAC address is not available, exiting")
         sys.exit(1)
 
     dst_mac = []
     if lb_mac_string:
         dst_mac = lb_mac_string.split(',')
-        print("destination mac obtained from lb_mac_string input - %s" % lb_mac_string)
+        logger.info(f"Destination MAC address obtained from lb_mac_string input - {lb_mac_string}")
     else:
         dst_mac = get_dst_mac()
-        print("destination mach fetched")
+        logger.info("Destination MAC address fetched")
 
     if not dst_mac:
-        print("ERROR: Destination mac address is not available, exiting...")
+        logger.error("Destination MAC address is not available, exiting")
         sys.exit(1)
 
     if len(dst_mac) != len(src_mac):
-        print("ERROR: Source (%s) and Destination (%s) mac list size is "
-            "different, exiting..." % (','.join(src_mac), ','.join(dst_mac)))
+        logger.error(f"Source ({','.join(src_mac)}) and Destination ({','.join(dst_mac)}) mac list size differ. Exiting." )
         sys.exit(1)
 
     if len(pci_list) != len(src_mac):
-        print("ERROR: PCI device list (%s) and Source mac (%s) mac list size is "
-            "different, exiting..." % (','.join(pci_list), ','.join(dst_mac)))
+        logger.error(f"PCI device list ({','.join(pci_list)}) and Source mac ({','.join(dst_mac)}) mac list size differ. Exiting.")
         sys.exit(1)
 
     for idx in range(len(pci_list)):
@@ -111,7 +118,7 @@ def main():
         port_obj['dest_mac'] = dst_mac[idx]
         cfg[0]['port_info'].append(port_obj)
 
-    print(trex_cfg_template)
+    logger.info(f"{trex_cfg_template}")
     with open(CFG_FILE, "w") as f:
         yaml.safe_dump(cfg, f)
 
@@ -124,7 +131,7 @@ def get_pci_sock_info(pci, core_list):
     elif re.match(pattern_partial, pci):
         numa_node += "0000:" + pci
     else:
-        print("ERROR: pci string %s does not match exepected format" % pci)
+        logger.error(f"PCI string {pci} does not match exepected format.")
         return
 
     numa_node += "/numa_node"
@@ -135,7 +142,7 @@ def get_pci_sock_info(pci, core_list):
     for core in core_list:
         core_sock_num = get_core_sock_num(core)
         if core_sock_num == None:
-            print("ERROR: Unable to find sock number for core %s", core)
+            logger.error(f"Unable to find sock number for core {core}")
             return
         elif core_sock_num == sock_num:
             sock_info['threads'].append(core)
@@ -170,7 +177,7 @@ def get_pci():
     for net in network_list:
         pci_env = "PCIDEVICE_" + net.replace('/', '_').replace('.', '_').upper()
         pcis = os.environ[pci_env]
-        print("pcis = %s" % pcis)
+        logger.info(f"pcis = {pcis}")
         pci_list = pcis.split(',')
         pci_all.extend(pci_list)
     return pci_all
@@ -187,11 +194,11 @@ def get_src_mac():
             if name == "k8s.v1.cni.cncf.io/networks":
                 obj = yaml.safe_load(yaml.safe_load(var))
     for item in obj:
-        print(item)
+        logger.info(item)
         if 'mac' in item:
             macs.append(item['mac'])
         else:
-            print("TODO: Implement mac fetching DPDK application - workaround")
+            logger.warning("TODO: Implement mac fetching DPDK application - workaround")
             mac = [int('fe', 16), int('16', 16),
                    int('3b', 16), random.getrandbits(8),
                    random.getrandbits(8), random.getrandbits(8)]
@@ -214,7 +221,7 @@ def get_dst_mac():
 
     macs = []
     for item in response['items']:
-        print(item['spec'].get('node'))
+        logger.info(f"{item['spec'].get('node')}")
         for resource in item['spec']['resources']:
             for dev in resource['devices']:
                 macs.append(dev['mac'])

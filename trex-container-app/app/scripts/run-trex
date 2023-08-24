@@ -17,12 +17,23 @@ from threading import Thread
 from datetime import datetime
 
 # Internal python files - /opt/pyfiles/
-from logger import CustomLogger, log
+
 import trexmac
 import trexevent
 import trexstats
 
-clog = CustomLogger("debug")
+# TODO - uniform the logging
+from logger import CustomLogger
+clog = CustomLogger("trex-run-clog-debug")
+
+import logging
+
+# Add UTC timestamp to the logs
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+                    datefmt='%Y-%m-%dT%H:%M:%S%z')
+
+logger = logging.getLogger('run-trex')
 
 
 class STLS1_Wrapper(object):
@@ -73,8 +84,7 @@ class STLS1_Wrapper(object):
             self.client.clear_stats()
 
             # here we multiply the traffic lineaer to whatever given in rate
-            log.info("Running {:} on ports {:}, {:} for {:} seconds...".format(
-                self.rate, self.port_a, self.port_b, self.duration))
+            logger.info(f"Running {self.rate} on ports {self.port_a}, {self.port_b} for {self.duration} seconds...")
 
             self.client.start(ports = self.ports, mult = self.rate,
                 duration = self.duration, core_mask = STLClient.CORE_MASK_PIN)
@@ -98,20 +108,20 @@ class STLS1_Wrapper(object):
         except STLError as e:
             passed = False
             trexstats.force_exit = True
-            log.info(e)
+            logger.info(e)
 
         finally:
             self.force_exit = True
             self.client.disconnect()
 
         if passed:
-            print("\nTest has passed :-)\n")
+            logger.info("\nTest has passed :-)\n")
         else:
-            print("\nTest has failed :-(\n")
+            logger.error("\nTest has failed :-(\n")
             sys.exit(1)
 
     def signal_handler(self, sig, frame):
-        log.info('You pressed Ctrl+C!')
+        logger.info("You have pressed Ctrl+C!")
         trexstats.force_exit = True
         self.client.reset(ports = self.ports)
         self.force_exit = True
@@ -125,26 +135,26 @@ def main():
     duration = os.getenv("DURATION")
     profile = os.environ.get("TREX_PROFILE_NAME")
     if not duration:
-        log.info("ERROR: Provide duration in seconds, -1 for continous burst mode")
+        logger.error("Provide duration in seconds, -1 for continous burst mode")
         sys.exit(1)
 
     if duration != -1:
         duration = int(duration)
-    log.info("Starting burst...")
-    log.info("Packet Rate - %s" % packet_rate)
+    logger.info("Starting burst...")
+    logger.info("Packet Rate - %s" % packet_rate)
     if duration == -1:
-        log.info("Packets will be generated forever")
+        logger.info("Packets will be generated forever")
     else:
-        log.info("Duration - %s" % duration)
+        logger.info("Duration - %s" % duration)
     if profile:
-        log.info("TRex profile - %s" % profile)
+        logger.info("TRex profile - %s" % profile)
     if packet_size:
-        log.info("Packet Size - %s" % packet_size)
+        logger.info("Packet Size - %s" % packet_size)
     try:
         obj = STLS1_Wrapper(ports = [0, 1], rate=packet_rate, profile=profile, duration=duration)
         obj.simple_burst()
     except Exception as e:
-        log.exception("failed to start burst: %s" % e)
+        logger.exception("failed to start burst: %s" % e)
 
 if __name__ == "__main__":
     main()
