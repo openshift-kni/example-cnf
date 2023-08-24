@@ -2,12 +2,17 @@
 
 set -ex
 
+# Define the function to add timestamp to log entries
+echo_ts() {
+  echo "$(date -u +"%Y-%m-%dT%H:%M:%S%z") $@"
+}
+
 RUN_APP=${run_app:=1}
 SERVER=${TREX_SERVER_URL:="0.0.0.0"}
 MODE=${MODE:="lb"}
 
 if [[ "${MODE}" == "direct" ]]; then
-  echo "MODE is ${MODE}"
+  echo_ts "MODE is ${MODE}"
   RUN_APP=3
 fi
 
@@ -18,9 +23,9 @@ while [[ ${count} -gt 0 ]]; do
     ((count--))
 done
 if [[ ${count} -gt 0 ]]; then
-    echo "trex-server is ready"
+    echo_ts "trex-server is ready"
 else
-    echo "ERROR: trex-server could not start properly, exiting... "
+    echo_ts "ERROR: trex-server could not start properly, exiting... "
     exit 1
 fi
 
@@ -35,7 +40,7 @@ if [ ! -z ${TREX_PROFILE_NAME} ]; then
         # No ConfigMap, Use one of trex-core's profile
         ln -s "/opt/trex/trex-core/scripts/stl/${TREX_PROFILE_NAME}" "${HOME}/${TREX_PROFILE_NAME}"
     else
-        echo "ERROR: TREX_PROFILE_NAME is defined but could not find valid profiles"
+        echo_ts "ERROR: TREX_PROFILE_NAME is defined but could not find valid profiles"
         exit 1
     fi
 fi
@@ -43,17 +48,17 @@ fi
 if [[ $RUN_APP == "1" ]]; then
     # leave the server running for 10s before starting application
     sleep 10
-    echo "Running TRex ..."
+    echo_ts "Running TRex ..."
     run-trex
 elif [[ $RUN_APP == "2" ]]; then
     sleep 10
-    echo "Running binary search"
+    echo_ts "Running binary search"
     run-binary-search
 elif [[ $RUN_APP == "3" ]]; then
     sleep 10
-    echo "Running TRex in direct mode (without LB)"
+    echo_ts "Running TRex in direct mode (without LB)"
     run-trex-direct
 else
-    echo "Skipping TRex run, waiting ..."
+    echo_ts "Skipping TRex run, waiting ..."
     sleep infinity
 fi

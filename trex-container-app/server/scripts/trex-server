@@ -1,10 +1,16 @@
 #!/bin/bash
 
 set -x
+
+# Define the function to add timestamp to log entries
+echo_ts() {
+  echo "$(date -u +"%Y-%m-%dT%H:%M:%S%z") $@"
+}
+
 CORE_COUNT=$1
 
 if [ -z $CORE_COUNT ]; then
-    echo "Provide number cores as first parameter"
+    echo_ts "Provide number cores as first parameter"
     exit 1
 fi
 
@@ -16,4 +22,4 @@ do
    n=$((n+1))
    sleep 5
 done
-echo "Failed to start TRex Server on 5 retries..."
+echo_ts "Failed to start TRex Server on 5 retries..."

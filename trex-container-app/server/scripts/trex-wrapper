@@ -2,6 +2,11 @@
 
 set -e
 
+# Define the function to add timestamp to log entries
+echo_ts() {
+  echo "$(date -u +"%Y-%m-%dT%H:%M:%S%z") $@"
+}
+
 # direct variables
 MODE=${MODE:="direct"}
 LB_MACS=${LB_MACS:=""}
@@ -15,14 +20,14 @@ RUN_DELAY=${run_delay:=1}
 CORES=$(taskset -pc 1 | cut -d: -f2)
 
 if [[ $RUN_CONFIGURE != "1" ]]; then
-    echo "Configure disabled for manual override, sleeping .."
+    echo_ts "Configure disabled for manual override, sleeping .."
     sleep infinity
 fi
 
 # Write TRex cfg file
 if [[ $MODE == "lb" ]]; then
     if [ -z ${LB_MACS} ]; then
-        echo "ERROR: LB macs is empty in lb mode, cannot start server"
+        echo_ts "ERROR: LB macs is empty in lb mode, cannot start server"
         sleep infinity
         exit 1
     fi
@@ -40,8 +45,8 @@ CORE_COUNT=${trex_core_count:=$CORE_COUNT_CFG}
 # TREX_CPU env will be set on the pod spec with number of required cores
 if [[ $((CORE_COUNT_CFG + 2)) != $TREX_CPU ]]; then
     # TEMP
-    echo "CORES=$((CORE_COUNT + 2))"
-    echo "TREX_CPU=$TREX_CPU"
+    echo_ts "CORES=$((CORE_COUNT + 2))"
+    echo_ts "TREX_CPU=$TREX_CPU"
     exit 1
 fi
 
@@ -50,11 +55,11 @@ chmod +x $SERVER
 
 if [[ $RUN_SERVER == "1" ]]; then
     sleep $RUN_DELAY
-    #echo "Starting TRex daemon server ..."
+    #echo_ts "Starting TRex daemon server ..."
     #./trex_daemon_server start
-    echo "Starting TRex server ..."
+    echo_ts "Starting TRex server ..."
     $SERVER $CORE_COUNT
 else
-    echo "Skipping TRex server start, waiting ..."
+    echo_ts "Skipping TRex server start, waiting ..."
     sleep infinity
 fi
