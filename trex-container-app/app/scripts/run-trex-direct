@@ -17,22 +17,12 @@ from threading import Thread
 from datetime import datetime
 
 # Internal python files - /opt/pyfiles/
-# TODO - uniform the logging
-from logger import CustomLogger
-clog = CustomLogger("debug")
-
+from logger import CustomLogger, log
 import trexmac
 import trexevent
 import trexstats
 
-import logging
-
-# Add UTC timestamp to the logs
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
-                    datefmt='%Y-%m-%dT%H:%M:%S%z')
-
-logger = logging.getLogger('run-trex-direct')
+clog = CustomLogger("debug")
 
 
 class STLS1(object):
@@ -69,18 +59,18 @@ class STLS1(object):
     def update(self, obj):
         meta = obj['metadata']
         spec = obj['spec']
-        logger.info(f"Name({meta['name']}) Namespace({meta['namespace']})")
+        log.info("Name(%s) Namespace(%s)" % (meta['name'], meta['namespace']))
         macs = self.get_macs(spec)
         if len(macs) < len(self.ports):
-            logger.error(f"macs len({len(macs)}) is less then ports len ({len(self.ports)})")
+            log.info("ERROR: macs len(%s) is less then ports len (%s)" % (len(macs), len(self.ports)))
             return
 
-        logger.info("reset ports")
+        log.info("reset ports")
         self.client.reset(ports=self.ports)
-        logger.info("create stream with new mac address")
+        log.info("create stream with new mac address")
         for idx in range(0, len(self.ports)):
             self.add_streams(self.ports[idx], macs[idx])
-        logger.info("staring ports")
+        log.info("staring ports")
         self.client.start(ports=self.ports, mult=self.rate, duration=self.duration, core_mask=STLClient.CORE_MASK_PIN)
         data = {}
         now = datetime.now()
@@ -137,7 +127,7 @@ class STLS1(object):
 
     def add_streams(self, port, dest_mac):
         if dest_mac:
-            logger.info(f"Create stream for port {port} with dest mac {dest_mac}")
+            log.info("create stream for port %s with dest mac %s" % (port, dest_mac))
         new_stream = self.create_stream(dest_mac, port)
         self.client.add_streams(new_stream, [port])
 
@@ -148,11 +138,11 @@ class STLS1(object):
             macs = os.getenv('LB_MACS', '').split(',')
 
         if macs:
-            logger.info("destination macs available")
+            log.info("destination macs available")
             for idx in range(0, len(self.ports)):
                 self.add_streams(self.ports[idx], macs[idx])
         else:
-            logger.info("destination macs not available")
+            log.info("destination macs not available")
             for idx in range(0, len(self.ports)):
                 self.add_streams(self.ports[idx], None)
 
@@ -171,7 +161,8 @@ class STLS1(object):
             self.client.clear_stats()
 
             # here we multiply the traffic lineaer to whatever given in rate
-            logger.info(f"Running {self.rate} on ports {self.port_a}, {self.port_b} for {self.duration} seconds.")
+            log.info("Running {:} on ports {:}, {:} for {:} seconds...".format(
+                self.rate, self.port_a, self.port_b, self.duration))
 
             self.client.start(ports = self.ports, mult = self.rate,
                 duration = self.duration, core_mask = STLClient.CORE_MASK_PIN)
@@ -197,21 +188,21 @@ class STLS1(object):
         except STLError as e:
             passed = False
             trexstats.force_exit = True
-            logger.error(e)
+            log.info(e)
 
         finally:
             self.force_exit = True
             self.client.disconnect()
 
         if passed:
-            logger.info("\nTest has passed :-)\n")
+            print("\nTest has passed :-)\n")
             sys.exit(0)
         else:
-            logger.error("\nTest has failed :-(\n")
+            print("\nTest has failed :-(\n")
             sys.exit(1)
 
     def signal_handler(self, sig, frame):
-        logger.info("You have pressed Ctrl+C!")
+        log.info('You pressed Ctrl+C!')
         time.sleep(6)
         self.force_exit = True
         clog.force_exit = True
@@ -226,18 +217,18 @@ def main():
     profile = os.environ.get("TREX_PROFILE_NAME")
     if duration != -1:
         duration = int(duration)
-    logger.info("Starting burst...")
-    logger.info(f"Packet Size - {packet_size}")
-    logger.info(f"Packet Rate - {packet_rate}")
+    log.info("Starting burst...")
+    log.info("Packet Size - %s" % packet_size)
+    log.info("Packet Rate - %s" % packet_rate)
     if profile:
-        logger.info(f"TRex profile - {profile}")
+        log.info("TRex profile - %s" % profile)
     if duration == -1:
-        logger.info("Packets will be generated forever...")
+        log.info("Packets will be generated forever...")
     try:
         obj = STLS1(ports = [0, 1], size=packet_size, rate=packet_rate, duration=duration, profile=profile)
         obj.simple_burst()
     except Exception as e:
-        logger.error(f"failed to start burst: {e}")
+        log.exception("failed to start burst: %s" % e)
 
 if __name__ == "__main__":
     main()

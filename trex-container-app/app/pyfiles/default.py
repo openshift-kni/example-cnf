@@ -2,15 +2,6 @@ from trex_stl_lib.api import *
 import os
 import sys
 
-import logging
-
-# Add UTC timestamp to the logs
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
-                    datefmt='%Y-%m-%dT%H:%M:%S%z')
-
-logger = logging.getLogger('default-trex-app')
-
 class STLS1(object):
 
     def __init__ (self):
@@ -54,7 +45,7 @@ class STLS1(object):
     def get_dest_mac(self, direction):
         lb_macs = os.environ.get('LB_MACS')
         if not lb_macs:
-            logger.error("LB_MACS environment variable is not set")
+            print("LB_MACS environment variable is not set")
             sys.exit(1)
         macs = lb_macs.split(',')
         return macs[direction]
