@@ -1,5 +1,5 @@
   relatedImages:
     - name: trex-container-server
-      image: "quay.io/rh-nfv-int/trex-container-server@sha256:b453dcc324f87adcf7dc4ea24acc3f2df79914657cb7f3f2c0934134306b875e" # tmp build
+      image: "quay.io/rh-nfv-int/trex-container-server@sha256:190d69aef293d1719952969edcca8042d99e17b0d62d1a085cdd7b01cb5e1f1d" # v0.2.6
     - name: trex-container-app
-      image: "quay.io/rh-nfv-int/trex-container-app@sha256:603c35cef0567cafe2ab477116c83f543f1c524a58cd3713b0ca8c71afc09be6" # tmp build
+      image: "quay.io/rh-nfv-int/trex-container-app@sha256:da8c5aae7f2f7459d9d7b842880040cfde0ce301a9edc83e88ae9f27dc448829" # v0.2.6

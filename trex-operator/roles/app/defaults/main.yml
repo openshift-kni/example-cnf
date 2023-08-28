@@ -1,5 +1,5 @@
 ---
-image_app: "quay.io/rh-nfv-int/trex-container-app@sha256:603c35cef0567cafe2ab477116c83f543f1c524a58cd3713b0ca8c71afc09be6" # tmp build
+image_app: "quay.io/rh-nfv-int/trex-container-app@sha256:da8c5aae7f2f7459d9d7b842880040cfde0ce301a9edc83e88ae9f27dc448829" # v0.2.6
 image_pull_policy: Always
 command: ["trex-wrapper"]
 environments: {}
