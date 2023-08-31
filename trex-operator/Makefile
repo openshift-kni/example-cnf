@@ -67,8 +67,16 @@ deploy: kustomize
 undeploy: kustomize
 	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} delete -f -
 
+# Ensure proper images for trex-container-app and trex-container-server
+ensure_digests:
+	cp roles/app/defaults/main.yml.in roles/app/defaults/main.yml
+	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/app/defaults/main.yml
+	cp roles/server/defaults/main.yml.in roles/server/defaults/main.yml
+	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-server:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-server@.*/trex-container-server@$${DIGEST}\"   # $(TREX_VER)/" roles/server/defaults/main.yml
+	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/server/defaults/main.yml
+
 # Build the operator image
-operator-build:
+operator-build: ensure_digests
 	if [ -n "$(RELEASE)" ]; then \
 	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . -t ${IMG}  -t ${REL_IMG} ;\
 	else \
