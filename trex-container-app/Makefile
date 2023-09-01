@@ -41,7 +41,7 @@ build-app:
 .PHONY: push-all # Push ALL images
 push-all: push-server push-app
 
-.PHONY: push-testpmd # Push TRex Server
+.PHONY: push-server # Push TRex Server
 push-server: build-server
 	$(CONTAINER_CLI) push "$(REGISTRY)/$(ORG)/trex-container-$(@:push-%=%):v$(TAG)"
 	if [ -n "$(RELEASE)" ]; then \

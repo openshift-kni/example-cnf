@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/python-36:latest
+FROM registry.access.redhat.com/ubi8/python-39:latest
 
 ENV TREX_VER v2.85
 ENV TREX_REPO https://github.com/cisco-system-traffic-generator/trex-core.git

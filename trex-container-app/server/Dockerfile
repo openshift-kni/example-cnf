@@ -6,7 +6,7 @@ ENV TRAFFICGEN_REPO https://github.com/atheurer/trafficgen
 
 # Install prerequisite packages
 RUN dnf install -y wget numactl numactl-devel make cmake git wget gcc gcc-c++ kernel-headers glibc-devel net-tools \
-        glibc-headers pciutils nfs-utils perf unzip xorg-x11-xauth yum-utils python36  iproute zlib-devel binutils \
+        glibc-headers pciutils nfs-utils perf unzip xorg-x11-xauth yum-utils python39  iproute zlib-devel binutils \
         tcpdump vim && yum clean all
 
 RUN mkdir -p /opt/trex && cd /opt/trex && git clone --branch ${TREX_VER} ${TREX_REPO}
