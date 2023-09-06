@@ -16,8 +16,7 @@ class TRexAppStats(object):
     def stats(self, stat, ports):
         for i in ports:
             if  stat[i]['ipackets'] < 0 or  stat[i]['opackets'] <= 0:
-                log.info("invalid packet count - port(%s) out(%s) id(%s)" % (i,
-                         stat[i]['opackets'], stat[i]['ipackets']))
+                log.info(f"invalid packet count - port({i}) out({stat[i]['opackets']}) id({stat[i]['ipackets']})")
                 return
 
         ipack = 0
@@ -29,24 +28,24 @@ class TRexAppStats(object):
             self.opack[i] = stat[i]['opackets']
 
         if ipack < 0 or opack < 0:
-            log.info("invalid packet count - out(%s) id(%s)" % (opack, ipack))
+            log.info(f"invalid packet count - out({opack}) id({ipack})")
             return
 
         if not self.first_packet_match:
             if ipack >= opack and opack != 0:
                 self.first_packet_match = True
             else:
-                log.info("still waiting for first packet match - out(%s) > in(%s)" % (opack, ipack))
+                log.info(f"still waiting for first packet match - out({opack}) > in({ipack})")
                 return
 
         if ipack >= opack:
-            log.info("MATCH: out(%s) > in(%s)" % (opack, ipack))
+            log.info(f"MATCH: out({opack}) > in({ipack})")
             self.notify_event(False)
             if self.miss and not self.miss[-1].get('end'):
                 self.miss[-1]['end'] = datetime.now()
-                log.info("Loss recovery: %s" % (self.miss[-1]['end'] - self.miss[-1]['start']))
+                log.info(f"Loss recovery: {self.miss[-1]['end'] - self.miss[-1]['start']}")
         else:
-            log.info("MISS:  out(%s) > in(%s)" % (opack, ipack))
+            log.info(f"MISS:  out({opack}) > in({ipack})")
             self.notify_event(True)
             if self.miss and not self.miss[-1].get('end'):
                 self.miss.append({'start': datetime.now()})
@@ -103,10 +102,10 @@ def completed_stats(stats, warnings, port_a, port_b, profile, rate, duration):
     data['microtime'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
     data['time'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
     if profile:
-        msg = ("Profile (%s) " % profile)
+        msg = (f"Profile ({profile}) ")
     else:
-        msg = ("Profile (default) with size (%s) " % size)
-    msg += ("with rate (%s) for (%s)s have completed" % (rate, duration))
+        msg = (f"Profile (default) with size ({size}) ")
+    msg += (f"with rate ({rate}) for ({duration})s have completed")
     data['msg'] = msg
     data['reason'] = 'TestCompleted'
     trexevent.create_event(data)
@@ -116,12 +115,16 @@ def completed_stats(stats, warnings, port_a, port_b, profile, rate, duration):
     log.info(json.dumps(stats[port_b], indent = 4, separators=(',', ': '), sort_keys = True))
 
     lost_a = stats[port_a]["opackets"] - stats[port_b]["ipackets"]
+    percentage_lost_a = lost_a * 100.0 / stats[port_a]["opackets"]
     lost_b = stats[port_b]["opackets"] - stats[port_a]["ipackets"]
+    percentage_lost_b = lost_b * 100.0 / stats[port_b]["opackets"]
     lost = lost_a + lost_b
+    packets = stats[port_a]["opackets"] + stats[port_b]["opackets"]
+    total_lost = lost * 100.0 / packets
 
-    log.info("\npackets lost from {0} --> {1}:   {2} pkts".format(port_a, port_b, lost_a))
-    log.info("packets lost from {0} --> {1}:   {2} pkts".format(port_b, port_a, lost_b))
-    log.info("packet lost total: {} pkts".format(lost))
+    log.info(f"\nPackets lost from {port_a} to {port_b}:   {lost_a} packets, which is {percentage_lost_a}% packet loss")
+    log.info(f"Packets lost from {port_b} to {port_a}:   {lost_b} packets, which is {percentage_lost_b}% packet loss")
+    log.info(f"Total packets lost: {lost} packets, which is {total_lost}% packet loss")
 
     if warnings:
         log.info("\n\n*** test had warnings ****\n\n")
@@ -130,11 +133,10 @@ def completed_stats(stats, warnings, port_a, port_b, profile, rate, duration):
 
     if lost <= 0 and not warnings:
         passed = True
-        packets = stats[port_a]["opackets"] + stats[port_b]["opackets"]
-        data['msg'] = ("Test has Passed with no loss, total packets {}".format(packets))
+        data['msg'] = (f"Test has passed with no packet loss, total packets: {packets}")
         data['reason'] = 'TestPassed'
     else:
-        data['msg'] = ("Test has failed with packets loss of {} pkts".format(lost))
+        data['msg'] = (f"Test has failed with {lost} packets lost, resulting in {total_lost}% packet loss")
         data['reason'] = 'TestFailed'
 
     trexevent.create_event(data)
