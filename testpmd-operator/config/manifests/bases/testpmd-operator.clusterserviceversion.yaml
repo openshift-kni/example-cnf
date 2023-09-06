@@ -4,7 +4,7 @@ metadata:
   annotations:
     alm-examples: '[]'
     capabilities: Basic Install
-    operators.operatorframework.io/builder: operator-sdk-v1.2.0
+    operators.operatorframework.io/builder: operator-sdk-v1.31.0
     operators.operatorframework.io/project_layout: ansible.sdk.operatorframework.io/v1
   name: testpmd-operator.v0.0.0
   namespace: placeholder
@@ -39,6 +39,8 @@ spec:
   maintainers:
   - email: skramaja@redhat.com
     name: Saravanan KR
+  - email: telcoci@redhat.com
+    name: Telco CI
   maturity: alpha
   provider:
     name: Red Hat
