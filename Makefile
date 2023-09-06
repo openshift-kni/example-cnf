@@ -1,6 +1,8 @@
-SHELL 		    := /bin/bash
+SHELL           := /bin/bash
 
-DIRS                := testpmd-container-app trex-container-app cnf-app-mac-operator testpmd-lb-operator testpmd-operator trex-operator nfv-example-cnf-index
+DIRS            := testpmd-container-app trex-container-app cnf-app-mac-operator testpmd-lb-operator testpmd-operator trex-operator nfv-example-cnf-index
+
+OPERATOR_SDK_VER:= 1.31.0
 
 # Print the possible targets and a short description
 .PHONY: targets
@@ -9,11 +11,11 @@ targets:
 
 .PHONY: all # Build and push all images
 all:
-	@set -ex; for d in $(shell env FORCE_BUILD=$(FORCE_BUILD) ./generate-versions.sh "versions.cfg" "${DATE}.${SHA}"); do make -C $$d all SHA=$(SHA) DATE=$(DATE) RELEASE=${RELEASE}; done
+	@set -ex; for d in $(shell env FORCE_BUILD=$(FORCE_BUILD) ./generate-versions.sh "versions.cfg" "${DATE}.${SHA}"); do make -C $$d all SHA=$(SHA) DATE=$(DATE) OPERATOR_SDK_VER=$(OPERATOR_SDK_VER) RELEASE=${RELEASE}; done
 
 .PHONY: build-all # Build all images
 build-all:
-	@set -ex; for d in $(shell env FORCE_BUILD=$(FORCE_BUILD) ./generate-versions.sh "versions.cfg" "${DATE}.${SHA}"); do make -C $$d build-all SHA=$(SHA) DATE=$(DATE) RELEASE=${RELEASE}; done
+	@set -ex; for d in $(shell env FORCE_BUILD=$(FORCE_BUILD) ./generate-versions.sh "versions.cfg" "${DATE}.${SHA}"); do make -C $$d build-all SHA=$(SHA) DATE=$(DATE) OPERATOR_SDK_VER=$(OPERATOR_SDK_VER) RELEASE=${RELEASE}; done
 
 .PHONY: version # Display all the versions
 version:
