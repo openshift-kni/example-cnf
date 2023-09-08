@@ -10,7 +10,7 @@ DEFAULT_CHANNEL  ?= alpha
 CONTAINER_CLI    ?= podman
 CLUSTER_CLI      ?= oc
 OPERATOR_NAME    := trex-operator
-OPERATOR_SDK_VER := 1.7.2
+OPERATOR_SDK_VER ?= 1.31.0
 KUSTOMIZE_VER    := 3.5.4
 TREX_VER         ?= v$(shell bash -c '. ../versions.cfg; echo "$${VERSIONS[trex-container-app]}"')
 
