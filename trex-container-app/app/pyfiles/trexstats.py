@@ -14,11 +14,16 @@ class TRexAppStats(object):
         self.event_notified_miss = None
 
     def stats(self, stat, ports):
+        log.debug(f"Current stat = {stat}")
         for i in ports:
-            if  stat[i]['ipackets'] < 0 or  stat[i]['opackets'] <= 0:
-                log.info(f"invalid packet count - port({i}) out({stat[i]['opackets']}) id({stat[i]['ipackets']})")
+            if stat[i]['ipackets'] < 0 or stat[i]['opackets'] <= 0:
+                log.info(f"Invalid packet count for the port({i}): \
+                         in({stat[i]['ipackets']}) \
+                         vs out({stat[i]['opackets']})")
                 return
 
+        # TODO: check these calculations for some possible issues
+        # that could expain having ipack much larger then opack
         ipack = 0
         opack = 0
         for i in ports:
@@ -28,43 +33,57 @@ class TRexAppStats(object):
             self.opack[i] = stat[i]['opackets']
 
         if ipack < 0 or opack < 0:
-            log.info(f"invalid packet count - out({opack}) id({ipack})")
+            log.info(f"Invalid packet count summary for all ports: in({ipack}) vs out({opack})")
             return
 
         if not self.first_packet_match:
             if ipack >= opack and opack != 0:
                 self.first_packet_match = True
             else:
-                log.info(f"still waiting for first packet match - out({opack}) > in({ipack})")
+                log.info(f"Still waiting for the first packet match: in({ipack}) < out({opack})")
                 return
 
+        # If there is no packet loss (we received more than we sent)
         if ipack >= opack:
-            log.info(f"MATCH: out({opack}) > in({ipack})")
-            self.notify_event(False)
+            log.info(f"MATCH: in({ipack}) >= out({opack})")
+            self.notify_event(ongoing_miss=False)
+            # If there is ongoing packet loss, close it with the end timestamp
             if self.miss and not self.miss[-1].get('end'):
                 self.miss[-1]['end'] = datetime.now()
-                log.info(f"Loss recovery: {self.miss[-1]['end'] - self.miss[-1]['start']}")
+                log.info(f"Packet loss occurred during the following time: \
+                         {self.miss[-1]['end'] - self.miss[-1]['start']}, \
+                         now recovered")
+        # Packet loss detected
         else:
-            log.info(f"MISS:  out({opack}) > in({ipack})")
-            self.notify_event(True)
-            if self.miss and not self.miss[-1].get('end'):
+            log.info(f"MISS: in({ipack}) < out({opack})")
+            self.notify_event(ongoing_miss=True)
+            # Start tracking the new packet loss with a start timestamp
+            if not self.miss or self.miss[-1].get('end'):
                 self.miss.append({'start': datetime.now()})
+                log.info(f"New packet loss detected at {datetime.now()}")
 
-    def notify_event(self, miss=False):
-        if self.event_notified_miss != miss:
+    def notify_event(self, ongoing_miss=False):
+        # Only notify if there's a change in the ongoing packet loss situation
+        if self.event_notified_miss != ongoing_miss:
             data = {}
             now = datetime.now()
             data['microtime'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
             data['time'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-            if miss:
+
+            # If we started losing packets
+            if ongoing_miss:
                 data['msg'] = ("Packet miss started")
                 data['reason'] = 'PacketDropped'
+            # If we recovered from the previously reported loss
             else:
                 data['msg'] = ("Packet miss recovered")
                 data['reason'] = 'PacketMatched'
+
             log.info("%s at %s" % (data['reason'], data['microtime']))
             Thread(target=trexevent.create_event, args=[data]).start()
-            self.event_notified_miss = miss
+
+            # Update the current status
+            self.event_notified_miss = ongoing_miss
 
 force_exit = False
 stats_period = os.getenv("STATS_PERIOD") or 5
@@ -122,8 +141,8 @@ def completed_stats(stats, warnings, port_a, port_b, profile, rate, duration):
     packets = stats[port_a]["opackets"] + stats[port_b]["opackets"]
     total_lost = lost * 100.0 / packets
 
-    log.info(f"\nPackets lost from {port_a} to {port_b}:   {lost_a} packets, which is {percentage_lost_a}% packet loss")
-    log.info(f"Packets lost from {port_b} to {port_a}:   {lost_b} packets, which is {percentage_lost_b}% packet loss")
+    log.info(f"\nPackets lost from {port_a} to {port_b}: {lost_a} packets, which is {percentage_lost_a}% packet loss")
+    log.info(f"Packets lost from {port_b} to {port_a}: {lost_b} packets, which is {percentage_lost_b}% packet loss")
     log.info(f"Total packets lost: {lost} packets, which is {total_lost}% packet loss")
 
     if warnings:

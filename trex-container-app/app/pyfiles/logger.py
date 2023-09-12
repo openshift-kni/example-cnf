@@ -8,7 +8,7 @@ log.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 fh = logging.FileHandler('/var/log/run-trex.log')
-fh.setLevel(logging.INFO)
+fh.setLevel(logging.DEBUG)
 fh.setFormatter(formatter)
 
 fhd = logging.FileHandler('/var/log/trex.log')
@@ -16,7 +16,8 @@ fhd.setLevel(logging.DEBUG)
 fhd.setFormatter(formatter)
 
 st = logging.StreamHandler()
-st.setLevel(logging.INFO)
+st.setLevel(logging.DEBUG)
+st.setFormatter(formatter)
 
 log.addHandler(fh)
 log.addHandler(fhd)
