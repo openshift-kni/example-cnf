@@ -66,8 +66,9 @@ jobs:
           OCP-4.10,
           OCP-4.11,
           OCP-4.12,
-          OCP-4.13
-          OCP-4.14
+          OCP-4.13,
+          OCP-4.14,
+          OCP-4.15
           '
           componentName: nfv-example-cnf-index
           componentVersion: v${{ needs.build_all.outputs.version }}
