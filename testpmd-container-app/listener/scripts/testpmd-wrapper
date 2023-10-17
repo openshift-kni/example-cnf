@@ -32,7 +32,7 @@ until [ "$n" -le 0 ]; do
     n=$((n - 1))
 done
 if [ $n -le 0 ]; then
-    echo "ERROR: TestPMD is not started, waiting to configure timedout..."
+    echo "ERROR: TestPMD is not started, waiting to configure timeout..."
     exit 1
 fi
 
