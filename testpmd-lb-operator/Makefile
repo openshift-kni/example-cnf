@@ -63,8 +63,14 @@ deploy: kustomize
 undeploy: kustomize
 	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} delete -f -
 
+# Ensure proper digests for testpmd-container-app-listener and testpmd-container-app-testpmd
+ensure_digests:
+	cp roles/loadbalancer/defaults/main.yml.in roles/loadbalancer/defaults/main.yml
+	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/testpmd-container-app-testpmd:$(TESTPMD_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/testpmd-container-app-testpmd@.*/testpmd-container-app-testpmd@$${DIGEST}\"   # $(TESTPMD_VER)/" roles/loadbalancer/defaults/main.yml
+	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/testpmd-container-app-listener:$(TESTPMD_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/testpmd-container-app-listener@.*/testpmd-container-app-listener@$${DIGEST}\"   # $(TESTPMD_VER)/" roles/loadbalancer/defaults/main.yml
+
 # Build the operator image
-operator-build:
+operator-build: ensure_digests
 	if [ -n "$(RELEASE)" ]; then \
 	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . -t ${IMG} -t $(REL_IMG) ;\
 	else \
