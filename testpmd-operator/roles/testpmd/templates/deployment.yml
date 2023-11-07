@@ -12,6 +12,9 @@ spec:
     metadata:
 {% if not skip_annot|bool %}
       annotations:
+{% if high_perf_runtime is defined %}
+        irq-load-balancing.crio.io: "disable"
+{% endif %}
         k8s.v1.cni.cncf.io/networks: '[
 {% for network in networks %}
 {% set outer_loop = loop %}
@@ -41,6 +44,9 @@ spec:
                 - lb-app
             topologyKey: kubernetes.io/hostname
       serviceAccountName: testpmd-operator-controller-manager
+{% if high_perf_runtime is defined %}
+      runtimeClassName: "{{ high_perf_runtime }}"
+{% endif %}
       containers:
       - name: testpmd
         command:
