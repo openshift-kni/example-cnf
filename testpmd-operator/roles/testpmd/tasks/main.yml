@@ -98,19 +98,6 @@
         - "ds_info.resources|length > 0"
         - "ds_info.resources[0].status.desiredNumberScheduled != ds_info.resources[0].status.numberReady"
 
-- name: Get all RuntimeClass
-  community.kubernetes.k8s_info:
-    api_version: node.k8s.io/v1
-    kind: RuntimeClass
-  register: rclass
-
-- name: Select High performance RuntimeClass
-  set_fact:
-    high_perf_runtime: "{{ rclass | json_query(query)}}"
-  vars:
-    query: "resources[?handler=='high-performance'].metadata.name"
-  when: rclass|length > 0
-
 - name: Create TestPMD deployment
   community.kubernetes.k8s:
     state: present
