@@ -11,7 +11,7 @@ CONTAINER_CLI    ?= podman
 CLUSTER_CLI      ?= oc
 OPERATOR_NAME    := testpmd-operator
 OPERATOR_SDK_VER ?= 1.31.0
-KUSTOMIZE_VER    := 3.5.4
+KUSTOMIZE_VER    := 5.0.1
 DPDK_VER         ?= v4.6.3
 TESTPMD_VER      ?= v$(shell bash -c '. ../versions.cfg; echo "$${VERSIONS[testpmd-container-app]}"')
 
