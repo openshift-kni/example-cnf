@@ -11,7 +11,7 @@ CONTAINER_CLI    ?= podman
 CLUSTER_CLI      ?= oc
 OPERATOR_NAME    := testpmd-lb-operator
 OPERATOR_SDK_VER ?= 1.31.0
-KUSTOMIZE_VER    := 5.0.1
+KUSTOMIZE_VER    := 3.5.4
 TESTPMD_VER      ?= v$(shell bash -c '. ../versions.cfg; echo "$${VERSIONS[testpmd-container-app]}"')
 
 # Default bundle image tag

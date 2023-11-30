@@ -11,7 +11,7 @@ CLUSTER_CLI      ?= oc
 OPERATOR_NAME    := cnf-app-mac-operator
 OPERATOR_SDK_VER ?= 1.31.0
 CONTROLLER_VER   := 0.4.1
-KUSTOMIZE_VER    := 5.0.1
+KUSTOMIZE_VER    := 3.8.7
 OS               = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH             = $(shell uname -m | sed 's/x86_64/amd64/')
 
