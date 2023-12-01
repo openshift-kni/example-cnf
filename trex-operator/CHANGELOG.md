@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.14] - 2023-12-04
+
+- Updated OperatorSDK to v1.32.0
+- Updated ansible requirements
+  - operator_sdk.util 0.5.0
+
+## [0.2.13] - 2023-06-02
+
+- Updates required for PR/PUSH Github actions
+
 ## [0.2.12] - 2023-02-01
 
 - Moved from beta-version events.k8s.io/v1beta1 to GA events.k8s.io/v1 because of v1beta1 deprecation in OCP-4.12
