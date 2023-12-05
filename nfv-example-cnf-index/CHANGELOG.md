@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.3.4] - 2023-06-02
+
+- Updates required for PR/PUSH Github actions
+
 ## [0.3.3] - 2023-02-01
 
 - Use a new trex-operator with the v1 version of the events API
