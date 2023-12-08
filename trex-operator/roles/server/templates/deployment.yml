@@ -53,6 +53,9 @@ spec:
 {% endif %}
             topologyKey: kubernetes.io/hostname
       serviceAccountName: trex-operator-controller-manager
+{% if numa_aware_topology is defined and numa_aware_topology | length %}
+      schedulerName: "{{ numa_aware_topology }}"
+{% endif %}
       containers:
 {% if trex_server|bool %}
       - name: trex-server

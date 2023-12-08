@@ -40,6 +40,9 @@ spec:
                 - pkt-gen
             topologyKey: kubernetes.io/hostname
       serviceAccountName: testpmd-lb-operator-controller-manager
+{% if numa_aware_topology is defined and numa_aware_topology | length %}
+      schedulerName: "{{ numa_aware_topology }}"
+{% endif %}
       containers:
       - name: loadbalancer
         command: ["testpmd-wrapper"]
