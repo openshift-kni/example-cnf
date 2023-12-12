@@ -55,15 +55,11 @@ jobs:
     steps:
       - name: Create DCI components
         id: dci
-        uses: dci-labs/dci-component@v1.0.1
+        uses: dci-labs/dci-component@v1
         with:
           dciClientId: ${{ secrets.DCI_CLIENT_ID }}
           dciApiSecret: ${{ secrets.DCI_API_SECRET }}
           dciTopics: '
-          OCP-4.7,
-          OCP-4.8,
-          OCP-4.9,
-          OCP-4.10,
           OCP-4.11,
           OCP-4.12,
           OCP-4.13,
@@ -75,3 +71,12 @@ jobs:
           componentVersion: v${{ needs.build_all.outputs.version }}
           componentData: '{"url":"${{ env.REGISTRY }}/rh-nfv-int/nfv-example-cnf-catalog"}'
           componentRelease: ga
+
+      - name: Results
+        run: |
+          echo "## DCI components" >> ${GITHUB_STEP_SUMMARY}
+          echo "" >> ${GITHUB_STEP_SUMMARY}
+          echo "\`\`\`JSON" >> ${GITHUB_STEP_SUMMARY}
+          <<<'${{ steps.dci.outputs.components }}' jq . | grep -v team_id >> ${GITHUB_STEP_SUMMARY}
+          echo "\`\`\`" >> ${GITHUB_STEP_SUMMARY}
+          echo "" >> ${GITHUB_STEP_SUMMARY}
