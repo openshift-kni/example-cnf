@@ -117,6 +117,7 @@ spec:
 {% for key, value in environments.items() %}
         - name: {{ key }}
           value: "{{ value }}"
+        terminationMessagePolicy: FallbackToLogsOnError
 {% endfor %}
       volumes:
       - name: hugepage

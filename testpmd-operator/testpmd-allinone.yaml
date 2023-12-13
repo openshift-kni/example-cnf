@@ -211,5 +211,6 @@ spec:
             port: 6789
           initialDelaySeconds: 5
           periodSeconds: 10
+        terminationMessagePolicy: FallbackToLogsOnError
       serviceAccountName: testpmd-operator-controller-manager
       terminationGracePeriodSeconds: 10

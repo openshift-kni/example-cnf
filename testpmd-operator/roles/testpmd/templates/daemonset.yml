@@ -27,6 +27,7 @@ spec:
         volumeMounts:
         - name: host-cni-bin
           mountPath: /hostbin
+        terminationMessagePolicy: FallbackToLogsOnError
       volumes:
       - name: host-cni-bin
         hostPath:
