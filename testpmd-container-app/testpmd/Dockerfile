@@ -1,7 +1,7 @@
 ## Build image
 FROM quay.io/centos/centos:stream8 as build
 
-ENV DPDK_VER=19.11
+ENV DPDK_VER=23.11
 ENV DPDK_DIR=/usr/src/dpdk-${DPDK_VER}
 ENV RTE_TARGET=x86_64-native-linuxapp-gcc
 ENV RTE_SDK=${DPDK_DIR}
