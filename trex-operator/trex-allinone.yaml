@@ -240,4 +240,5 @@ spec:
         image: jumphost.cluster5.dfwt5g.lab:5000/nfv-example-cnf/trex-operator:v0.1.0
         imagePullPolicy: Always
         name: manager
+        terminationMessagePolicy: FallbackToLogsOnError
       terminationGracePeriodSeconds: 10

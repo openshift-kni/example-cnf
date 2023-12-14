@@ -56,6 +56,7 @@ spec:
         - name: PACKET_RATE
           value: "{{ packet_rate }}"
 {% endif %}
+        terminationMessagePolicy: FallbackToLogsOnError
       volumes:
       - name: varlog
         emptyDir: {}

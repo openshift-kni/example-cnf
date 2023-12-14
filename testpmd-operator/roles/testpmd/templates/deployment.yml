@@ -118,6 +118,7 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+        terminationMessagePolicy: FallbackToLogsOnError
       volumes:
       - name: hugepage
         emptyDir:

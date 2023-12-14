@@ -113,6 +113,7 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+        terminationMessagePolicy: FallbackToLogsOnError
       - name: listener
         image: "{{ image_listener }}"
         imagePullPolicy: "{{ image_pull_policy }}"
@@ -146,6 +147,7 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+        terminationMessagePolicy: FallbackToLogsOnError
       volumes:
       - name: hugepage
         emptyDir:

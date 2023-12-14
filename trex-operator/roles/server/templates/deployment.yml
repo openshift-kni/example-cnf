@@ -104,6 +104,7 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+        terminationMessagePolicy: FallbackToLogsOnError
 {% endif %}
 {% if trex_app|bool %}
       - name: trex-app
@@ -130,6 +131,7 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+        terminationMessagePolicy: FallbackToLogsOnError
 {% endif %}
       volumes:
       - name: hugepage
