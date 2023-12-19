@@ -12,7 +12,7 @@ CLUSTER_CLI      ?= oc
 OPERATOR_NAME    := testpmd-operator
 OPERATOR_SDK_VER ?= 1.32.0
 KUSTOMIZE_VER    := 3.5.4
-DPDK_VER         ?= v4.6.3
+# TESTPMD_VER determines the DPDK version to use
 TESTPMD_VER      ?= v$(shell bash -c '. ../versions.cfg; echo "$${VERSIONS[testpmd-container-app]}"')
 
 # Default bundle image tag
@@ -135,7 +135,6 @@ bundle: kustomize operator-sdk
 	DIGEST=$$(skopeo inspect docker://$(IMG) | jq -r '.Digest') && [ -n "$${DIGEST}" ] && sed -i -e 's/\(\s*image: .*\):v'$(TAG)'/\1@'$${DIGEST}'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	sed -i -e '/^# Copy.*/i LABEL com.redhat.openshift.versions="v4.6"\nLABEL com.redhat.delivery.backport=false\nLABEL com.redhat.delivery.operator.bundle=true' bundle.Dockerfile
 	cp relatedImages.yaml.in relatedImages.yaml
-#	DIGEST=$$(skopeo inspect docker://registry.redhat.io/openshift4/dpdk-base-rhel8:$(DPDK_VER)|jq -r .Digest) && [ -n "$$DIGEST" ] && sed -i -e "s/dpdk-base-rhel8@.*/dpdk-base-rhel8@$${DIGEST}\"  # $(DPDK_VER)/" relatedImages.yaml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/testpmd-container-app-mac:$(TESTPMD_VER)|jq -r .Digest) && [ -n "$DIGEST" ] && sed -i -e "s/testpmd-container-app-mac@.*/testpmd-container-app-mac@$${DIGEST}\"   # $(TESTPMD_VER)/" relatedImages.yaml
 	cat relatedImages.yaml >> bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	$(OPERATOR_SDK) bundle validate ./bundle
