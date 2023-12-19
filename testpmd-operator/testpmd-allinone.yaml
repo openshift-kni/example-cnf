@@ -205,19 +205,14 @@ spec:
           preStop:
             exec:
               command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 6789
-          initialDelaySeconds: 15
-          periodSeconds: 20
         name: manager
-        readinessProbe:
-          httpGet:
-            path: /readyz
-            port: 6789
-          initialDelaySeconds: 5
-          periodSeconds: 10
         terminationMessagePolicy: FallbackToLogsOnError
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "killall -0 tail"]
       serviceAccountName: testpmd-operator-controller-manager
       terminationGracePeriodSeconds: 10

@@ -104,6 +104,7 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+<<<<<<< HEAD
         lifecycle:
           postStart:
             exec:
@@ -111,8 +112,34 @@ spec:
           preStop:
             exec:
               command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
+=======
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 6789
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 6789
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /startupz
+            port: 6789
+          initialDelaySeconds: 5
+          periodSeconds: 10
+>>>>>>> b0a6bdf (Fix tests related to lifecycle and probe specs for pods under test)
         terminationMessagePolicy: FallbackToLogsOnError
-{% endif %}
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "killall -0 tail"]{% endif %}
 {% if trex_app|bool %}
       - name: trex-app
         image: "{{ image_app }}"
@@ -138,6 +165,7 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+<<<<<<< HEAD
         lifecycle:
           postStart:
             exec:
@@ -145,8 +173,34 @@ spec:
           preStop:
             exec:
               command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
+=======
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 6789
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 6789
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /startupz
+            port: 6789
+          initialDelaySeconds: 5
+          periodSeconds: 10
+>>>>>>> b0a6bdf (Fix tests related to lifecycle and probe specs for pods under test)
         terminationMessagePolicy: FallbackToLogsOnError
-{% endif %}
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "killall -0 tail"]{% endif %}
       volumes:
       - name: hugepage
         emptyDir:

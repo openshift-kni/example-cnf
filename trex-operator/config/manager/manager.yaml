@@ -43,6 +43,19 @@ spec:
               port: 6789
             initialDelaySeconds: 5
             periodSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /startupz
+              port: 6789
+            initialDelaySeconds: 5
+            periodSeconds: 10
           terminationMessagePolicy: FallbackToLogsOnError
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "killall -0 tail"]
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10

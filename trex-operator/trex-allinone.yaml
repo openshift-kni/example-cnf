@@ -248,4 +248,10 @@ spec:
             exec:
               command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
         terminationMessagePolicy: FallbackToLogsOnError
-      terminationGracePeriodSeconds: 10
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "killall -0 tail"]      terminationGracePeriodSeconds: 10
