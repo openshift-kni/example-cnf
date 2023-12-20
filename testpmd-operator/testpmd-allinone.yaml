@@ -207,12 +207,5 @@ spec:
               command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
         name: manager
         terminationMessagePolicy: FallbackToLogsOnError
-        lifecycle:
-          postStart:
-            exec:
-              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
-          preStop:
-            exec:
-              command: ["/bin/sh", "-c", "killall -0 tail"]
       serviceAccountName: testpmd-operator-controller-manager
       terminationGracePeriodSeconds: 10

@@ -121,13 +121,6 @@ spec:
             exec:
               command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
         terminationMessagePolicy: FallbackToLogsOnError
-        lifecycle:
-          postStart:
-            exec:
-              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
-          preStop:
-            exec:
-              command: ["/bin/sh", "-c", "killall -0 tail"]
       - name: listener
         image: "{{ image_listener }}"
         imagePullPolicy: "{{ image_pull_policy }}"
@@ -168,14 +161,28 @@ spec:
           preStop:
             exec:
               command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
+<<<<<<< HEAD
+=======
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 6789
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 6789
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /startupz
+            port: 6789
+          initialDelaySeconds: 5
+          periodSeconds: 10
+>>>>>>> a8a4019 (Reorder specs and fix some minor issues)
         terminationMessagePolicy: FallbackToLogsOnError
-        lifecycle:
-          postStart:
-            exec:
-              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
-          preStop:
-            exec:
-              command: ["/bin/sh", "-c", "killall -0 tail"]
       volumes:
       - name: hugepage
         emptyDir:
