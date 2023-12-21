@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.12] - 2023-12-21
+
+- Updated OperatorSDK to v1.33.0
+
 ## [0.2.11] - 2023-12-04
 
 - Updated OperatorSDK to v1.32.0
