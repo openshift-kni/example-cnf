@@ -138,10 +138,6 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> a8a4019 (Reorder specs and fix some minor issues)
         lifecycle:
           postStart:
             exec:
@@ -149,29 +145,6 @@ spec:
           preStop:
             exec:
               command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
-<<<<<<< HEAD
-=======
-=======
->>>>>>> a8a4019 (Reorder specs and fix some minor issues)
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 6789
-          initialDelaySeconds: 15
-          periodSeconds: 20
-        readinessProbe:
-          httpGet:
-            path: /readyz
-            port: 6789
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        startupProbe:
-          httpGet:
-            path: /startupz
-            port: 6789
-          initialDelaySeconds: 5
-          periodSeconds: 10
->>>>>>> b0a6bdf (Fix tests related to lifecycle and probe specs for pods under test)
         terminationMessagePolicy: FallbackToLogsOnError
 {% endif %}
       volumes:
