@@ -2,7 +2,7 @@ SHELL            := /bin/bash
 DATE             ?= $(shell date --utc +%Y%m%d%H%M)
 SHA              ?= $(shell git rev-parse --short HEAD)
 # Current Operator version
-VERSION          := 0.2.11
+VERSION          := 0.2.12
 TAG              := $(VERSION)-$(DATE).$(SHA)
 REGISTRY         ?= quay.io
 ORG              ?= rh-nfv-int
@@ -10,8 +10,8 @@ DEFAULT_CHANNEL  ?= alpha
 CONTAINER_CLI    ?= podman
 CLUSTER_CLI      ?= oc
 OPERATOR_NAME    := testpmd-lb-operator
-OPERATOR_SDK_VER ?= 1.32.0
-KUSTOMIZE_VER    := 3.5.4
+OPERATOR_SDK_VER ?= 1.33.0
+KUSTOMIZE_VER    := 5.0.1
 TESTPMD_VER      ?= v$(shell bash -c '. ../versions.cfg; echo "$${VERSIONS[testpmd-container-app]}"')
 
 # Default bundle image tag

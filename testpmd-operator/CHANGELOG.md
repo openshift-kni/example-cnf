@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.12] - 2023-12-22
+
+- Updated OperatorSDK to v1.33.0
+- Updated Kustomize to v5.0.1
+
 ## [0.2.11] - 2023-12-04
 
 - Updated OperatorSDK to v1.32.0
