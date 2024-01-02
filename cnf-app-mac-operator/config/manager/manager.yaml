@@ -23,6 +23,8 @@ spec:
         image: controller:latest
         imagePullPolicy: Always
         name: manager
+        ports:
+        - containerPort: 8095
         resources:
           limits:
             cpu: 100m
@@ -51,12 +53,19 @@ spec:
         readinessProbe:
           httpGet:
             path: /readyz
+          tcpSocket:
+            port: 8095
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          tcpSocket:
             port: 8095
           initialDelaySeconds: 5
           periodSeconds: 10
         startupProbe:
           httpGet:
             path: /startz
+          tcpSocket:
             port: 8095
           initialDelaySeconds: 30
           periodSeconds: 10
