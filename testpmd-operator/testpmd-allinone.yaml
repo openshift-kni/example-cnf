@@ -198,6 +198,13 @@ spec:
           value: explicit
         image: quay.io/rh-nfv-int/testpmd-operator:v0.2.4
         imagePullPolicy: IfNotPresent
+        lifecycle:
+          postStart:
+            exec:
+              command: ["echo Hello from the postStart handler"]
+          preStop:
+            exec:
+              command: ["echo Hello from the preStop handler"]
         livenessProbe:
           httpGet:
             path: /healthz

@@ -27,6 +27,13 @@ spec:
         volumeMounts:
         - name: host-cni-bin
           mountPath: /hostbin
+        lifecycle:
+          postStart:
+            exec:
+              command: ["echo Hello from the postStart handler"]
+          preStop:
+            exec:
+              command: ["echo Hello from the preStop handler"]
         terminationMessagePolicy: FallbackToLogsOnError
       volumes:
       - name: host-cni-bin

@@ -118,6 +118,13 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+        lifecycle:
+          postStart:
+            exec:
+              command: ["echo Hello from the postStart handler"]
+          preStop:
+            exec:
+              command: ["echo Hello from the preStop handler"]
         terminationMessagePolicy: FallbackToLogsOnError
       volumes:
       - name: hugepage
