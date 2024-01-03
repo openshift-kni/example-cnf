@@ -35,12 +35,5 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        lifecycle:
-          postStart:
-            exec:
-              command: ["echo Hello from the postStart handler"]
-          preStop:
-            exec:
-              command: ["echo Hello from the preStop handler"]
         terminationMessagePolicy: FallbackToLogsOnError
       terminationGracePeriodSeconds: 10
