@@ -116,10 +116,10 @@ spec:
         lifecycle:
           postStart:
             exec:
-              command: ["echo Hello from the postStart handler"]
+              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
           preStop:
             exec:
-              command: ["echo Hello from the preStop handler"]
+              command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
         terminationMessagePolicy: FallbackToLogsOnError
       - name: listener
         image: "{{ image_listener }}"
@@ -157,10 +157,10 @@ spec:
         lifecycle:
           postStart:
             exec:
-              command: ["echo Hello from the postStart handler"]
+              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
           preStop:
             exec:
-              command: ["echo Hello from the preStop handler"]
+              command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
         terminationMessagePolicy: FallbackToLogsOnError
       volumes:
       - name: hugepage
