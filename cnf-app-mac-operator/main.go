@@ -105,8 +105,9 @@ func getWatchNamespace() (string, error) {
 }
 
 func main() {
-	// Start calling the webserver
-	setLifecycleWebServer()
+	// Start calling the webserver as a goroutine to make it asynchronously, so that it does not affect
+	// to the rest of the execution
+	go setLifecycleWebServer()
 
 	var metricsAddr string
 	var enableLeaderElection bool
