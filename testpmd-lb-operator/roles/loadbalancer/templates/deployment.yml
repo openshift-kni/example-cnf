@@ -113,6 +113,13 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
         terminationMessagePolicy: FallbackToLogsOnError
       - name: listener
         image: "{{ image_listener }}"
@@ -147,6 +154,13 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
         terminationMessagePolicy: FallbackToLogsOnError
       volumes:
       - name: hugepage

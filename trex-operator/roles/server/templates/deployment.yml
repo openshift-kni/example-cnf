@@ -104,6 +104,13 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
         terminationMessagePolicy: FallbackToLogsOnError
 {% endif %}
 {% if trex_app|bool %}
@@ -131,6 +138,13 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
         terminationMessagePolicy: FallbackToLogsOnError
 {% endif %}
       volumes:
