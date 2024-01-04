@@ -35,5 +35,34 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        # lifecycle admits not only `exec`, but also `httpGet`:
+        # https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#hook-handler-implementations
+        lifecycle:
+          postStart:
+            httpGet:
+              path: /poststartz
+              port: 8095
+          preStop:
+            httpGet:
+              path: /prestopz
+              port: 8095
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8095
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8095
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /startz
+            port: 8095
+          initialDelaySeconds: 5
+          periodSeconds: 10
         terminationMessagePolicy: FallbackToLogsOnError
       terminationGracePeriodSeconds: 10
