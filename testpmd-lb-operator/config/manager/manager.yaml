@@ -31,6 +31,13 @@ spec:
             - name: ANSIBLE_GATHERING
               value: explicit
           image: controller:latest
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
           livenessProbe:
             httpGet:
               path: /healthz
@@ -43,9 +50,11 @@ spec:
               port: 6789
             initialDelaySeconds: 5
             periodSeconds: 10
+          # operator-sdk is not implementing startup probe up to now, using liveness probe endpoint
+          # while this feature is developed
           startupProbe:
             httpGet:
-              path: /startupz
+              path: /healthz
               port: 6789
             initialDelaySeconds: 5
             periodSeconds: 10
