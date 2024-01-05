@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -45,6 +46,50 @@ func init() {
 	// +kubebuilder:scaffold:scheme
 }
 
+func setLifecycleWebServer() {
+	setupLog.Info("configure webserver")
+
+	// Liveness Probe handler
+	http.HandleFunc("/healthz", func(rw http.ResponseWriter, r *http.Request) {
+		fmt.Println("query received to check liveness")
+		rw.WriteHeader(200)
+		rw.Write([]byte("ok"))
+	})
+	// Readiness Probe handler
+	http.HandleFunc("/readyz", func(rw http.ResponseWriter, r *http.Request) {
+		fmt.Println("query received to check readiness")
+		rw.WriteHeader(200)
+		rw.Write([]byte("ok"))
+	})
+	// Startup Probe handler
+	http.HandleFunc("/startz", func(rw http.ResponseWriter, r *http.Request) {
+		fmt.Println("query received to check startup")
+		rw.WriteHeader(200)
+		rw.Write([]byte("ok"))
+	})
+
+	// Lifecycle postStart handler
+	http.HandleFunc("/poststartz", func(rw http.ResponseWriter, r *http.Request) {
+		fmt.Println("query received to check postStart")
+		rw.WriteHeader(200)
+		rw.Write([]byte("ok"))
+	})
+	// Lifecycle preStop handler
+	http.HandleFunc("/prestopz", func(rw http.ResponseWriter, r *http.Request) {
+		fmt.Println("query received to check preStop")
+		rw.WriteHeader(200)
+		rw.Write([]byte("ok"))
+	})
+
+	setupLog.Info("try to start webserver")
+	// Launch web server on port 8095
+	err := http.ListenAndServe(":8095", nil)
+	if err != nil {
+		setupLog.Error(err, "unable to start webserver")
+		os.Exit(1)
+	}
+}
+
 // getWatchNamespace returns the Namespace the operator should be watching for changes
 func getWatchNamespace() (string, error) {
 	// WatchNamespaceEnvVar is the constant for env variable WATCH_NAMESPACE
@@ -60,6 +105,10 @@ func getWatchNamespace() (string, error) {
 }
 
 func main() {
+	// Start calling the webserver as a goroutine to make it asynchronously, so that it does not affect
+	// to the rest of the execution
+	go setLifecycleWebServer()
+
 	var metricsAddr string
 	var enableLeaderElection bool
 	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")

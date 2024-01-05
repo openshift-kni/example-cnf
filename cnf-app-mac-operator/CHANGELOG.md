@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.13] - 2024-01-05
+
+- Implement webserver to handle lifecycle and probe requests
+
 ## [0.2.12] - 2023-12-22
 
 - Updated OperatorSDK to v1.33.0
