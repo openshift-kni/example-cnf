@@ -106,11 +106,9 @@ func waitUntilLifecycleWebServerIsReady() {
 			setupLog.Error(err, "error making http request")
 			os.Exit(1)
 		}
-		else {
-			if res.StatusCode == http.StatusOK {
-				setupLog.Info("webserver is ready")
-				break
-			}
+		if res.StatusCode == http.StatusOK {
+			setupLog.Info("webserver is ready")
+			break
 		}
 	}
 }
