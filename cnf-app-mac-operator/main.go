@@ -87,8 +87,8 @@ func waitUntilLifecycleWebServerIsReady() {
 		// Each retry will be made after 100 ms
 		time.Sleep(100 * time.Millisecond)
 
-		// Check liveness probe for this case
-		res, err := http.Get("http://localhost:8080/health")
+		// Check startup probe for this case
+		res, err := http.Get("http://localhost:8095/startz")
 		if err != nil {
 			setupLog.Error(err, "error making http request")
 			os.Exit(1)

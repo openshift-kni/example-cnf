@@ -42,23 +42,23 @@ spec:
           preStop:
             exec:
               command: ["/busybox/sh", "-c", "echo Hello from the preStop handler"]
-#        livenessProbe:
-#          httpGet:
-#            path: /healthz
-#            port: 8095
-#          initialDelaySeconds: 5
-#          periodSeconds: 10
-#        readinessProbe:
-#          httpGet:
-#            path: /readyz
-#            port: 8095
-#          initialDelaySeconds: 5
-#          periodSeconds: 10
-#        startupProbe:
-#          httpGet:
-#            path: /startz
-#            port: 8095
-#          initialDelaySeconds: 5
-#          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8095
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8095
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /startz
+            port: 8095
+          initialDelaySeconds: 30
+          periodSeconds: 10
         terminationMessagePolicy: FallbackToLogsOnError
       terminationGracePeriodSeconds: 10
