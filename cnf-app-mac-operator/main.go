@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -32,6 +33,10 @@ import (
 	examplecnfv1 "github.com/rh-nfv-int/cnf-app-mac-operator/api/v1"
 	"github.com/rh-nfv-int/cnf-app-mac-operator/controllers"
 	// +kubebuilder:scaffold:imports
+)
+
+const (
+  MAX_RETRIES_WEBSERVER_CHECK = 50
 )
 
 var (
@@ -51,32 +56,19 @@ func setLifecycleWebServer() {
 
 	// Liveness Probe handler
 	http.HandleFunc("/healthz", func(rw http.ResponseWriter, r *http.Request) {
-		fmt.Println("query received to check liveness")
+		setupLog.Info("query received to check liveness")
 		rw.WriteHeader(200)
 		rw.Write([]byte("ok"))
 	})
 	// Readiness Probe handler
 	http.HandleFunc("/readyz", func(rw http.ResponseWriter, r *http.Request) {
-		fmt.Println("query received to check readiness")
+		setupLog.Info("query received to check readiness")
 		rw.WriteHeader(200)
 		rw.Write([]byte("ok"))
 	})
 	// Startup Probe handler
 	http.HandleFunc("/startz", func(rw http.ResponseWriter, r *http.Request) {
-		fmt.Println("query received to check startup")
-		rw.WriteHeader(200)
-		rw.Write([]byte("ok"))
-	})
-
-	// Lifecycle postStart handler
-	http.HandleFunc("/poststartz", func(rw http.ResponseWriter, r *http.Request) {
-		fmt.Println("query received to check postStart")
-		rw.WriteHeader(200)
-		rw.Write([]byte("ok"))
-	})
-	// Lifecycle preStop handler
-	http.HandleFunc("/prestopz", func(rw http.ResponseWriter, r *http.Request) {
-		fmt.Println("query received to check preStop")
+		setupLog.Info("query received to check startup")
 		rw.WriteHeader(200)
 		rw.Write([]byte("ok"))
 	})
@@ -87,6 +79,24 @@ func setLifecycleWebServer() {
 	if err != nil {
 		setupLog.Error(err, "unable to start webserver")
 		os.Exit(1)
+	}
+}
+
+func waitUntilLifecycleWebServerIsReady() {
+	for retries := 0; retries < MAX_RETRIES_WEBSERVER_CHECK; retries++ {
+		// Each retry will be made after 100 ms
+		time.Sleep(100 * time.Millisecond)
+
+		// Check startup probe for this case
+		res, err := http.Get("http://localhost:8095/startz")
+		if err != nil {
+			setupLog.Error(err, "error making http request")
+			os.Exit(1)
+		}
+		if res.StatusCode == http.StatusOK {
+			setupLog.Info("webserver is ready")
+			break
+		}
 	}
 }
 
@@ -108,6 +118,10 @@ func main() {
 	// Start calling the webserver as a goroutine to make it asynchronously, so that it does not affect
 	// to the rest of the execution
 	go setLifecycleWebServer()
+
+	// We need to wait until the webserver is ready before proceeding with the rest of the configuration
+	// This call must be synchronous
+	waitUntilLifecycleWebServerIsReady()
 
 	var metricsAddr string
 	var enableLeaderElection bool
