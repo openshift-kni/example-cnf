@@ -73,6 +73,19 @@ func setLifecycleWebServer() {
 		rw.Write([]byte("ok"))
 	})
 
+	// Lifecycle postStart handler
+	http.HandleFunc("/poststartz", func(rw http.ResponseWriter, r *http.Request) {
+		setupLog.Info("query received to check postStart")
+		rw.WriteHeader(200)
+		rw.Write([]byte("ok"))
+	})
+	// Lifecycle preStop handler
+	http.HandleFunc("/prestopz", func(rw http.ResponseWriter, r *http.Request) {
+		setupLog.Info("query received to check preStop")
+		rw.WriteHeader(200)
+		rw.Write([]byte("ok"))
+	})
+
 	setupLog.Info("try to start webserver")
 	// Launch web server on port 8095
 	err := http.ListenAndServe(":8095", nil)
