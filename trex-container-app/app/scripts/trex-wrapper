@@ -2,6 +2,9 @@
 
 set -ex
 
+# Start lifecycle webserver in background
+python3 /usr/local/bin/webserver &
+
 # Define the function to add timestamp to log entries
 echo_ts() {
   echo "$(date -u +"%Y-%m-%dT%H:%M:%S%z") $@"

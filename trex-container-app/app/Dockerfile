@@ -11,10 +11,14 @@ RUN mkdir -p /opt/trex && cd /opt/trex && git clone --branch ${TREX_VER}  ${TREX
 RUN cd /opt && git clone  ${TRAFFICGEN_REPO}
 RUN pip3 install pyyaml kubernetes
 
+# Dependencies for lifecycle webserver
+RUN pip3 install Flask waitress
+
 ENV PYTHONPATH="/opt/trex/trex-core/scripts/automation/trex_control_plane/interactive"
 ENV TREX_DIR="/opt/trex/trex-core/scripts"
 ENV TRAFFICGEN_DIR="/opt/trafficgen"
 
 COPY scripts /usr/local/bin/
+RUN chmod +x /usr/local/bin/webserver
 COPY pyfiles /opt/pyfiles/
 ENTRYPOINT ["trex-wrapper"]

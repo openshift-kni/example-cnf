@@ -2,6 +2,9 @@
 
 set -ex
 
+# Start lifecycle webserver in background
+python3 /usr/local/bin/webserver &
+
 RUN_APP=${run_app:=1}
 
 LOG_FILE="/var/log/testpmd/app.log"

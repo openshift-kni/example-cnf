@@ -111,6 +111,24 @@ spec:
           preStop:
             exec:
               command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8096
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8096
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /startz
+            port: 8096
+          initialDelaySeconds: 30
+          periodSeconds: 10
         terminationMessagePolicy: FallbackToLogsOnError
 {% endif %}
 {% if trex_app|bool %}
@@ -145,6 +163,24 @@ spec:
           preStop:
             exec:
               command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8095
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8095
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /startz
+            port: 8095
+          initialDelaySeconds: 30
+          periodSeconds: 10
         terminationMessagePolicy: FallbackToLogsOnError
 {% endif %}
       volumes:

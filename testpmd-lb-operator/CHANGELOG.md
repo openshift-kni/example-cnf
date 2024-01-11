@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.13] - 2023-01-12
+
+- Lifecycle webserver included in container images consumed from testpmd-container-app to cover CNF Certification requirements for liveness, readiness and startup probes
+
 ## [0.2.12] - 2023-12-22
 
 - Updated OperatorSDK to v1.33.0

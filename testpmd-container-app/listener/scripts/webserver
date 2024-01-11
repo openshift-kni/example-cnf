@@ -1,0 +1,37 @@
+import logging
+from flask import Flask
+from waitress import serve
+
+app = Flask(__name__)
+logger = logging.getLogger(__name__)
+
+@app.route('/healthz', methods=['GET'])
+def healthz():
+    logger.info("GET /healthz - query received to check liveness")
+    return 'query received to check liveness', 200
+
+@app.route('/readyz', methods=['GET'])
+def readyz():
+    logger.info("GET /readyz - query received to check readiness")
+    return 'query received to check readiness', 200
+
+@app.route('/startz', methods=['GET'])
+def startz():
+    logger.info("GET /startz - query received to check startup")
+    return 'query received to check startup', 200
+
+if __name__ == "__main__":
+    # Set up logging to file
+    logging.basicConfig(
+        filename='/var/log/lifecycle_probes_webserver.log',
+        level=logging.INFO, 
+        format= '[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
+        datefmt='%H:%M:%S'
+    )
+
+    # Start logger
+    logger = logging.getLogger(__name__)
+
+    # Start webserver
+    logger.info("Serving LifecycleProbesWebserver on port 8096")
+    serve(app, host='0.0.0.0', port='8096')

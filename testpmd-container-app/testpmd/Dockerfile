@@ -49,7 +49,11 @@ RUN dnf install -y \
     tcpdump \
     && dnf clean all
 
+# Dependencies for lifecycle webserver
+RUN pip3 install Flask waitress
+
 # copy testpmd runtime cmdline file
 COPY testpmd-runtime-cmds.txt /root/testpmd-runtime-cmds.txt
 COPY scripts /usr/local/bin
+RUN chmod +x /usr/local/bin/webserver
 COPY --from=build /usr/local/bin/testpmd /usr/local/bin/testpmd

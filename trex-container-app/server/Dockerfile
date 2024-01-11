@@ -18,8 +18,12 @@ RUN cd /opt/trex/trex-core/linux_dpdk && \
 RUN cd /opt && git clone ${TRAFFICGEN_REPO}
 RUN pip3 install kubernetes
 
+# Dependencies for lifecycle webserver
+RUN pip3 install Flask waitress
+
 ENV PYTHONPATH="/opt/trex/trex-core/scripts/automation/trex_control_plane/interactive"
 WORKDIR /opt/trex/trex-core/scripts
 ENV TREX_DIR="/opt/trex/trex-core/scripts"
 ENV TRAFFICGEN_DIR="/opt/trafficgen"
 COPY scripts /usr/local/bin/
+RUN chmod +x /usr/local/bin/webserver
