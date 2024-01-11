@@ -8,6 +8,8 @@ network_defintions: ""
 network_resources: {}
 environments: {}
 image_testpmd: "registry.redhat.io/openshift4/dpdk-base-rhel8@sha256:dccbad0b74151eb62bdd1ed9a1ec2d2588acc01db7cc126981795c8315bb678b"  # v4.14
+# this image is not hardcoded - it is replaced by the testpmd-operator Makefile launched by the Github actions defined for this repo
+# https://github.com/openshift-kni/example-cnf/blob/main/testpmd-operator/Makefile - See "ensure_digests" task
 mac_workaround_image: "quay.io/rh-nfv-int/testpmd-container-app-mac@sha256:0a516a6f646989cb1abe77696b19838ff6138f177b1e4df6970b7bc8938552df" # v0.2.3
 
 # mac workaround variables

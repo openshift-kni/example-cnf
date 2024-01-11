@@ -1,3 +1,5 @@
+# these two images are not hardcoded - they are replaced by the testpmd-lb-operator Makefile launched by the Github actions defined for this repo
+# https://github.com/openshift-kni/example-cnf/blob/main/testpmd-lb-operator/Makefile - See "bundle" task
   relatedImages:
     - name: testpmd-container-app-testpmd
       image: "quay.io/rh-nfv-int/testpmd-container-app-testpmd@sha256:eca74e7cb50612e38a7712450ed123a7ed49f305b88f5e3b59d6368394535603"  # v0.2.3
