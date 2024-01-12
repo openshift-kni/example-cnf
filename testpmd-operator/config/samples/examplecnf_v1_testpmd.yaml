@@ -3,7 +3,7 @@ kind: TestPMD
 metadata:
   name: testpmd-sample
 spec:
-  image_testpmd: registry.redhat.io/openshift4/dpdk-base-rhel8:v4.14
+  image_testpmd: registry.redhat.io/openshift4/dpdk-base-rhel8:v4.6.3-8
   size: 1
   ethpeerMaclist: ["20:04:0f:f1:89:01","20:04:0f:f1:89:02"]
   networks:
