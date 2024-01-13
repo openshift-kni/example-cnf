@@ -1,4 +1,4 @@
-FROM registry.redhat.io/openshift4/dpdk-base-rhel8:v4.14
+FROM registry.redhat.io/openshift4/dpdk-base-rhel8:v4.6.3-8
 
 MAINTAINER skramaja@redhat.com
 
