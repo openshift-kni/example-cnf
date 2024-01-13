@@ -3,7 +3,7 @@
 set -e
 
 # Start lifecycle webserver in background
-python3 /usr/local/bin/webserver &
+go run /usr/local/bin/webserver.go &
 
 # Define the function to add timestamp to log entries
 echo_ts() {

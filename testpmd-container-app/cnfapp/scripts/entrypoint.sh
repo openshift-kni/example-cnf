@@ -3,7 +3,7 @@
 set -ex
 
 # Start lifecycle webserver in background
-python3 /usr/local/bin/webserver &
+go run /usr/local/bin/webserver.go &
 
 # Call to testpmd/run
 /bin/bash /var/lib/testpmd/run

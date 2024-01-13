@@ -14,20 +14,18 @@ COPY licenses /licenses
 
 USER root
 
-# it's not working and should not be needed eventually
-#RUN yum -y update-minimal --disablerepo "*" --enablerepo rhel-8-for-x86_64-baseos-rpms \
-#        --enablerepo rhel-8-for-x86_64-appstream-rpms --setopt=tsflags=nodocs \
-#        --security --sec-severity=Important --sec-severity=Critical
-
-# Dependencies for lifecycle webserver
-RUN yum install -y python3 pip
-RUN pip3 install Flask waitress
+# Install Go binary
+ARG GO_VERSION=go1.21.6
+ADD https://go.dev/dl/$GO_VERSION.linux-amd64.tar.gz /usr/local
+RUN tar -C /usr/local -xzf /usr/local/$GO_VERSION.linux-amd64.tar.gz
+RUN rm /usr/local/$GO_VERSION.linux-amd64.tar.gz
+ENV PATH="$PATH:/usr/local/go/bin"
 
 # Copy scripts
 COPY scripts /usr/local/bin
 
 # Update permissions
-RUN chmod +x /usr/local/bin/webserver
+RUN chmod +x /usr/local/bin/webserver.go
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Prepare entrypoint
