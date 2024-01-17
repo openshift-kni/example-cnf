@@ -3,7 +3,7 @@
 set -e
 
 # Start lifecycle webserver in background
-go run /usr/local/bin/webserver.go &
+/bin/bash /usr/local/bin/webserver 8096 &
 
 # Define the function to add timestamp to log entries
 echo_ts() {

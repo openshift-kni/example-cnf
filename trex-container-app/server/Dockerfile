@@ -1,3 +1,10 @@
+FROM docker.io/library/golang:1.21 as build
+
+WORKDIR /scripts
+COPY scripts/webserver.go .
+RUN go mod init webserver.go
+RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
+
 FROM quay.io/centos/centos:stream8
 
 ENV TREX_VER v2.85
@@ -18,16 +25,13 @@ RUN cd /opt/trex/trex-core/linux_dpdk && \
 RUN cd /opt && git clone ${TRAFFICGEN_REPO}
 RUN pip3 install kubernetes
 
-# Install Go binary
-ARG GO_VERSION=go1.21.6
-ADD https://go.dev/dl/$GO_VERSION.linux-amd64.tar.gz /usr/local
-RUN tar -C /usr/local -xzf /usr/local/$GO_VERSION.linux-amd64.tar.gz
-RUN rm /usr/local/$GO_VERSION.linux-amd64.tar.gz
-ENV PATH="$PATH:/usr/local/go/bin"
-
 ENV PYTHONPATH="/opt/trex/trex-core/scripts/automation/trex_control_plane/interactive"
 WORKDIR /opt/trex/trex-core/scripts
 ENV TREX_DIR="/opt/trex/trex-core/scripts"
 ENV TRAFFICGEN_DIR="/opt/trafficgen"
-COPY scripts /usr/local/bin/
-RUN chmod +x /usr/local/bin/webserver.go
+
+# Copy scripts
+COPY scripts /usr/local/bin
+COPY --from=build /scripts/webserver /usr/local/bin/
+
+RUN chmod +x /usr/local/bin/webserver

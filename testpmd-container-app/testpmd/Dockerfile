@@ -35,6 +35,14 @@ RUN cd ${DPDK_DIR}/app && patch -p2 < /usr/src/dpdk-${DPDK_VER}-lb.patch && \
     make -j $(nproc) && \
     cp testpmd /usr/local/bin
 
+# Image to build webserver
+FROM docker.io/library/golang:1.21 as build2
+
+WORKDIR /scripts
+COPY scripts/webserver.go .
+RUN go mod init webserver.go
+RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
+
 ## testpmd image
 FROM quay.io/centos/centos:stream8
 
@@ -49,15 +57,14 @@ RUN dnf install -y \
     tcpdump \
     && dnf clean all
 
-# Install Go binary
-ARG GO_VERSION=go1.21.6
-ADD https://go.dev/dl/$GO_VERSION.linux-amd64.tar.gz /usr/local
-RUN tar -C /usr/local -xzf /usr/local/$GO_VERSION.linux-amd64.tar.gz
-RUN rm /usr/local/$GO_VERSION.linux-amd64.tar.gz
-ENV PATH="$PATH:/usr/local/go/bin"
-
 # copy testpmd runtime cmdline file
 COPY testpmd-runtime-cmds.txt /root/testpmd-runtime-cmds.txt
+
+# Copy scripts
 COPY scripts /usr/local/bin
-RUN chmod +x /usr/local/bin/webserver.go
+COPY --from=build2 /scripts/webserver /usr/local/bin/
+
+# Update permissions
+RUN chmod +x /usr/local/bin/webserver
+
 COPY --from=build /usr/local/bin/testpmd /usr/local/bin/testpmd

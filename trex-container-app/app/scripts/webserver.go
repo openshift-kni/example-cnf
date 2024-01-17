@@ -22,7 +22,7 @@ import (
 	"os"
 )
 
-func setLifecycleWebServer() {
+func setLifecycleWebServer(port string) {
 	fmt.Println("configure webserver")
 
 	// Liveness Probe handler
@@ -44,9 +44,9 @@ func setLifecycleWebServer() {
 		rw.Write([]byte("ok"))
 	})
 
-	fmt.Println("try to start webserver")
-	// Launch web server on port 8095
-	err := http.ListenAndServe(":8095", nil)
+	fmt.Println("try to start webserver in port: ", port)
+	// Launch web server on selected port
+	err := http.ListenAndServe(":" + port, nil)
 	if err != nil {
 		fmt.Println(err, "unable to start webserver")
 		os.Exit(1)
@@ -54,6 +54,15 @@ func setLifecycleWebServer() {
 }
 
 func main() {
+
+	// If providing a command line argument, then use it as port, else use 8095
+	var port string
+	args := os.Args
+	if len(args) == 2 {
+		port = args[1]
+	}	else {
+		port = "8095"
+	}
 	// Call the webserver in a synchronous way.
-	setLifecycleWebServer()
+	setLifecycleWebServer(port)
 }
