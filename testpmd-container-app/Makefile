@@ -25,6 +25,15 @@ testpmd-dependencies:
 	if [[ ! -d testpmd/testpmd-as-load-balancer ]]; then \
 	git clone $(TESTPMD_LB_REPO) testpmd/testpmd-as-load-balancer; \
 	fi
+	cp ../utils/webserver.go testpmd/utils/webserver.go
+
+.PHONY: listener-dependencies # Get dependencies for listener
+listener-dependencies:
+	cp ../utils/webserver.go listener/utils/webserver.go
+
+.PHONY: cnfapp-dependencies # Get dependencies for cnfapp
+cnfapp-dependencies:
+	cp ../utils/webserver.go cnfapp/utils/webserver.go
 
 .PHONY: build-all # Build ALL images
 build-all: build-testpmd build-mac build-listener build-cnfapp
@@ -46,7 +55,7 @@ build-mac:
 	fi
 
 .PHONY: build-listener # Build listener
-build-listener:
+build-listener: listener-dependencies
 	if [ -n "$(RELEASE)" ]; then \
 	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(VERSION)" $(CONTAINER_ARGS); \
 	else \
@@ -54,7 +63,7 @@ build-listener:
 	fi
 
 .PHONY: build-cnfapp # Build cnfapp
-build-cnfapp:
+build-cnfapp: cnfapp-dependencies
 	if [ -n "$(RELEASE)" ]; then \
 	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(VERSION)" $(CONTAINER_ARGS); \
 	else \

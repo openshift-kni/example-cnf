@@ -38,8 +38,8 @@ RUN cd ${DPDK_DIR}/app && patch -p2 < /usr/src/dpdk-${DPDK_VER}-lb.patch && \
 # Image to build webserver
 FROM docker.io/library/golang:1.21 as build2
 
-WORKDIR /scripts
-COPY scripts/webserver.go .
+WORKDIR /utils
+COPY utils/webserver.go .
 RUN go mod init webserver.go
 RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
 
@@ -62,9 +62,5 @@ COPY testpmd-runtime-cmds.txt /root/testpmd-runtime-cmds.txt
 
 # Copy scripts
 COPY scripts /usr/local/bin
-COPY --from=build2 /scripts/webserver /usr/local/bin/
-
-# Update permissions
-RUN chmod +x /usr/local/bin/webserver
-
+COPY --chmod=550 --from=build2 /utils/webserver /usr/local/bin/
 COPY --from=build /usr/local/bin/testpmd /usr/local/bin/testpmd

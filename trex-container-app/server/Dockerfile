@@ -1,7 +1,7 @@
 FROM docker.io/library/golang:1.21 as build
 
-WORKDIR /scripts
-COPY scripts/webserver.go .
+WORKDIR /utils
+COPY utils/webserver.go .
 RUN go mod init webserver.go
 RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
 
@@ -32,6 +32,4 @@ ENV TRAFFICGEN_DIR="/opt/trafficgen"
 
 # Copy scripts
 COPY scripts /usr/local/bin
-COPY --from=build /scripts/webserver /usr/local/bin/
-
-RUN chmod +x /usr/local/bin/webserver
+COPY --chmod=550 --from=build /utils/webserver /usr/local/bin/
