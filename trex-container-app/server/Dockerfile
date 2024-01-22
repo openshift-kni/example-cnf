@@ -1,3 +1,10 @@
+FROM docker.io/library/golang:1.21 as build
+
+WORKDIR /utils
+COPY utils/webserver.go .
+RUN go mod init webserver.go
+RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
+
 FROM quay.io/centos/centos:stream8
 
 ENV TREX_VER v2.85
@@ -22,4 +29,7 @@ ENV PYTHONPATH="/opt/trex/trex-core/scripts/automation/trex_control_plane/intera
 WORKDIR /opt/trex/trex-core/scripts
 ENV TREX_DIR="/opt/trex/trex-core/scripts"
 ENV TRAFFICGEN_DIR="/opt/trafficgen"
-COPY scripts /usr/local/bin/
+
+# Copy scripts
+COPY scripts /usr/local/bin
+COPY --chmod=550 --from=build /utils/webserver /usr/local/bin/

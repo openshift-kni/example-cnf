@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.3.5] - 2024-01-12
+
+- Lifecycle webserver included in some container images to cover CNF Certification requirements for liveness, readiness and startup probes
+
 ## [0.3.4] - 2023-06-02
 
 - Updates required for PR/PUSH Github actions

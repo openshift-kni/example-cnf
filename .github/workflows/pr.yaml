@@ -6,7 +6,8 @@ on:
       - main
 
 env:
-  REGISTRY: quay.io
+  QUAY_REGISTRY: quay.io
+  RH_REGISTRY: registry.redhat.io
 
 defaults:
   run:
@@ -29,7 +30,14 @@ jobs:
         with:
           username: ${{ secrets.QUAY_USER }}
           password: ${{ secrets.QUAY_TOKEN }}
-          registry: ${{ env.REGISTRY }}
+          registry: ${{ env.QUAY_REGISTRY }}
+
+      - name: Log in to registry.redhat.io
+        uses: redhat-actions/podman-login@v1
+        with:
+          username: ${{ secrets.RH_REGISTRY_USER }}
+          password: ${{ secrets.RH_REGISTRY_TOKEN }}
+          registry: ${{ env.RH_REGISTRY }}
 
       - name: Build All
         run: |

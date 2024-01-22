@@ -2,7 +2,7 @@ SHELL            := /bin/bash
 DATE             ?= $(shell date --utc +%Y%m%d%H%M)
 SHA              ?= $(shell git rev-parse --short HEAD)
 # Current Operator version
-VERSION          := 0.2.12
+VERSION          := 0.2.13
 TAG              := $(VERSION)-$(DATE).$(SHA)
 REGISTRY         ?= quay.io
 ORG              ?= rh-nfv-int
@@ -66,9 +66,10 @@ deploy: kustomize
 undeploy: kustomize
 	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} delete -f -
 
-# Ensure proper digests for testpmd-container-app-mac
+# Ensure proper digests for testpmd-container-app-cnfapp and testpmd-container-app-mac
 ensure_digests:
 	cp roles/testpmd/defaults/main.yml.in roles/testpmd/defaults/main.yml
+	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/testpmd-container-app-cnfapp:$(TESTPMD_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/testpmd-container-app-cnfapp@.*/testpmd-container-app-cnfapp@$${DIGEST}\"   # $(TESTPMD_VER)/" roles/testpmd/defaults/main.yml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/testpmd-container-app-mac:$(TESTPMD_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/testpmd-container-app-mac@.*/testpmd-container-app-mac@$${DIGEST}\"   # $(TESTPMD_VER)/" roles/testpmd/defaults/main.yml
 
 # Build the operator image
@@ -140,6 +141,7 @@ bundle: kustomize operator-sdk
 	DIGEST=$$(skopeo inspect docker://$(IMG) | jq -r '.Digest') && [ -n "$${DIGEST}" ] && sed -i -e 's/\(\s*image: .*\):v'$(TAG)'/\1@'$${DIGEST}'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	sed -i -e '/^# Copy.*/i LABEL com.redhat.openshift.versions="v4.6"\nLABEL com.redhat.delivery.backport=false\nLABEL com.redhat.delivery.operator.bundle=true' bundle.Dockerfile
 	cp relatedImages.yaml.in relatedImages.yaml
+	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/testpmd-container-app-cnfapp:$(TESTPMD_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/testpmd-container-app-cnfapp@.*/testpmd-container-app-cnfapp@$${DIGEST}\"   # $(TESTPMD_VER)/" relatedImages.yaml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/testpmd-container-app-mac:$(TESTPMD_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/testpmd-container-app-mac@.*/testpmd-container-app-mac@$${DIGEST}\"   # $(TESTPMD_VER)/" relatedImages.yaml
 	cat relatedImages.yaml >> bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	$(OPERATOR_SDK) bundle validate ./bundle

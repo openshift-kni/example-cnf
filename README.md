@@ -45,3 +45,10 @@ Traffic Flow:
 - TRex calculates statistics by comparing the incoming traffic on Port 1 (processed traffic) with the outgoing traffic on Port 0 (original traffic sent by TRex) and vice versa.
 
 This configuration simulates a traffic flow from TRex to TestPMD, then to the CNF Application, and finally back to TRex for evaluation. TestPMD serves as a load balancer to distribute traffic between its ports, and the CNF Application processes and loops back the traffic to TRex for analysis. TestPMD LB ensures zero traffic loss throughout the rolling update process.
+
+Utils
+------------------------
+
+Under [utils](utils) folder, you can find some utilities included in example-cnf to extend the functionalities offered by the tool.
+
+- [webserver.go](utils/webserver.go): a Golang-based webserver to implement liveness, readiness and startup probes in the container images offered in [testpmd-container-app](testpmd-container-app) and [trex-container-app](trex-container-app) folders. The Makefiles offered in these directories take care of copying the webserver code from the utils directory to each image's directory; anyway, you have a local copy of the webserver code included on each image for the sake of completeness.
