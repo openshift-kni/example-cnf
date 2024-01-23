@@ -77,7 +77,7 @@ jobs:
           '
           componentName: nfv-example-cnf-index
           componentVersion: v${{ needs.build_all.outputs.version }}
-          componentData: '{"url":"${{ env.REGISTRY }}/rh-nfv-int/nfv-example-cnf-catalog"}'
+          componentData: '{"url":"${{ env.QUAY_REGISTRY }}/rh-nfv-int/nfv-example-cnf-catalog"}'
           componentRelease: ga
 
       - name: Results
