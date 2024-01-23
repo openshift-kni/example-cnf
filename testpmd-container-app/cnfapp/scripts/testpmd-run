@@ -1,0 +1,92 @@
+#!/bin/bash
+
+set -ex
+
+# Start lifecycle webserver in background
+/usr/local/bin/webserver 8095 &
+
+echo "Running testpmd"
+
+RUN_APP=${run_app:=1}
+
+LOG_DIR="/var/log/testpmd"
+[ -d $LOG_DIR ] || mkdir -p $LOG_DIR
+rm -rf /var/log/testpmd/*
+
+MODE=${MODE:-"fwd"}
+
+if [ -z ${NETWORK_NAME_LIST} ]; then
+    echo "ERROR: NETWORK_NAME_LIST is required."
+    exit 1
+fi
+
+PCI=""
+IFS=',' read -r -a NETWORK_ARRAY <<< "$NETWORK_NAME_LIST"
+TESTPMD_ENV="/var/lib/testpmd/env.txt"
+echo "" > $TESTPMD_ENV
+for item in "${NETWORK_ARRAY[@]}"; do
+    IFS='/' read -r -a RES_ARRAY <<< "$item"
+    NAME="PCIDEVICE_OPENSHIFT_IO_${RES_ARRAY[1]^^}"
+    if [ -z ${!NAME} ]; then
+        echo "Could not find ${NAME} with PCI address, exiting"
+        exit 1
+    fi
+    echo "${NAME}=${!NAME}" >> $TESTPMD_ENV
+    IFS=',' read -r -a PCI_ARRAY <<< "${!NAME}"
+    for pci_item in "${PCI_ARRAY[@]}"; do
+        PCI+=" -w ${pci_item} "
+    done
+done
+
+LCORES=$(cat /sys/fs/cgroup/cpuset/cpuset.cpus)
+if [ -z $LCORES ]; then
+    echo "Could not find cores, existing.."
+    exit 1
+fi
+
+CORES_STR=$LCORES
+IFS=',' read -ra CORES_ARR <<< "$CORES_STR"
+CORES_LEN=${#CORES_ARR[@]}
+if [[ $CORES_LEN -gt $TESTPMD_CPU_COUNT ]]; then
+    echo "ERROR: Acutal cores (${CORES_LEN}) is greater than configured cores (${TESTPMD_CPU_COUNT})"
+    exit 1
+fi
+
+# TODO: remove it later
+eth_peer=${eth_peer:="0,60:04:0f:f1:89:01;1,60:04:0f:f1:89:02"}
+ETH_PEER=""
+IFS=';' read -ra ETH_PEER_LIST <<< "$eth_peer"
+for item in "${ETH_PEER_LIST[@]}"; do
+    ETH_PEER="${ETH_PEER} --eth-peer ${item}"
+done
+
+SOCKET_MEM=${socket_mem:=1024}
+MEMORY_CHANNELS=${memory_channels:=4}
+FORWARDING_CORES=${forwarding_cores:=2}
+RXQ=${rx_queues:=1}
+TXQ=${tx_queues:=1}
+RXD=${rx_descriptors:=1024}
+TXD=${tx_descriptors:=1024}
+STATS_PERIOD=${stats_period:=1}
+
+CMD="testpmd -l $LCORES --in-memory $PCI --socket-mem ${SOCKET_MEM} -n ${MEMORY_CHANNELS} --proc-type auto --file-prefix pg"
+CMD="${CMD} --"
+CMD="${CMD} --disable-rss --nb-cores=${FORWARDING_CORES} --rxq=${RXQ} --txq=${TXQ} --rxd=${RXD} --txd=${TXD}"
+CMD="${CMD} --auto-start ${ETH_PEER} --forward-mode=mac --stats-period ${STATS_PERIOD}"
+#CMD="${CMD} --cmdline-file /root/testpmd-runtime-cmds.txt"
+#CMD="${CMD} 2>&1 | tee /var/log/testpmd/app.log"
+
+function sig_term() {
+    echo $(date +"%F %T,%3N") > /var/log/testpmd/sigterm-received.log
+    # kill testpmd application
+    kill -9 $(ps aux | grep -w stats-period | grep -v grep | awk '{print $2}')
+    exit
+}
+trap sig_term SIGTERM
+
+if [[ $RUN_APP == "1" ]]; then
+    ${CMD} 2>&1 | tee /var/log/testpmd/app.log
+else
+    echo ${CMD} > /var/lib/testpmd/cmd
+    sleep infinity
+fi
