@@ -78,9 +78,11 @@ rules:
   - patch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
+  creationTimestamp: null
   name: testpmd-operator-manager-role
+  namespace: example-cnf
 rules:
 - apiGroups:
   - ""
@@ -158,12 +160,12 @@ subjects:
   namespace: example-cnf
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   name: testpmd-operator-manager-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
+  kind: Role
   name: testpmd-operator-manager-role
 subjects:
 - kind: ServiceAccount
