@@ -76,11 +76,9 @@ rules:
   - patch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
-  creationTimestamp: null
   name: trex-operator-manager-role
-  namespace: example-cnf
 rules:
 - apiGroups:
   - ""
@@ -135,11 +133,9 @@ rules:
   - use
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
-  creationTimestamp: null
   name: trex-operator-proxy-role
-  namespace: example-cnf
 rules:
 - apiGroups:
   - authentication.k8s.io
@@ -155,11 +151,9 @@ rules:
   - create
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: Role
+kind: ClusterRole
 metadata:
-  creationTimestamp: null
   name: trex-operator-metrics-reader
-  namespace: example-cnf
 rules:
 - nonResourceURLs:
   - /metrics
@@ -181,12 +175,12 @@ subjects:
   namespace: example-cnf
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   name: trex-operator-manager-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
+  kind: ClusterRole
   name: trex-operator-manager-role
 subjects:
 - kind: ServiceAccount
@@ -194,12 +188,12 @@ subjects:
   namespace: example-cnf
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   name: trex-operator-proxy-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
+  kind: ClusterRole
   name: trex-operator-proxy-role
 subjects:
 - kind: ServiceAccount
