@@ -38,6 +38,7 @@ spec:
 {% elif trex_app|bool %}
         example-cnf-type: pkt-gen-app
 {% endif %}
+        restart-on-reboot: true
     spec:
       affinity:
         podAntiAffinity:

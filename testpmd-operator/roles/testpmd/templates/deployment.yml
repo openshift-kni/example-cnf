@@ -32,6 +32,7 @@ spec:
 {% endif %}
       labels:
         example-cnf-type: cnf-app
+        restart-on-reboot: true
     spec:
       affinity:
         podAntiAffinity:
