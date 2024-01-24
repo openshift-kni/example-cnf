@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.14] - 2023-01-24
+
+- Remove MAC workaround, since it was just needed for OCP 4.5 and below, which are EOL.
+
 ## [0.2.13] - 2023-01-12
 
 - Lifecycle webserver included in container images consumed from testpmd-container-app to cover CNF Certification requirements for liveness, readiness and startup probes
