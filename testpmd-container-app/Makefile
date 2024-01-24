@@ -2,7 +2,7 @@ SHELL           := /bin/bash
 
 DATE            ?= $(shell date --utc +%Y%m%d%H%M)
 SHA             ?= $(shell git rev-parse --short HEAD)
-VERSION         ?= 0.2.6
+VERSION         ?= 0.2.7
 REGISTRY        ?= quay.io
 ORG             ?= rh-nfv-int
 CONTAINER_CLI   ?= podman
@@ -36,18 +36,10 @@ cnfapp-dependencies:
 	cp ../utils/webserver.go cnfapp/utils/webserver.go
 
 .PHONY: build-all # Build ALL images
-build-all: build-testpmd build-mac build-listener build-cnfapp
+build-all: build-testpmd build-listener build-cnfapp
 
 .PHONY: build-testpmd # Build testpmd
 build-testpmd: testpmd-dependencies
-	if [ -n "$(RELEASE)" ]; then \
-	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(VERSION)" $(CONTAINER_ARGS); \
-	else \
-	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile --label quay.expires-after=2w -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" $(CONTAINER_ARGS); \
-	fi
-
-.PHONY: build-mac # Build mac
-build-mac:
 	if [ -n "$(RELEASE)" ]; then \
 	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(VERSION)" $(CONTAINER_ARGS); \
 	else \
@@ -75,17 +67,10 @@ clean:
 	rm -Rf testpmd/testpmd-as-load-balancer
 
 .PHONY: push-all # Push ALL images
-push-all: push-testpmd push-mac push-listener push-cnfapp
+push-all: push-testpmd push-listener push-cnfapp
 
 .PHONY: push-testpmd # Push testpmd
 push-testpmd: build-testpmd
-	$(CONTAINER_CLI) push "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:push-%=%):v$(TAG)"
-	if [ -n "$(RELEASE)" ]; then \
-	$(CONTAINER_CLI) push "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:push-%=%):v$(VERSION)"; \
-	fi
-
-.PHONY: push-mac # Push mac
-push-mac: build-mac
 	$(CONTAINER_CLI) push "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:push-%=%):v$(TAG)"
 	if [ -n "$(RELEASE)" ]; then \
 	$(CONTAINER_CLI) push "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:push-%=%):v$(VERSION)"; \

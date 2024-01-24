@@ -2,7 +2,7 @@
 
 set -e
 
-TAG=${TAG:-"v0.2.6"}
+TAG=${TAG:-"v0.2.7"}
 
 CLI=${CLI:="podman"}
 ORG=${ORG:="rh-nfv-int"}
@@ -27,8 +27,8 @@ if [[ $1 == "all" || $1 == "testpmd" ]]; then
         popd
     fi
 fi
-if [[ $1 == "all" || $1 == "mac" ]]; then
-    LIST="${LIST} mac"
+if [[ $1 == "all" || $1 == "cnfapp" ]]; then
+    LIST="${LIST} cnfapp"
 fi
 if [[ $1 == "all" || $1 == "listener" ]]; then
     LIST="${LIST} listener"
