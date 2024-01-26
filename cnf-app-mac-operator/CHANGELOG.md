@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.14] - 2024-01-26
+
+- Run webserver from external binary
+
 ## [0.2.13] - 2024-01-05
 
 - Implement webserver to handle lifecycle and probe requests

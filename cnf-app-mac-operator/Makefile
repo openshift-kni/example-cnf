@@ -1,7 +1,7 @@
 SHELL            := /bin/bash
 DATE             ?= $(shell date --utc +%Y%m%d%H%M)
 SHA              ?= $(shell git rev-parse --short HEAD)
-VERSION          := 0.2.13
+VERSION          := 0.2.14
 TAG              := $(VERSION)-$(DATE).$(SHA)
 REGISTRY         ?= quay.io
 ORG              ?= rh-nfv-int
@@ -52,9 +52,9 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
-all: operator-all bundle-all
+all: dependencies operator-all bundle-all
 
-build-all: kustomize operator-build bundle-build
+build-all: dependencies kustomize operator-build bundle-build
 
 push-all: operator-push bundle-push
 
@@ -131,6 +131,10 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 
 undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} delete -f -
+
+# Include dependnecies
+dependencies:
+	cp ../utils/webserver.go utils/webserver.go
 
 # Build the operator image
 operator-build: kustomize
