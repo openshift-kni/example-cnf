@@ -8,6 +8,7 @@ spec:
   selector:
     matchLabels:
       example-cnf-type: lb-app
+      restart-on-reboot: "true"
   template:
     metadata:
       annotations:
@@ -27,6 +28,7 @@ spec:
         ]'
       labels:
         example-cnf-type: lb-app
+        restart-on-reboot: "true"
     spec:
       affinity:
         podAntiAffinity:

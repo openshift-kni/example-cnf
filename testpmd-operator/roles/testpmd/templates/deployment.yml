@@ -8,6 +8,7 @@ spec:
   selector:
     matchLabels:
       example-cnf-type: cnf-app
+      restart-on-reboot: "true"
   template:
     metadata:
 {% if not skip_annot|bool %}
@@ -32,6 +33,7 @@ spec:
 {% endif %}
       labels:
         example-cnf-type: cnf-app
+        restart-on-reboot: "true"
     spec:
       affinity:
         podAntiAffinity:

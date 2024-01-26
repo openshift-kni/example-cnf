@@ -8,10 +8,11 @@ spec:
   selector:
     matchLabels:
 {% if trex_server|bool %}
-        example-cnf-type: pkt-gen
+      example-cnf-type: pkt-gen
 {% elif trex_app|bool %}
-        example-cnf-type: pkt-gen-app
+      example-cnf-type: pkt-gen-app
 {% endif %}
+      restart-on-reboot: "true"
   template:
     metadata:
 {% if not skip_annot %}
@@ -38,6 +39,7 @@ spec:
 {% elif trex_app|bool %}
         example-cnf-type: pkt-gen-app
 {% endif %}
+        restart-on-reboot: "true"
     spec:
       affinity:
         podAntiAffinity:
