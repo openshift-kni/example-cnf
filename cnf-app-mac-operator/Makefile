@@ -132,7 +132,7 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} delete -f -
 
-# Include dependnecies
+# Include dependencies
 dependencies:
 	cp ../utils/webserver.go utils/webserver.go
 
