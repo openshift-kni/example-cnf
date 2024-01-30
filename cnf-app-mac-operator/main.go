@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -52,34 +53,16 @@ func init() {
 }
 
 func setLifecycleWebServer() {
-	setupLog.Info("configure webserver")
-
-	// Liveness Probe handler
-	http.HandleFunc("/healthz", func(rw http.ResponseWriter, r *http.Request) {
-		setupLog.Info("query received to check liveness")
-		rw.WriteHeader(200)
-		rw.Write([]byte("ok"))
-	})
-	// Readiness Probe handler
-	http.HandleFunc("/readyz", func(rw http.ResponseWriter, r *http.Request) {
-		setupLog.Info("query received to check readiness")
-		rw.WriteHeader(200)
-		rw.Write([]byte("ok"))
-	})
-	// Startup Probe handler
-	http.HandleFunc("/startz", func(rw http.ResponseWriter, r *http.Request) {
-		setupLog.Info("query received to check startup")
-		rw.WriteHeader(200)
-		rw.Write([]byte("ok"))
-	})
-
-	setupLog.Info("try to start webserver")
-	// Launch web server on port 8095
-	err := http.ListenAndServe(":8095", nil)
+	cmd := exec.Command("./webserver", "8095")
+	cmd.Stdout = os.Stdout
+	err := cmd.Start()
 	if err != nil {
-		setupLog.Error(err, "unable to start webserver")
-		os.Exit(1)
+		setupLog.Error(err, "error starting webserver")
 	}
+	go func() { 
+		err = cmd.Wait()
+	 	setupLog.Error(err, "error running webserver")
+	}()
 }
 
 func waitUntilLifecycleWebServerIsReady() {
@@ -117,7 +100,7 @@ func getWatchNamespace() (string, error) {
 func main() {
 	// Start calling the webserver as a goroutine to make it asynchronously, so that it does not affect
 	// to the rest of the execution
-	go setLifecycleWebServer()
+	setLifecycleWebServer()
 
 	// We need to wait until the webserver is ready before proceeding with the rest of the configuration
 	// This call must be synchronous
