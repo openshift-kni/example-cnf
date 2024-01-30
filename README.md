@@ -51,4 +51,4 @@ Utils
 
 Under [utils](utils) folder, you can find some utilities included in example-cnf to extend the functionalities offered by the tool.
 
-- [webserver.go](utils/webserver.go): a Golang-based webserver to implement liveness, readiness and startup probes in the container images offered in [testpmd-container-app](testpmd-container-app) and [trex-container-app](trex-container-app) folders. The Makefiles offered in these directories take care of copying the webserver code from the utils directory to each image's directory; anyway, you have a local copy of the webserver code included on each image for the sake of completeness.
+- [webserver.go](utils/webserver.go): a Golang-based webserver to implement liveness, readiness and startup probes in the container images offered in [cnf-app-mac-operator](cnf-app-mac-operator), [testpmd-container-app](testpmd-container-app) and [trex-container-app](trex-container-app) folders. The Makefiles offered in these directories take care of copying the webserver code from the utils directory to each image's directory.

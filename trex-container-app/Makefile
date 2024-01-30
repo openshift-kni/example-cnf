@@ -19,11 +19,21 @@ targets:
 .PHONY: all # Build and push all images
 all: build-all push-all
 
+.PHONY: server-dependencies # Include dependencies for server
+server-dependencies:
+	mkdir server/utils
+	cp ../utils/webserver.go server/utils/webserver.go
+
+.PHONY: app-dependencies # Include dependencies for app
+app-dependencies:
+	mkdir app/utils
+	cp ../utils/webserver.go app/utils/webserver.go
+
 .PHONY: build-all # Build ALL images
 build-all: build-server build-app
 
 .PHONY: build-server # Build TRex Server
-build-server:
+build-server: server-dependencies
 	if [ -n "$(RELEASE)" ]; then \
 	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(TAG)" -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(VERSION)" $(CONTAINER_ARGS); \
 	else \
@@ -31,7 +41,7 @@ build-server:
 	fi
 
 .PHONY: build-app # Build TRex App
-build-app:
+build-app: app-dependencies
 	if [ -n "$(RELEASE)" ]; then \
 	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(TAG)" -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(VERSION)" $(CONTAINER_ARGS); \
 	else \

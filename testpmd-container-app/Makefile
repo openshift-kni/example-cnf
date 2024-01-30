@@ -25,14 +25,17 @@ testpmd-dependencies:
 	if [[ ! -d testpmd/testpmd-as-load-balancer ]]; then \
 	git clone $(TESTPMD_LB_REPO) testpmd/testpmd-as-load-balancer; \
 	fi
+	mkdir testpmd/utils
 	cp ../utils/webserver.go testpmd/utils/webserver.go
 
 .PHONY: listener-dependencies # Get dependencies for listener
 listener-dependencies:
+	mkdir listener/utils
 	cp ../utils/webserver.go listener/utils/webserver.go
 
 .PHONY: cnfapp-dependencies # Get dependencies for cnfapp
 cnfapp-dependencies:
+	mkdir cnfapp/utils
 	cp ../utils/webserver.go cnfapp/utils/webserver.go
 
 .PHONY: build-all # Build ALL images

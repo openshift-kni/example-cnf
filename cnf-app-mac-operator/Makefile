@@ -134,6 +134,7 @@ undeploy: kustomize ## Undeploy controller from the K8s cluster specified in ~/.
 
 # Include dependencies
 dependencies:
+	mkdir utils
 	cp ../utils/webserver.go utils/webserver.go
 
 # Build the operator image
