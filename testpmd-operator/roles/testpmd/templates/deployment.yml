@@ -45,7 +45,7 @@ spec:
                 values:
                 - lb-app
             topologyKey: kubernetes.io/hostname
-      serviceAccountName: testpmd-operator-controller-manager
+      serviceAccountName: testpmd-account
 {% if high_perf_runtime is defined and high_perf_runtime|length %}
       runtimeClassName: "{{ high_perf_runtime }}"
 {% endif %}

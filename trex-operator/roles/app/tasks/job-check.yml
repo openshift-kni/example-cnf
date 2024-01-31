@@ -20,8 +20,25 @@
   when:
     - "'failed' not in item.status or item.status.failed != 1"
 
-- name: create trexapp job
-  k8s:
-    state: present
-    definition: "{{ lookup('template', 'job.yml') }}"
-  when: "active_jobs|int == 0"
+- name: trexapp job creation
+  when: "active_jobs|int == 0"  
+  block:
+    - name: Create ServiceAccount for trexapp job resource
+      k8s:
+        state: present
+        definition: "{{ lookup('template', 'service_account.yml') }}"
+
+    - name: Create Role for trexapp job resource
+      k8s:
+        state: present
+        definition: "{{ lookup('template', 'role.yml') }}"
+
+    - name: Create RoleBinding for trexapp job resource
+      k8s:
+        state: present
+        definition: "{{ lookup('template', 'role_binding.yml') }}"
+
+    - name: create trexapp job
+      k8s:
+        state: present
+        definition: "{{ lookup('template', 'job.yml') }}"
