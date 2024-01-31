@@ -61,4 +61,5 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 10
         terminationMessagePolicy: FallbackToLogsOnError
+      serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
