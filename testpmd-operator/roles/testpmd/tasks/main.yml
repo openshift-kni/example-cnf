@@ -79,6 +79,11 @@
     state: present
     definition: "{{ lookup('template', 'role_binding.yml') }}"
 
+- name: Create default network policies
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'network_policies.yml') }}"
+
 - name: Create TestPMD deployment
   kubernetes.core.k8s:
     state: present

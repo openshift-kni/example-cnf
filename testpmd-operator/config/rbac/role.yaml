@@ -113,4 +113,20 @@ rules:
       - patch
       - update
       - watch
+  ##
+  ## Rules to allow the creation of NetworkPolicy for the pods deployed by this
+  ## operator
+  ##
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - networkpolicies
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
 #+kubebuilder:scaffold:rules
