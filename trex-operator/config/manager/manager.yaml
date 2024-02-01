@@ -52,5 +52,12 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 10
           terminationMessagePolicy: FallbackToLogsOnError
+          resources:
+           limits:
+             cpu: 200m
+             memory: 100Mi
+           requests:
+             cpu: 100m
+             memory: 50Mi
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
