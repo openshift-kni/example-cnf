@@ -9,10 +9,20 @@ Example CNF is an OpenShift workload to exercice an SRIOV setup.
 
 It is providing the following operators:
 
-* testpmd-operator
 * trex-operator
+    * It provides TRex Traffic Generator, decomposed in two components: a TRex server, deployed as `trexconfig-<x>` pod, which takes care of deploying and configuring a TRex server instance, and a TRex application, deplayed as `trex-app` job, that starts TRex server, generating traffic towards the system under test.
+    * In `trexconfig-<x>` logs, you can see the trex statistics printed periodically. The summary of the test execution can be seen at the end of the `trex-app` logs.
+    * The `trexconfig-<x>` pod has two interfaces connected to the same SRIOV network.
 * testpmd-lb-operator
+    * Its main component is a modified TestPMD instance, implementing a custom load balancing forwarding module, which is eventually used to perform load balancing between the ports of the deployed pod, called `loadbalancer-<x>`.
+    * This pod is composed by two containers: `loadbalancer`, which performs the load balancing forwarding, and `listener`, an auxiliary module that is listening to the CNFAppMac component created by the cnf-app-mac-operator to retrieve the MAC addresses of the TestPMD instances launched by the testpmd-operator (i.e. the CNF Applications), then serving this information to the `loadbalancer` container.
+    * To see the TestPMD statistics printed periodically for this module, you can rely on `loadbalancer` container logs.
+    * The `loadbalancer-<x>` pod has four network interfaces; two of them connected to the same SRIOV network than TRex, and the other two connected to the same SRIOV network than the CNF Application.
+* testpmd-operator
+    * Final application, also known as CNF Application, which is a standard TestPMD instance using the default MAC forwarding module. Two replica pods are deployed, called `testpmd-app-<x>`, having each of them two ports connected to the same SRIOV network, but different than the SRIOV network used by TRex.
+    * To see the TestPMD statistics printed periodically for this module, you can rely on `testpmd-app-<x>` container logs. Each log will offer you the statistics of each replica pod.
 * cnf-app-mac-operator
+    * Auxiliary operator used to deploy a resource called CNFAppMac, which is a wrapper created for each `testpmd-app-<x>` and linked to them, and that are used to extract the network information of these pods (MAC and PCI addresses), to be offered to other components of the solution, such as the TestPMD Load Balancer.
 
 You can use them from the [Example CNF Catalog](https://quay.io/repository/rh-nfv-int/nfv-example-cnf-catalog?tab=tags).
 
@@ -109,7 +119,7 @@ Traffic Flow
 
 ![Flow](documentation/trex_flow_4_ports_bi_directional.png)
 
-Traffic Flow:
+Traffic Flow (just considering one CNF Application as target, but the same flow applies to all CNF Applications deployed in the scenario):
 
 - TRex (Traffic Generator) generates and sends traffic from Port 0 to TestPMD.
 
@@ -121,13 +131,13 @@ Traffic Flow:
 
 - The CNF Application receives incoming traffic from TestPMD on one of its ports.
 
-- The CNF Application processes the received traffic and passes it back to TRex for evaluation.
+- The CNF Application processes the received traffic and passes it back to TRex for evaluation, using the TestPMD MAC forwarding mode.
 
 - TRex receives the processed traffic on Port 1.
 
 - TRex calculates statistics by comparing the incoming traffic on Port 1 (processed traffic) with the outgoing traffic on Port 0 (original traffic sent by TRex) and vice versa.
 
-This configuration simulates a traffic flow from TRex to TestPMD, then to the CNF Application, and finally back to TRex for evaluation. TestPMD serves as a load balancer to distribute traffic between its ports, and the CNF Application processes and loops back the traffic to TRex for analysis. TestPMD LB ensures zero traffic loss throughout the rolling update process.
+This configuration simulates a traffic flow from TRex to TestPMD, then to the CNF Application, and finally back to TRex for evaluation. TestPMD serves as a load balancer to distribute traffic between its ports, and the CNF Application processes and loops back the traffic to TRex for analysis using the TestPMD MAC forwarding mode. TestPMD LB ensures zero traffic loss throughout the rolling update process.
 
 Utils
 ------------------------
