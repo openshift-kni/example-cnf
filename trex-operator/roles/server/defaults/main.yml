@@ -1,0 +1,16 @@
+---
+# these images are not hardcoded - they are replaced by the trex-operator Makefile launched by the Github actions defined for this repo
+# https://github.com/openshift-kni/example-cnf/blob/main/trex-operator/Makefile - See "ensure_digests" task
+image_server: "quay.io/rh-nfv-int/trex-container-server@sha256:e6bc8c738712a69e22089789e2cb21d53d31d986adeae9ad81b02491aaafffd2"   # v0.2.8
+image_app: "quay.io/rh-nfv-int/trex-container-app@sha256:f4bdd03ac20e80105b96acb9979ba6b8ef66e444ee8a58f43d0b3a7e84e4f6cb"   # v0.2.8
+image_pull_policy: IfNotPresent
+privileged: false
+command: ["trex-wrapper"]
+environments: {}
+network_resources: {}
+enable_lb: true
+lb_macs: []
+trex_server: true
+trex_app: false
+
+skip_annot: false

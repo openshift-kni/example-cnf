@@ -29,6 +29,7 @@ spec:
       #  seccompProfile:
       #    type: RuntimeDefault
       containers:
+<<<<<<< HEAD
       - args:
         - --leader-elect
         - --leader-election-id=trex-operator
