@@ -12,6 +12,9 @@ spec:
     spec:
       restartPolicy: Never
       serviceAccountName: trex-app-account
+{ % if high_perf_runtime is defined and high_perf_runtime|length % }
+      runtimeClassName: "{{ high_perf_runtime }}"
+{ % endif % }
       containers:
       - name: trex-app
         image: "{{ image_app }}"

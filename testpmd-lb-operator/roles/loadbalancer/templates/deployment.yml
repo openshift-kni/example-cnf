@@ -42,6 +42,9 @@ spec:
                 - pkt-gen
             topologyKey: kubernetes.io/hostname
       serviceAccountName: loadbalancer-account
+{% if high_perf_runtime is defined and high_perf_runtime|length %}
+      runtimeClassName: "{{ high_perf_runtime }}"
+{% endif %}
 {% if numa_aware_topology is defined and numa_aware_topology | length %}
       schedulerName: "{{ numa_aware_topology }}"
 {% endif %}
