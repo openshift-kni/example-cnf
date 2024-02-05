@@ -238,7 +238,7 @@ spec:
         - --enable-leader-election
         - --leader-election-id=trex-operator
         image: jumphost.cluster5.dfwt5g.lab:5000/nfv-example-cnf/trex-operator:v0.1.0
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         name: manager
         lifecycle:
           postStart:

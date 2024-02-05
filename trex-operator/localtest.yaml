@@ -10,7 +10,7 @@
       namespace: example-cnf
     privileged: false
     image: quay.io/krsacme/trex-container-app:v0.0.1
-    imagePullPolicy: Always
+    imagePullPolicy: IfNotPresent
     size: 1
     networks:
       - name: vfdpdk1
