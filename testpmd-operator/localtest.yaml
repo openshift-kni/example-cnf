@@ -14,7 +14,7 @@
     vars:
       privileged: true
       image: jumphost.cluster5.dfwt5g.lab:5000/nfv-example-cnf/testpmd-container-app:v0.1.0
-      image_pull_policy: Always
+      image_pull_policy: IfNotPresent
       ethpeer_maclist:
         - 3c:fd:fe:79:2a:a0
         - 3c:fd:fe:79:2a:a1
