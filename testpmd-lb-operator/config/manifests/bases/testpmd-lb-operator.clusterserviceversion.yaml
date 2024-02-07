@@ -38,8 +38,6 @@ spec:
   - name: Testpmd Lb Operator
     url: https://testpmd-lb-operator.domain
   maintainers:
-  - email: skramaja@redhat.com
-    name: Saravanan KR
   - email: telcoci@redhat.com
     name: Telco CI
   maturity: alpha

@@ -4,4 +4,4 @@
   group: examplecnf.openshift.io
   kind: LoadBalancer
   role: loadbalancer
-# +kubebuilder:scaffold:watch
+#+kubebuilder:scaffold:watch
