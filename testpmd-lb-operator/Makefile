@@ -1,18 +1,8 @@
-# VERSION defines the project version for the bundle.
-# Update this value when you upgrade the version of your project.
-# To re-generate a bundle for another specific version without changing the standard setup, you can:
-# - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
-# - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION          := 0.2.13
-
-# Set the Operator SDK version to use. By default, what is installed on the system is used.
-# This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
-OPERATOR_SDK_VER ?= 1.33.0
-
-# Other custom variables
 SHELL            := /bin/bash
 DATE             ?= $(shell date --utc +%Y%m%d%H%M)
 SHA              ?= $(shell git rev-parse --short HEAD)
+# Current Operator version
+VERSION          := 0.2.13
 TAG              := $(VERSION)-$(DATE).$(SHA)
 REGISTRY         ?= quay.io
 ORG              ?= rh-nfv-int
@@ -20,127 +10,66 @@ DEFAULT_CHANNEL  ?= alpha
 CONTAINER_CLI    ?= podman
 CLUSTER_CLI      ?= oc
 OPERATOR_NAME    := testpmd-lb-operator
+OPERATOR_SDK_VER ?= 1.33.0
 KUSTOMIZE_VER    := 5.0.1
-OPM_VER          := 1.23.0
 TESTPMD_VER      ?= v$(shell bash -c '. ../versions.cfg; echo "$${VERSIONS[testpmd-container-app]}"')
 
-
-# CHANNELS define the bundle channels used in the bundle.
-# Add a new line here if you would like to change its default config. (E.g CHANNELS = "candidate,fast,stable")
-# To re-generate a bundle for other specific channels without changing the standard setup, you can:
-# - use the CHANNELS as arg of the bundle target (e.g make bundle CHANNELS=candidate,fast,stable)
-# - use environment variables to overwrite this value (e.g export CHANNELS="candidate,fast,stable")
+# Default bundle image tag
+BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME)-bundle:v$(TAG)
+REL_BUNDLE_IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME)-bundle:v$(VERSION)
+# Options for 'bundle-build'
 ifneq ($(origin CHANNELS), undefined)
 BUNDLE_CHANNELS := --channels=$(CHANNELS)
 endif
-
-# DEFAULT_CHANNEL defines the default channel used in the bundle.
-# Add a new line here if you would like to change its default config. (E.g DEFAULT_CHANNEL = "stable")
-# To re-generate a bundle for any other default channel without changing the default setup, you can:
-# - use the DEFAULT_CHANNEL as arg of the bundle target (e.g make bundle DEFAULT_CHANNEL=stable)
-# - use environment variables to overwrite this value (e.g export DEFAULT_CHANNEL="stable")
 ifneq ($(origin DEFAULT_CHANNEL), undefined)
 BUNDLE_DEFAULT_CHANNEL := --default-channel=$(DEFAULT_CHANNEL)
 endif
 BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
-# IMAGE_TAG_BASE defines the docker.io namespace and part of the image name for remote images.
-# This variable is used to construct full image tags for bundle and catalog images.
-IMAGE_TAG_BASE ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME)
-
-# BUNDLE_IMG defines the image:tag used for the bundle.
-# You can use it as an arg. (E.g make bundle-build BUNDLE_IMG=<some-registry>/<project-name-bundle>:<tag>)
-BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(TAG)
-REL_BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
-
-# BUNDLE_GEN_FLAGS are the flags passed to the operator-sdk generate bundle command
-BUNDLE_GEN_FLAGS ?= -q --overwrite --version $(TAG) $(BUNDLE_METADATA_OPTS)
-
-# USE_IMAGE_DIGESTS defines if images are resolved via tags or digests
-# You can enable this value if you would like to use SHA Based Digests
-# To enable set flag to true
-USE_IMAGE_DIGESTS ?= false
-ifeq ($(USE_IMAGE_DIGESTS), true)
-	BUNDLE_GEN_FLAGS += --use-image-digests
-endif
-
 # Image URL to use all building/pushing image targets
-IMG ?= $(IMAGE_TAG_BASE):v$(TAG)
-REL_IMG ?= $(IMAGE_TAG_BASE):v$(VERSION)
+IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME):v$(TAG)
+REL_IMG ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME):v$(VERSION)
 
-# Our general, custom tasks
-
-.PHONY: all
 all: operator-all bundle-all
 
-.PHONY: build-all
 build-all: operator-build bundle-build
 
-.PHONY: push-all
 push-all: operator-push bundle-push
 
 # Operator build and push
-.PHONY: operator-all
 operator-all: operator-build operator-push
 
 # Bundle build and push
-.PHONY: bundle-all
 bundle-all: bundle-build bundle-push
 
-##@ General
-
-# The help target prints out all targets with their descriptions organized
-# beneath their categories. The categories are represented by '##@' and the
-# target descriptions by '##'. The awk commands is responsible for reading the
-# entire set of makefiles included in this invocation, looking for lines of the
-# file as xyz: ## something, and then pretty-format the target and help. Then,
-# if there's a line with ##@ something, that gets pretty-printed as a category.
-# More info on the usage of ANSI control characters for terminal formatting:
-# https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_parameters
-# More info on the awk command:
-# http://linuxcommand.org/lc3_adv_awk.php
-
-.PHONY: help
-help: ## Display this help.
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
-
-##@ Build
-
-.PHONY: run
-ANSIBLE_ROLES_PATH?="$(shell pwd)/roles"
-run: ansible-operator ## Run against the configured Kubernetes cluster in ~/.kube/config
+# Run against the configured Kubernetes cluster in ~/.kube/config
+run: ansible-operator
 	$(ANSIBLE_OPERATOR) run
 
-##@ Deployment
-
-.PHONY: install
-install: kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
+# Install CRDs into a cluster
+install: kustomize
 	$(KUSTOMIZE) build config/crd | ${CLUSTER_CLI} apply -f -
 
-.PHONY: uninstall
-uninstall: kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config.
+# Uninstall CRDs from a cluster
+uninstall: kustomize
 	$(KUSTOMIZE) build config/crd | ${CLUSTER_CLI} delete -f -
 
-.PHONY: deploy
-deploy: kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+# Deploy controller in the configured Kubernetes cluster in ~/.kube/config
+deploy: kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} apply -f -
 
-.PHONY: undeploy
-undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
+# Undeploy controller in the configured Kubernetes cluster in ~/.kube/config
+undeploy: kustomize
 	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} delete -f -
 
-# Custom tasks for our operator build and push
-
 # Ensure proper digests for testpmd-container-app-listener and testpmd-container-app-testpmd
-.PHONY: ensure_digests
 ensure_digests:
 	cp roles/loadbalancer/defaults/main.yml.in roles/loadbalancer/defaults/main.yml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/testpmd-container-app-testpmd:$(TESTPMD_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/testpmd-container-app-testpmd@.*/testpmd-container-app-testpmd@$${DIGEST}\"   # $(TESTPMD_VER)/" roles/loadbalancer/defaults/main.yml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/testpmd-container-app-listener:$(TESTPMD_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/testpmd-container-app-listener@.*/testpmd-container-app-listener@$${DIGEST}\"   # $(TESTPMD_VER)/" roles/loadbalancer/defaults/main.yml
 
 # Build the operator image
-.PHONY: operator-build
 operator-build: ensure_digests
 	if [ -n "$(RELEASE)" ]; then \
 	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . -t ${IMG} -t $(REL_IMG) ;\
@@ -149,71 +78,64 @@ operator-build: ensure_digests
 	fi
 
 # Push the operator image
-.PHONY: operator-push
 operator-push:
 	${CONTAINER_CLI} push ${IMG}
 	if [ -n "$(RELEASE)" ]; then \
 	${CONTAINER_CLI} push ${REL_IMG} ;\
 	fi
 
-OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
-ARCH := $(shell uname -m | sed 's/x86_64/amd64/' | sed 's/aarch64/arm64/')
+PATH  := $(PATH):$(PWD)/bin
+OS    = $(shell uname -s | tr '[:upper:]' '[:lower:]')
+ARCH  = $(shell uname -m | sed 's/x86_64/amd64/')
+OSOPER   = $(shell uname -s | tr '[:upper:]' '[:lower:]' | sed 's/darwin/apple-darwin/' | sed 's/linux/linux-gnu/')
+ARCHOPER = $(shell uname -m )
 
+# Download kustomize locally if necessary in $(pwd)/bin
 .PHONY: kustomize
 KUSTOMIZE = $(shell pwd)/bin/kustomize
-kustomize: ## Download kustomize locally if necessary.
+kustomize:
 ifeq (,$(wildcard $(KUSTOMIZE)))
-ifeq (,$(shell which kustomize 2>/dev/null))
 	@{ \
-	set -e ;\
+	set -ex ;\
 	mkdir -p $(dir $(KUSTOMIZE)) ;\
 	curl -sSLo - https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v$(KUSTOMIZE_VER)/kustomize_v$(KUSTOMIZE_VER)_$(OS)_$(ARCH).tar.gz | \
 	tar xzf - -C bin/ ;\
 	}
-else
-KUSTOMIZE = $(shell which kustomize)
-endif
 endif
 
+# Installs operator-sdk if is not available in $(pwd)/bin
+.PHONY: operator-sdk
+OPERATOR_SDK = $(shell pwd)/bin/operator-sdk
+operator-sdk:
+ifeq (,$(wildcard $(OPERATOR_SDK)))
+	@{ \
+	set -ex ;\
+	mkdir -p $(dir $(OPERATOR_SDK)) ;\
+	curl -sLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/v$(OPERATOR_SDK_VER)/operator-sdk_$(OS)_$(ARCH) ; \
+	chmod u+x $(OPERATOR_SDK) ; \
+	}
+else
+endif
+
+# Download ansible-operator locally if necessary in $(pwd)/bin
 .PHONY: ansible-operator
 ANSIBLE_OPERATOR = $(shell pwd)/bin/ansible-operator
-ansible-operator: ## Download ansible-operator locally if necessary, preferring the $(pwd)/bin path over global if both exist.
+ansible-operator:
 ifeq (,$(wildcard $(ANSIBLE_OPERATOR)))
-ifeq (,$(shell which ansible-operator 2>/dev/null))
 	@{ \
-	set -e ;\
+	set -ex ;\
 	mkdir -p $(dir $(ANSIBLE_OPERATOR)) ;\
-	curl -sSLo $(ANSIBLE_OPERATOR) https://github.com/operator-framework/ansible-operator-plugins/releases/download/$(OPERATOR_SDK_VER)/ansible-operator_$(OS)_$(ARCH) ;\
+	curl -sSLo $(ANSIBLE_OPERATOR) https://github.com/operator-framework/operator-sdk/releases/download/v$(OPERATOR_SDK_VER)/ansible-operator_$(OS)_$(ARCH) ;\
 	chmod +x $(ANSIBLE_OPERATOR) ;\
 	}
-else
-ANSIBLE_OPERATOR = $(shell which ansible-operator)
-endif
 endif
 
-.PHONY: operator-sdk
-OPERATOR_SDK ?= ./bin/operator-sdk
-operator-sdk: ## Download operator-sdk locally if necessary.
-ifeq (,$(wildcard $(OPERATOR_SDK)))
-ifeq (, $(shell which operator-sdk 2>/dev/null))
-	@{ \
-	set -e ;\
-	mkdir -p $(dir $(OPERATOR_SDK)) ;\
-	curl -sSLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VER)/operator-sdk_$(OS)_$(ARCH) ;\
-	chmod +x $(OPERATOR_SDK) ;\
-	}
-else
-OPERATOR_SDK = $(shell which operator-sdk)
-endif
-endif
-
-# Custom bundle-related tasks
 # Generate bundle manifests and metadata, then validate generated files.
 .PHONY: bundle
 bundle: kustomize operator-sdk
 	$(OPERATOR_SDK) generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
-	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle $(BUNDLE_GEN_FLAGS)
+	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle -q --overwrite --version $(TAG) $(BUNDLE_METADATA_OPTS)
 	DIGEST=$$(skopeo inspect docker://$(IMG) | jq -r '.Digest') && sed -i -e 's/\(\s*image: .*\):v'$(TAG)'/\1@'$${DIGEST}'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	sed -i -e '/^# Copy.*/i LABEL com.redhat.openshift.versions="v4.6"\nLABEL com.redhat.delivery.backport=false\nLABEL com.redhat.delivery.operator.bundle=true' bundle.Dockerfile
 	cp relatedImages.yaml.in relatedImages.yaml
@@ -234,7 +156,6 @@ bundle-build: bundle
 	fi
 
 # Tag local bundle image with our registry BUNDLE_IMG
-.PHONY: bundle-tag
 bundle-tag:
 	${CONTAINER_CLI} tag bundle $(BUNDLE_IMG)
 	if [ -n "$(RELEASE)" ]; then \
@@ -242,7 +163,6 @@ bundle-tag:
 	fi
 
 # Push the BUNDLE_IMG
-.PHONY: bundle-push
 bundle-push: bundle-tag
 	${CONTAINER_CLI} push $(BUNDLE_IMG)
 	if [ -n "$(RELEASE)" ]; then \
@@ -252,45 +172,3 @@ bundle-push: bundle-tag
 .PHONY: version # Display the version
 version:
 	@echo $(VERSION)
-
-# OPM task
-
-.PHONY: opm
-OPM = ./bin/opm
-opm: ## Download opm locally if necessary.
-ifeq (,$(wildcard $(OPM)))
-ifeq (,$(shell which opm 2>/dev/null))
-	@{ \
-	set -e ;\
-	mkdir -p $(dir $(OPM)) ;\
-	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v$(OPM_VER)/$(OS)-$(ARCH)-opm ;\
-	chmod +x $(OPM) ;\
-	}
-else
-OPM = $(shell which opm)
-endif
-endif
-
-# A comma-separated list of bundle images (e.g. make catalog-build BUNDLE_IMGS=example.com/operator-bundle:v0.1.0,example.com/operator-bundle:v0.2.0).
-# These images MUST exist in a registry and be pull-able.
-BUNDLE_IMGS ?= $(BUNDLE_IMG)
-
-# The image tag given to the resulting catalog image (e.g. make catalog-build CATALOG_IMG=example.com/operator-catalog:v0.2.0).
-CATALOG_IMG ?= $(IMAGE_TAG_BASE)-catalog:v$(VERSION)
-
-# Set CATALOG_BASE_IMG to an existing catalog image tag to add $BUNDLE_IMGS to that image.
-ifneq ($(origin CATALOG_BASE_IMG), undefined)
-FROM_INDEX_OPT := --from-index $(CATALOG_BASE_IMG)
-endif
-
-# Build a catalog image by adding bundle images to an empty catalog using the operator package manager tool, 'opm'.
-# This recipe invokes 'opm' in 'semver' bundle add mode. For more information on add modes, see:
-# https://github.com/operator-framework/community-operators/blob/7f1438c/docs/packaging-operator.md#updating-your-existing-operator
-.PHONY: catalog-build
-catalog-build: opm ## Build a catalog image.
-	$(OPM) index add --container-tool docker --mode semver --tag $(CATALOG_IMG) --bundles $(BUNDLE_IMGS) $(FROM_INDEX_OPT)
-
-# Push the catalog image.
-.PHONY: catalog-push
-catalog-push: ## Push a catalog image.
-	$(MAKE) docker-push IMG=$(CATALOG_IMG)
