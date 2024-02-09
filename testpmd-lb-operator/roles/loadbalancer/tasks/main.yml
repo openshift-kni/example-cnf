@@ -39,6 +39,21 @@
   loop_control:
     loop_var: network_item
 
+- name: Create ServiceAccount for LoadBalancer resource
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'service_account.yml') }}"
+
+- name: Create Role for LoadBalancer resource
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'role.yml') }}"
+
+- name: Create RoleBinding for LoadBalancer resource
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'role_binding.yml') }}"
+
 - name: Create LoadBalancer deployment
   k8s:
     state: present

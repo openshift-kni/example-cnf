@@ -61,6 +61,21 @@
   debug:
     var: network_resources
 
+- name: Create ServiceAccount for TestPMD resource
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'service_account.yml') }}"
+
+- name: Create Role for TestPMD resource
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'role.yml') }}"
+
+- name: Create RoleBinding for TestPMD resource
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'role_binding.yml') }}"
+
 - name: Create TestPMD deployment
   community.kubernetes.k8s:
     state: present

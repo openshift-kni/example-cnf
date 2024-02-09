@@ -1,8 +1,9 @@
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
-  name: manager-role
+  name: loadbalancer-role
+  namespace: example-cnf
 rules:
   ##
   ## Base operator rules
@@ -14,7 +15,6 @@ rules:
       - pods
       - pods/exec
       - pods/log
-      - configmaps
     verbs:
       - create
       - delete
@@ -39,13 +39,14 @@ rules:
       - update
       - watch
   ##
-  ## Rules for examplecnf.openshift.io/v1, Kind: TestPMD
+  ## Rules for examplecnf.openshift.io/v1, Kind: LoadBalancer
   ##
   - apiGroups:
       - examplecnf.openshift.io
     resources:
-      - testpmds
-      - testpmds/status
+      - loadbalancers
+      - loadbalancers/status
+      - loadbalancers/finalizers
     verbs:
       - create
       - delete
@@ -53,6 +54,14 @@ rules:
       - list
       - patch
       - update
+      - watch
+  - apiGroups:
+      - examplecnf.openshift.io
+    resources:
+      - cnfappmacs
+    verbs:
+      - get
+      - list
       - watch
   - apiGroups:
       - k8s.cni.cncf.io
@@ -70,33 +79,4 @@ rules:
       - privileged
     verbs:
       - use
-  ##
-  ## Rules to allow the creation of ServiceAccount, Role and RoleBinding
-  ## for the pods deployed by this operator
-  ##
-  - apiGroups:
-      - ""
-    resources:
-      - serviceaccounts
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - "rbac.authorization.k8s.io"
-    resources:
-      - roles
-      - rolebindings
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
 # +kubebuilder:scaffold:rules

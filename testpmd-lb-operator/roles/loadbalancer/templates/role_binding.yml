@@ -1,0 +1,14 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: loadbalancer-rolebinding
+  namespace: example-cnf
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: loadbalancer-role
+subjects:
+- kind: ServiceAccount
+  name: loadbalancer-account
+  namespace: example-cnf

@@ -1,8 +1,9 @@
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
-  name: manager-role
+  name: trex-server-role
+  namespace: example-cnf
 rules:
   ##
   ## Base operator rules
@@ -14,7 +15,19 @@ rules:
       - pods
       - pods/exec
       - pods/log
-      - configmaps
+      - services
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
     verbs:
       - create
       - delete
@@ -39,13 +52,50 @@ rules:
       - update
       - watch
   ##
-  ## Rules for examplecnf.openshift.io/v1, Kind: TestPMD
+  ## Rules for examplecnf.openshift.io/v1, Kind: TRexConfig
   ##
   - apiGroups:
       - examplecnf.openshift.io
     resources:
-      - testpmds
-      - testpmds/status
+      - trexconfigs
+      - trexconfigs/status
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - security.openshift.io
+    resources:
+      - securitycontextconstraints
+    resourceNames:
+      - privileged
+    verbs:
+      - use
+  - apiGroups:
+      - events.k8s.io
+    resources:
+      - events
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  ##
+  ## Rules for examplecnf.openshift.io/v1, Kind: TRexApp
+  ##
+  - apiGroups:
+      - examplecnf.openshift.io
+    resources:
+      - trexapps
+      - trexapps/status
+      - trexapps/finalizers
     verbs:
       - create
       - delete
@@ -70,14 +120,10 @@ rules:
       - privileged
     verbs:
       - use
-  ##
-  ## Rules to allow the creation of ServiceAccount, Role and RoleBinding
-  ## for the pods deployed by this operator
-  ##
   - apiGroups:
-      - ""
+      - examplecnf.openshift.io
     resources:
-      - serviceaccounts
+      - cnfappmacs
     verbs:
       - create
       - delete
@@ -87,16 +133,11 @@ rules:
       - update
       - watch
   - apiGroups:
-      - "rbac.authorization.k8s.io"
+      - k8s.cni.cncf.io
     resources:
-      - roles
-      - rolebindings
+      - network-attachment-definitions
     verbs:
-      - create
-      - delete
       - get
       - list
-      - patch
-      - update
       - watch
 # +kubebuilder:scaffold:rules

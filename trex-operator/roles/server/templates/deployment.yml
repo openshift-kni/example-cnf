@@ -54,7 +54,7 @@ spec:
                 - cnf-app
 {% endif %}
             topologyKey: kubernetes.io/hostname
-      serviceAccountName: trex-operator-controller-manager
+      serviceAccountName: trex-server-account
 {% if numa_aware_topology is defined and numa_aware_topology | length %}
       schedulerName: "{{ numa_aware_topology }}"
 {% endif %}

@@ -41,7 +41,7 @@ spec:
                 - cnf-app
                 - pkt-gen
             topologyKey: kubernetes.io/hostname
-      serviceAccountName: testpmd-lb-operator-controller-manager
+      serviceAccountName: loadbalancer-account
 {% if numa_aware_topology is defined and numa_aware_topology | length %}
       schedulerName: "{{ numa_aware_topology }}"
 {% endif %}

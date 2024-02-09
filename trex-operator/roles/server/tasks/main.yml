@@ -14,6 +14,21 @@
   loop_control:
     loop_var: network_item
 
+- name: Create ServiceAccount for TRex resource
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'service_account.yml') }}"
+
+- name: Create Role for TRex resource
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'role.yml') }}"
+
+- name: Create RoleBinding for TRex resource
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'role_binding.yml') }}"
+
 - name: Create TRex deployment
   k8s:
     state: present
