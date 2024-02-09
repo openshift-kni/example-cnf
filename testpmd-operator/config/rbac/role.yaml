@@ -70,4 +70,33 @@ rules:
       - privileged
     verbs:
       - use
+  ##
+  ## Rules to allow the creation of ServiceAccount, Role and RoleBinding
+  ## for the pods deployed by this operator
+  ##
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - "rbac.authorization.k8s.io"
+    resources:
+      - roles
+      - rolebindings
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
 # +kubebuilder:scaffold:rules
