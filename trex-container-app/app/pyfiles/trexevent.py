@@ -1,5 +1,6 @@
 import random
 import string
+import os
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 from kubernetes.config.config_exception import ConfigException
@@ -16,76 +17,55 @@ def create_event(data):
 
     try:
         config.load_incluster_config()
-    except ConfigException:
+    except ConfigException as e:
+        log.error("Exception when setting incluster config: %s\n" % e)
         return
 
     custom_api = client.CustomObjectsApi()
     try:
-        objs = custom_api.list_namespaced_custom_object(group, version, namespace, plural)
+        cr = custom_api.get_namespaced_custom_object(group, version, namespace, plural, name)
     except ApiException as e:
-        log.info("Exception when calling CustomObjectsApi->list_namespaced_custom_object: %s\n" % e)
+        log.info("Exception when trying to retrieve TRex CR object: %s\n" % e)
         return
 
-    if len(objs['items']) == 0:
-        log.info("cannot create event, no trexapps CR object")
-        return
-
-    if len(objs['items']) > 1:
-        try:
-            cr_obj = custom_api.get_namespaced_custom_object(group, version, namespace, plural, name)
-        except ApiException as e:
-            log.info("Exception when calling CustomObjectsApi->get_namespaced_custom_object: %s\n" % e)
-            return
-    else:
-        cr_obj = objs['items'][0]
-
-    trex_config_name = cr_obj['metadata']['name']
-    trex_config_uid = cr_obj['metadata']['uid']
-    trex_config_api_version = cr_obj['apiVersion']
-
-    evtTimeMicro = data['microtime']
-    evtTime = data['time']
-    evtName = trex_config_name + '-' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
-
-    cr = {
-            'apiVersion': 'events.k8s.io/v1',
-            'kind': 'Event',
-            'metadata': {
-               'name': evtName,
-               'namespace': namespace,
-               'ownerReferences': []
-            },
-            'type': 'Normal',
-            'eventTime': evtTimeMicro,
-            'series': {
-                'lastObservedTime': evtTime,
-                'count': 2
-            },
-            'reason': data['reason'],
-            'action': data['reason'],
-            'note': data['msg'],
-            'regarding': {
-                    'namespace': namespace,
-                    'kind': 'TRexApp',
-                    'name': trex_config_name,
-                    'uid': trex_config_uid
-                },
-            'reportingController': 'pod/' + os.environ['HOSTNAME'],
-            'reportingInstance': trex_config_name
-         }
-
-    cr['metadata']['ownerReferences'].append({
-            'apiVersion': trex_config_api_version,
-            'kind': 'TRexApp',
-            'name': trex_config_name,
-            'uid': trex_config_uid,
-            'controller': True
-        })
-
-    log.info("CR to be used for the event creation: {}".format(cr))
+    # Randomize the event name to allow for sending subsequent events
+    random_event_id = '-' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+    cr_event = {
+        'apiVersion': 'events.k8s.io/v1',
+        'kind': 'Event',
+        'metadata': {
+            'name': cr['metadata']['name'] + random_event_id,
+            'namespace': cr['metadata']['namespace'],
+            'ownerReferences': [{
+                'apiVersion': cr['apiVersion'],
+                'kind': cr['kind'],
+                'name': cr['metadata']['name'],
+                'uid': cr['metadata']['uid'],
+                'controller': True
+            }]
+        },
+        'type': 'Normal',
+        'eventTime': data['microtime'],
+        'series': {
+            'lastObservedTime': data['time'],
+            'count': 2
+        },
+        'reason': data['reason'],
+        'action': data['reason'],
+        'note': data['msg'],
+        'regarding': {
+            'namespace': cr['metadata']['namespace'],
+            'kind': cr['kind'],
+            'name': cr['metadata']['name'],
+            'uid': cr['metadata']['uid']
+        },
+        'reportingController': 'pod/' + os.environ['HOSTNAME'],
+        'reportingInstance': cr['metadata']['name']
+    }
+    log.info(f"CR to be utilized for event creation: {cr_event}")
 
     events_api = client.EventsV1Api()
     try:
-        resp = events_api.create_namespaced_event(namespace, cr)
+        events_api.create_namespaced_event(namespace, cr_event)
     except ApiException as e:
-        log.info("Exception on creating Event: %s\n" % e)
+        log.info("Exception when creating Event: %s\n" % e)
