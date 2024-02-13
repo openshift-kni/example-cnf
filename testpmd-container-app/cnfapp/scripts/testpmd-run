@@ -34,7 +34,7 @@ for item in "${NETWORK_ARRAY[@]}"; do
     echo "${NAME}=${!NAME}" >> $TESTPMD_ENV
     IFS=',' read -r -a PCI_ARRAY <<< "${!NAME}"
     for pci_item in "${PCI_ARRAY[@]}"; do
-        PCI+=" -w ${pci_item} "
+        PCI+=" -a ${pci_item} "
     done
 done
 
