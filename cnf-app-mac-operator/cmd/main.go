@@ -1,5 +1,5 @@
 /*
-
+Copyright 2024.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,25 +19,22 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
-	"os/exec"
-	"time"
+
+	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
+	// to ensure that exec-entrypoint and run can make use of them.
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	examplecnfv1 "github.com/rh-nfv-int/cnf-app-mac-operator/api/v1"
-	"github.com/rh-nfv-int/cnf-app-mac-operator/controllers"
-	// +kubebuilder:scaffold:imports
-)
-
-const (
-  MAX_RETRIES_WEBSERVER_CHECK = 50
+	examplecnfv1 "github.com/openshift-kni/example-cnf/tree/main/cnf-app-mac-operator/api/v1"
+	"github.com/openshift-kni/example-cnf/tree/main/cnf-app-mac-operator/internal/controller"
+	//+kubebuilder:scaffold:imports
 )
 
 var (
@@ -49,38 +46,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(examplecnfv1.AddToScheme(scheme))
-	// +kubebuilder:scaffold:scheme
-}
-
-func setLifecycleWebServer() {
-	cmd := exec.Command("./webserver", "8095")
-	cmd.Stdout = os.Stdout
-	err := cmd.Start()
-	if err != nil {
-		setupLog.Error(err, "error starting webserver")
-	}
-	go func() { 
-		err = cmd.Wait()
-	 	setupLog.Error(err, "error running webserver")
-	}()
-}
-
-func waitUntilLifecycleWebServerIsReady() {
-	for retries := 0; retries < MAX_RETRIES_WEBSERVER_CHECK; retries++ {
-		// Each retry will be made after 100 ms
-		time.Sleep(100 * time.Millisecond)
-
-		// Check startup probe for this case
-		res, err := http.Get("http://localhost:8095/startz")
-		if err != nil {
-			setupLog.Error(err, "error making http request")
-			os.Exit(1)
-		}
-		if res.StatusCode == http.StatusOK {
-			setupLog.Info("webserver is ready")
-			break
-		}
-	}
+	//+kubebuilder:scaffold:scheme
 }
 
 // getWatchNamespace returns the Namespace the operator should be watching for changes
@@ -98,23 +64,21 @@ func getWatchNamespace() (string, error) {
 }
 
 func main() {
-	// Start calling the webserver as a goroutine to make it asynchronously, so that it does not affect
-	// to the rest of the execution
-	setLifecycleWebServer()
-
-	// We need to wait until the webserver is ready before proceeding with the rest of the configuration
-	// This call must be synchronous
-	waitUntilLifecycleWebServerIsReady()
-
 	var metricsAddr string
 	var enableLeaderElection bool
-	flag.StringVar(&metricsAddr, "metrics-addr", ":8080", "The address the metric endpoint binds to.")
-	flag.BoolVar(&enableLeaderElection, "enable-leader-election", false,
+	var probeAddr string
+	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
+	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
+	opts := zap.Options{
+		Development: true,
+	}
+	opts.BindFlags(flag.CommandLine)
 	flag.Parse()
 
-	ctrl.SetLogger(zap.New(zap.UseDevMode(false)))
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	watchNamespace, err := getWatchNamespace()
 	if err != nil {
@@ -123,19 +87,31 @@ func main() {
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:             scheme,
-		MetricsBindAddress: ":8091",
-		Port:               9443,
-		LeaderElection:     enableLeaderElection,
-		LeaderElectionID:   "34092d78.openshift.io",
-		Namespace:          watchNamespace,
+		Scheme:                 scheme,
+		MetricsBindAddress:     metricsAddr,
+		Port:                   9443,
+		HealthProbeBindAddress: probeAddr,
+		LeaderElection:         enableLeaderElection,
+		LeaderElectionID:       "69868ffe.openshift.io",
+		Namespace:              watchNamespace,
+		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
+		// when the Manager ends. This requires the binary to immediately end when the
+		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
+		// speeds up voluntary leader transitions as the new leader don't have to wait
+		// LeaseDuration time first.
+		//
+		// In the default scaffold provided, the program ends immediately after
+		// the manager stops, so would be fine to enable this option. However,
+		// if you are doing or is intended to do any operation such as perform cleanups
+		// after the manager stops then its usage might be unsafe.
+		// LeaderElectionReleaseOnCancel: true,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
 
-	if err = (&controllers.CNFAppMacReconciler{
+	if err = (&controller.CNFAppMacReconciler{
 		Client: mgr.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("CNFAppMac"),
 		Scheme: mgr.GetScheme(),
@@ -143,7 +119,20 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "CNFAppMac")
 		os.Exit(1)
 	}
-	// +kubebuilder:scaffold:builder
+	//if err = (&examplecnfv1.CNFAppMac{}).SetupWebhookWithManager(mgr); err != nil {
+	//	setupLog.Error(err, "unable to create webhook", "webhook", "CNFAppMac")
+	//	os.Exit(1)
+	//}
+	//+kubebuilder:scaffold:builder
+
+	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
+		setupLog.Error(err, "unable to set up health check")
+		os.Exit(1)
+	}
+	if err := mgr.AddReadyzCheck("readyz", healthz.Ping); err != nil {
+		setupLog.Error(err, "unable to set up ready check")
+		os.Exit(1)
+	}
 
 	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {

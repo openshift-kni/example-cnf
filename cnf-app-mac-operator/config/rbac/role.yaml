@@ -1,4 +1,3 @@
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -48,11 +47,33 @@ rules:
 - apiGroups:
   - examplecnf.openshift.io
   resources:
+  - cnfappmacs/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - examplecnf.openshift.io
+  resources:
   - cnfappmacs/status
   verbs:
   - get
   - patch
   - update
+- apiGroups:
+  - k8s.cni.cncf.io
+  resources:
+  - network-attachment-definitions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - security.openshift.io
+  resourceNames:
+  - hostnetwork
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use
 - apiGroups:
   - k8s.cni.cncf.io
   resources:

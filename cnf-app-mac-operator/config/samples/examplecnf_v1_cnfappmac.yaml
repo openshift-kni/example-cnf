@@ -1,6 +1,12 @@
 apiVersion: examplecnf.openshift.io/v1
 kind: CNFAppMac
 metadata:
+  labels:
+    app.kubernetes.io/name: cnfappmac
+    app.kubernetes.io/instance: cnfappmac-sample
+    app.kubernetes.io/part-of: cnf-app-mac-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: cnf-app-mac-operator
   name: cnfappmac-sample
 spec:
   node: worker-25

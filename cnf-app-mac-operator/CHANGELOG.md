@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.15] - 2024-02-14
+
+- Changed skeleton, based on operator-sdk v1.33.0
+- Webserver is not needed anymore since operator-sdk v1.33.0 code includes it natively in the controller-manager
+
 ## [0.2.14] - 2024-01-26
 
 - Run webserver from external binary
