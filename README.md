@@ -16,6 +16,45 @@ It is providing the following operators:
 
 You can use them from the [Example CNF Catalog](https://quay.io/repository/rh-nfv-int/nfv-example-cnf-catalog?tab=tags).
 
+How operators are created
+------------------------
+
+The four operators defined in this repository are built with [Operator SDK tool](https://sdk.operatorframework.io/docs/building-operators/).
+
+We can differentiate between these two cases:
+
+**Ansible-based operators:**
+
+This is the case of testpmd-operator, trex-operator and testpmd-lb-operator.
+
+Base structure for each case is achieved with the following commands, then it's just a matter of accommodating the required code for each operator in the corresponding files and folders:
+
+- testpmd-operator
+
+TBD
+
+- trex-operator
+
+TBD
+
+- testpmd-lb-operator
+
+```
+$ mkdir testpmd-lb-operator; cd testpmd-lb-operator
+$ operator-sdk init --domain openshift.io --plugins ansible
+$ operator-sdk create api --version v1 --generate-role --group examplecnf --kind LoadBalancer
+```
+
+**Go-based operators:**
+
+This is the case of cnf-app-mac-operator.
+
+Base structure for this case is achieved with the following commands, then it's just a matter of accommodating the required code for the operator in the corresponding files and folders:
+
+- cnf-app-mac-operator
+
+TBD
+
 Ansible based automation
 ------------------------
 

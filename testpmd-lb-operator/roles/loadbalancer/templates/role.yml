@@ -79,4 +79,4 @@ rules:
       - privileged
     verbs:
       - use
-# +kubebuilder:scaffold:rules
+#+kubebuilder:scaffold:rules

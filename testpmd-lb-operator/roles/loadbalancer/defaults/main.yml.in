@@ -1,4 +1,5 @@
 ---
+# defaults file for LoadBalancer
 image_pull_policy: IfNotPresent
 privileged: false
 network_defintions: ""

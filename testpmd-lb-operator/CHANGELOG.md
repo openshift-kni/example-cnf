@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
-## [0.2.13] - 2023-01-12
+## [0.2.14] - 2024-02-07
+
+- Changed skeleton, based on operator-sdk v1.33.0
+
+## [0.2.13] - 2024-01-12
 
 - Lifecycle webserver included in container images consumed from testpmd-container-app to cover CNF Certification requirements for liveness, readiness and startup probes
 
