@@ -19,7 +19,7 @@ RUN wget http://fast.dpdk.org/rel/dpdk-${DPDK_VER}.tar.xz -P /usr/src && \
 
 # Build it with support for mlx5 driver
 RUN cd ${DPDK_DIR} && \
-    meson setup -Dc_args='-DRTE_LIBRTE_MLX5_DEBUG' -Dexamples=all build && \
+    meson setup -Dc_args='-DRTE_LIBRTE_MLX5_DEBUG' -Dexamples=all -Dplatform=generic build && \
     cd build && \
     ninja && \
     meson install && \
