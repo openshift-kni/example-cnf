@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.15] - 2024-02-15
+
+- Changed skeleton, based on operator-sdk v1.33.0
+
 ## [0.2.14] - 2023-01-24
 
 - Remove MAC workaround, since it was just needed for OCP 4.5 and below, which are EOL.

@@ -1,4 +1,5 @@
 ---
+# defaults file for TestPMD
 registry: quay.io
 org: rh-nfv-int
 version: v0.2.0
