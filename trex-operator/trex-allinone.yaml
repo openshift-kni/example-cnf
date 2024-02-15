@@ -208,6 +208,7 @@ metadata:
   name: trex-operator-controller-manager-metrics-service
   namespace: example-cnf
 spec:
+  ipFamilyPolicy: "PreferDualStack"
   ports:
   - name: https
     port: 8443

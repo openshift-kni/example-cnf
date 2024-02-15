@@ -44,6 +44,7 @@
         name: trex-server
         namespace: "{{ ansible_operator_meta.namespace }}"
       spec:
+        ipFamilyPolicy: "PreferDualStack"
         selector:
           example-cnf-type: pkt-gen
         ports:
