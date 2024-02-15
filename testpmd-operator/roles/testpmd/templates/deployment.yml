@@ -60,7 +60,6 @@ spec:
 {% if privileged %}
           privileged: true
 {% else %}
-          runAsUser: 0
           capabilities:
             add: ["IPC_LOCK", "NET_ADMIN"]
 {% endif %}
