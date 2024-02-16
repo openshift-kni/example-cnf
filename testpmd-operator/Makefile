@@ -52,7 +52,7 @@ IMAGE_TAG_BASE ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME)
 
 # BUNDLE_IMG defines the image:tag used for the bundle.
 # You can use it as an arg. (E.g make bundle-build BUNDLE_IMG=<some-registry>/<project-name-bundle>:<tag>)
-BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
+BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(TAG)
 REL_BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
 
 # BUNDLE_GEN_FLAGS are the flags passed to the operator-sdk generate bundle command
@@ -197,6 +197,8 @@ OPERATOR_SDK = $(shell which operator-sdk)
 endif
 endif
 
+# Custom bundle-related tasks
+
 # Generate bundle manifests and metadata, then validate generated files.
 .PHONY: bundle
 bundle: kustomize operator-sdk ## Generate bundle manifests and metadata, then validate generated files.
@@ -237,6 +239,9 @@ bundle-push: bundle-tag
 	${CONTAINER_CLI} push $(REL_BUNDLE_IMG); \
 	fi
 
+.PHONY: version # Display the version
+version:
+	@echo $(VERSION)
 # OPM task
 
 # Download opm locally if necessary.

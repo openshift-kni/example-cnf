@@ -6,8 +6,8 @@ metadata:
     app.kubernetes.io/name: namespace
     app.kubernetes.io/instance: system
     app.kubernetes.io/component: manager
-    app.kubernetes.io/created-by: testpmd-operator-new
-    app.kubernetes.io/part-of: testpmd-operator-new
+    app.kubernetes.io/created-by: testpmd-operator
+    app.kubernetes.io/part-of: testpmd-operator
     app.kubernetes.io/managed-by: kustomize
   name: system
 ---
@@ -21,8 +21,8 @@ metadata:
     app.kubernetes.io/name: deployment
     app.kubernetes.io/instance: controller-manager
     app.kubernetes.io/component: manager
-    app.kubernetes.io/created-by: testpmd-operator-new
-    app.kubernetes.io/part-of: testpmd-operator-new
+    app.kubernetes.io/created-by: testpmd-operator
+    app.kubernetes.io/part-of: testpmd-operator
     app.kubernetes.io/managed-by: kustomize
 spec:
   selector:
@@ -41,8 +41,9 @@ spec:
       containers:
       - args:
         - --leader-elect
-        - --leader-election-id=testpmd-operator-new
+        - --leader-election-id=testpmd-operator
         image: controller:latest
+        imagePullPolicy: IfNotPresent
         name: manager
         env:
         - name: ANSIBLE_GATHERING

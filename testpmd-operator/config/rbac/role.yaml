@@ -100,3 +100,4 @@ rules:
       - patch
       - update
       - watch
+#+kubebuilder:scaffold:rules
