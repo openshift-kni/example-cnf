@@ -30,45 +30,7 @@ def send_lb_data(data):
     finally:
         sock.close();
 
-def send_macs(spec, name):
-    for resource in spec['resources']:
-        for device in resource['devices']:
-            msg = "1," + device['mac'] + "," + name
-            send_lb_data(msg)
-
-def send_testpmdmac_cr_values():
-    group = "examplecnf.openshift.io"
-    version = "v1"
-    namespace = os.environ.get("NAMESPACE", "example-cnf")
-    plural = "cnfappmacs"
-
-    if os.path.exists("/var/lib/testpmd/kubeconfig"):
-        config.load_kube_config(config_file="/var/lib/testpmd/kubeconfig")
-    else:
-        config.load_incluster_config()
-
-    custom_api = client.CustomObjectsApi()
-    try:
-        resp = custom_api.list_namespaced_custom_object(group, version, namespace, plural)
-        name_list = []
-        for item in resp['items']:
-            name = item['metadata']['name']
-            if name in name_list:
-                continue
-            name_list.append(name)
-            send_macs(item['spec'], name)
-    except ApiException as e:
-        return None
-
-def mac_fetch_thread():
-    print("fetch started")
-    time.sleep(2)
-    send_testpmdmac_cr_values()
-    print("fetch completed")
-
 def main():
-    # TODO(skramaja) NOt required as watch gets existing objs, test well before removing
-    #Thread(target=mac_fetch_thread).start()
     while True:
         try:
             start_watch()
