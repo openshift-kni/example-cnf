@@ -12,6 +12,8 @@ LABEL name="NFV Example CNF Application Opertor" \
 
 COPY licenses /licenses
 
+RUN /usr/bin/python3 -m pip install openshift
+
 COPY requirements.yml ${HOME}/requirements.yml
 RUN ansible-galaxy collection install -r ${HOME}/requirements.yml \
  && chmod -R ug+rwx ${HOME}/.ansible
