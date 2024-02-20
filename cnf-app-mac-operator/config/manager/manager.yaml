@@ -1,3 +1,16 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    control-plane: controller-manager
+    app.kubernetes.io/name: namespace
+    app.kubernetes.io/instance: system
+    app.kubernetes.io/component: manager
+    app.kubernetes.io/created-by: cnf-app-mac-operator
+    app.kubernetes.io/part-of: cnf-app-mac-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: system
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,6 +18,12 @@ metadata:
   namespace: system
   labels:
     control-plane: controller-manager
+    app.kubernetes.io/name: deployment
+    app.kubernetes.io/instance: controller-manager
+    app.kubernetes.io/component: manager
+    app.kubernetes.io/created-by: cnf-app-mac-operator
+    app.kubernetes.io/part-of: cnf-app-mac-operator
+    app.kubernetes.io/managed-by: kustomize
 spec:
   selector:
     matchLabels:
@@ -12,24 +31,26 @@ spec:
   replicas: 1
   template:
     metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
       labels:
         control-plane: controller-manager
     spec:
+      securityContext:
+        runAsNonRoot: true
       containers:
       - command:
         - /manager
         args:
-        - --enable-leader-election
+        - --leader-elect
         image: controller:latest
         imagePullPolicy: IfNotPresent
         name: manager
-        resources:
-          limits:
-            cpu: 100m
-            memory: 100Mi
-          requests:
-            cpu: 100m
-            memory: 50Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - "ALL"
         env:
         - name: WATCH_NAMESPACE
           valueFrom:
@@ -45,21 +66,30 @@ spec:
         livenessProbe:
           httpGet:
             path: /healthz
-            port: 8095
+            port: 8081
           initialDelaySeconds: 15
-          periodSeconds: 10
+          periodSeconds: 20
         readinessProbe:
           httpGet:
             path: /readyz
-            port: 8095
+            port: 8081
           initialDelaySeconds: 5
           periodSeconds: 10
+        # operator-sdk is not implementing startup probe up to now, using liveness probe endpoint
+        # while this feature is developed
         startupProbe:
           httpGet:
-            path: /startz
-            port: 8095
+            path: /healthz
+            port: 8081
           initialDelaySeconds: 30
           periodSeconds: 10
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 64Mi
         terminationMessagePolicy: FallbackToLogsOnError
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
