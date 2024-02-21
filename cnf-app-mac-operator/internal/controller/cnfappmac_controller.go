@@ -216,6 +216,11 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	if macStr == "" {
+		log.Info("No MAC address retrieved, exiting")
+		return ctrl.Result{}, nil
+	}
+
 	log.Info("Get mac string from command executed", "mac-string", macStr)
 
 	macs := strings.Split(strings.ReplaceAll(macStr, "\r\n", "\n"), "\n")
