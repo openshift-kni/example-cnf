@@ -446,7 +446,7 @@ func getContainerLogValue(podName, namespace string) (string, error) {
 	cmd := []string{
 		"sh",
 		"-c",
-		"egrep '^Port [0-9]: ([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$' /var/log/testpmd/app.log | sed 's/Port [0-9]: //'",
+		"egrep '^Port [0-9]: ([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})$' /var/log/testpmd/app.log | sed 's/Port [0-9]: //'",
 	}
 	return executeCmdOnContainer(cmd, podName, namespace)
 }
