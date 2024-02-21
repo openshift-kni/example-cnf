@@ -212,7 +212,6 @@ def get_dst_mac():
     except ApiException as e:
         return []
 
-    print(response)
     macs = []
     for item in response['items']:
         print(item['spec'].get('node'))

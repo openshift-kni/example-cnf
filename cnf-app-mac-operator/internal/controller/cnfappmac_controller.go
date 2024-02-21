@@ -130,6 +130,7 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	err = r.Get(ctx, req.NamespacedName, macCR)
 	if err == nil {
 		// CNFAppMac CR is found for this pod, skip further processing
+		log.Info("CNFAppMac CR is found for this pod, skip further processing")
 		return ctrl.Result{}, nil
 	} else if !errors.IsNotFound(err) {
 		log.Error(err, "Failed to get cr")
@@ -142,12 +143,15 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	networkStr, ok := pod.Annotations["k8s.v1.cni.cncf.io/networks"]
 	var networks []map[string]interface{}
 	if ok {
+		log.Info("Network annotations for pod", "raw-net-annotations", networkStr)
 		json.Unmarshal([]byte(networkStr), &networks)
+		log.Info("Unmarshalled network annotations", "unmarshalled-net-annotations", networks)
 		if len(networks) == 0 {
 			return ctrl.Result{}, nil
 		}
 		// Check if one of the nework has hardcode mac, pod will be skipped
 		for _, item := range networks {
+			log.Info("Individual network item", "net-item", item)
 			if _, ok = item["mac"]; ok {
 				return ctrl.Result{}, nil
 			}
@@ -156,6 +160,7 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		// CNF application, but does not have required annotations
 		// This can be case of shift-on-stack where sriov-cnf will not work with annotations
 		// Try alternate method
+		log.Info("No network annotations for pod, trying alternative method")
 		err = r.getNetworksFromResources(req, pod, &networks)
 		if err != nil {
 			log.Error(err, "Failed to get Networks from Resources")
@@ -169,7 +174,7 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	if len(networks) > 0 {
 		var nwNameList []string
 		for _, item := range networks {
-			log.Info("Networks", "name", item["name"])
+			log.Info("Networks", "name", item["name"], "net-details", item)
 			if !containsString(nwNameList, item["name"].(string)) {
 				nwNameList = append(nwNameList, item["name"].(string))
 			}
@@ -186,6 +191,7 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			if err != nil {
 				return ctrl.Result{}, err
 			}
+			log.Info("Resource name for network", "net", nwName, "resource", netAttach)
 			resName := netAttach.GetAnnotations()["k8s.v1.cni.cncf.io/resourceName"]
 			resourcesMap, _ := r.getResMap(resName, podName, namespace, nwName)
 			resourcesMapList = append(resourcesMapList, resourcesMap)
@@ -210,7 +216,11 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return ctrl.Result{}, err
 	}
 
+	log.Info("Get mac string from command executed", "mac-string", macStr)
+
 	macs := strings.Split(strings.ReplaceAll(macStr, "\r\n", "\n"), "\n")
+
+	log.Info("Get processed mac string from command executed", "processed-mac-string", macStr)
 
 	err = r.createCR(req, pod.UID, pod.Spec.NodeName, resourcesMapList, macs)
 	if err != nil {
@@ -243,7 +253,7 @@ func (r *CNFAppMacReconciler) getResMap(resName, podName, namespace, nwName stri
 }
 
 func (r *CNFAppMacReconciler) createCR(req ctrl.Request, uid types.UID, nodename string, resourcesMapList []map[string]interface{}, macs []string) error {
-	//log := r.Log.WithValues("cnfappmac", req.NamespacedName)
+	log := r.Log.WithValues("cnfappmac", req.NamespacedName)
 	resInterface := []interface{}{}
 	macIdx := 0
 	for _, item := range resourcesMapList {
@@ -294,6 +304,7 @@ func (r *CNFAppMacReconciler) createCR(req ctrl.Request, uid types.UID, nodename
 		},
 	}
 	err := r.Create(context.Background(), macCR)
+	log.Info("Created CNFAppMac CR", "cnfappmac-cr", macCR)
 	return err
 }
 
@@ -430,7 +441,7 @@ func getContainerLogValue(podName, namespace string) (string, error) {
 	cmd := []string{
 		"sh",
 		"-c",
-		"egrep 'Port [0-9]:' /var/log/testpmd/app.log | sed 's/Port [0-9]: //'",
+		"egrep '^Port [0-9]: ([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$' /var/log/testpmd/app.log | sed 's/Port [0-9]: //'",
 	}
 	return executeCmdOnContainer(cmd, podName, namespace)
 }
