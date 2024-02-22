@@ -1,6 +1,12 @@
 apiVersion: examplecnf.openshift.io/v1
 kind: TestPMD
 metadata:
+  labels:
+    app.kubernetes.io/name: testpmd
+    app.kubernetes.io/instance: testpmd-sample
+    app.kubernetes.io/part-of: testpmd-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: testpmd-operator
   name: testpmd-sample
 spec:
   image_testpmd: registry.redhat.io/openshift4/dpdk-base-rhel8:v4.6.3-8

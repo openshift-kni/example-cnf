@@ -4,4 +4,4 @@
   group: examplecnf.openshift.io
   kind: TestPMD
   role: testpmd
-# +kubebuilder:scaffold:watch
+#+kubebuilder:scaffold:watch

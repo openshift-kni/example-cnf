@@ -31,7 +31,11 @@ Base structure for each case is achieved with the following commands, then it's 
 
 - testpmd-operator
 
-TBD
+```
+$ mkdir testpmd-operator; cd testpmd-operator
+$ operator-sdk init --domain openshift.io --plugins ansible
+$ operator-sdk create api --version v1 --generate-role --group examplecnf --kind TestPMD
+```
 
 - trex-operator
 

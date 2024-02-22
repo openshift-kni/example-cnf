@@ -1,5 +1,5 @@
 # Adds namespace to all resources.
-namespace: example-cnf
+namespace: testpmd-operator-system
 
 # Value of this field is prepended to the
 # names of all resources, e.g. a deployment named
@@ -9,10 +9,12 @@ namespace: example-cnf
 namePrefix: testpmd-operator-
 
 # Labels to add to all resources and selectors.
-#commonLabels:
-#  someName: someValue
+#labels:
+#- includeSelectors: true
+#  pairs:
+#    someName: someValue
 
-bases:
+resources:
 - ../crd
 - ../rbac
 - ../manager
@@ -20,7 +22,9 @@ bases:
 #- ../prometheus
 
 patchesStrategicMerge:
-  # Protect the /metrics endpoint by putting it behind auth.
-  # If you want your controller-manager to expose the /metrics
-  # endpoint w/o any authn/z, please comment the following line.
+# Protect the /metrics endpoint by putting it behind auth.
+# If you want your controller-manager to expose the /metrics
+# endpoint w/o any authn/z, please comment the following line.
 - manager_auth_proxy_patch.yaml
+
+
