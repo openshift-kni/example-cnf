@@ -149,8 +149,11 @@ spec:
         imagePullPolicy: "{{ image_pull_policy }}"
         resources:
           limits:
-            memory: "500Mi"
+            memory: "756Mi"
             cpu: 2
+          requests:
+            memory: "256Mi"
+            cpu: 50m
         volumeMounts:
         - name: log-dir
           mountPath: /var/log/testpmd
