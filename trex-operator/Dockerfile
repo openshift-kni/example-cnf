@@ -1,4 +1,4 @@
-FROM quay.io/operator-framework/ansible-operator:v1.10.0
+FROM quay.io/operator-framework/ansible-operator:v1.33.0
 
 MAINTAINER telcoci@redhat.com
 

@@ -63,7 +63,12 @@ $ operator-sdk create api --version v1 --generate-role --group examplecnf --kind
 
 - trex-operator
 
-TBD
+```
+$ mkdir trex-operator; cd trex-operator
+$ operator-sdk init --domain openshift.io --plugins ansible
+$ operator-sdk create api --version v1 --generate-role --group examplecnf --kind TRexApp
+$ operator-sdk create api --version v1 --generate-role --group examplecnf --kind TRexConfig
+```
 
 - testpmd-lb-operator
 

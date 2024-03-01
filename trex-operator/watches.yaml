@@ -2,10 +2,10 @@
 # Use the 'create api' subcommand to add watches to this file.
 - version: v1
   group: examplecnf.openshift.io
-  kind: TRexConfig
-  role: server
+  kind: TRexApp
+  role: trexapp
 - version: v1
   group: examplecnf.openshift.io
-  kind: TRexApp
-  role: app
-# +kubebuilder:scaffold:watch
+  kind: TRexConfig
+  role: trexconfig
+#+kubebuilder:scaffold:watch
