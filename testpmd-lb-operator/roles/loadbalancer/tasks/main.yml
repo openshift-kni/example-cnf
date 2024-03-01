@@ -59,3 +59,8 @@
   k8s:
     state: present
     definition: "{{ lookup('template', 'deployment.yml') }}"
+
+- name: Create PodDisruptionBudget for LoadBalancer pod
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'pdb.yml') }}"

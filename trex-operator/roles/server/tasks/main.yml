@@ -34,6 +34,11 @@
     state: present
     definition: "{{ lookup('template', 'deployment.yml') }}"
 
+- name: Create PodDisruptionBudget for LoadBalancer pod
+  k8s:
+    state: present
+    definition: "{{ lookup('template', 'pdb.yml') }}"
+
 - name: Create TRex Server Service
   when: trex_server|default(true)|bool
   k8s:
