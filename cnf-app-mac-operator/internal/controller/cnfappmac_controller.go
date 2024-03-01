@@ -24,10 +24,8 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
-	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -38,9 +36,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
-	//"sigs.k8s.io/controller-runtime/pkg/handler"
-	//"sigs.k8s.io/controller-runtime/pkg/log"
-	//"sigs.k8s.io/controller-runtime/pkg/source"
 
 	examplecnfv1 "github.com/openshift-kni/example-cnf/tree/main/cnf-app-mac-operator/api/v1"
 )
@@ -210,7 +205,6 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 	}
 
-	//err = r.createMacFetchJob(req, pod.Spec.NodeName, resources)
 	macStr, err := getContainerLogValue(req.NamespacedName.Name, req.NamespacedName.Namespace)
 	if err != nil {
 		return ctrl.Result{}, err
@@ -359,78 +353,6 @@ func (r *CNFAppMacReconciler) removeCR(req ctrl.Request) {
 	if err == nil {
 		r.Delete(ctx, macCR)
 	}
-
-	macName := req.NamespacedName
-	macName.Name = "mac-fetch-" + req.NamespacedName.Name
-	job := &batchv1.Job{}
-	err = r.Get(context.Background(), macName, job)
-	if err == nil {
-		r.Delete(ctx, job)
-	}
-}
-
-func (r *CNFAppMacReconciler) createMacFetchJob(req ctrl.Request, nodeName string, resources []string) error {
-	log := r.Log.WithValues("cnfappmac", req.NamespacedName)
-	macName := req.NamespacedName
-	macName.Name = "mac-fetch-" + req.NamespacedName.Name
-
-	// Create a job on specific worker node to fetch the PCI's admin mac adress
-	job := &batchv1.Job{}
-	err := r.Get(context.Background(), macName, job)
-	if err != nil && !errors.IsNotFound(err) {
-		return err
-	} else if err == nil {
-		// Job for this pod already exists
-		log.Info("Job already exits")
-		return nil
-	}
-
-	args := []string{req.NamespacedName.Name}
-	args = append(args, resources...)
-	env := []corev1.EnvVar{
-		{
-			Name: "NAMESPACE",
-			ValueFrom: &corev1.EnvVarSource{
-				FieldRef: &corev1.ObjectFieldSelector{
-					FieldPath: "metadata.namespace",
-				},
-			},
-		},
-		{
-			Name: "NODENAME",
-			ValueFrom: &corev1.EnvVarSource{
-				FieldRef: &corev1.ObjectFieldSelector{
-					FieldPath: "spec.nodeName",
-				},
-			},
-		},
-	}
-	container := corev1.Container{
-		Name:            "fetch-mac",
-		Image:           "quay.io/rh-nfv-int/cnf-app-mac-fetch:v0.2.0",
-		Command:         []string{"/app/main"},
-		Args:            args,
-		ImagePullPolicy: corev1.PullAlways,
-		Env:             env,
-	}
-	job = &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      macName.Name,
-			Namespace: req.NamespacedName.Namespace,
-		},
-		Spec: batchv1.JobSpec{
-			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					NodeName:      nodeName,
-					HostNetwork:   true,
-					Containers:    []corev1.Container{container},
-					RestartPolicy: corev1.RestartPolicyNever,
-				},
-			},
-		},
-	}
-	err = r.Create(context.Background(), job)
-	return err
 }
 
 func getContainerEnvValue(podName, namespace, envName string) (string, error) {

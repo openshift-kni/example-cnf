@@ -85,9 +85,6 @@ spec:
           mountPath: /var/log/testpmd
         - name: lib-dir
           mountPath: /var/lib/testpmd
-        - name: cnf-run
-          mountPath: /var/lib/testpmd/run
-          subPath: run
         env:
         - name: NETWORK_NAME_LIST
           value: "{{ network_resources.keys()|list|join(',') }}"
@@ -151,7 +148,3 @@ spec:
         emptyDir: {}
       - name: lib-dir
         emptyDir: {}
-      - name: cnf-run
-        configMap:
-          name: cnf-run
-          defaultMode: 0755
