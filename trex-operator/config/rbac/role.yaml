@@ -25,8 +25,10 @@ rules:
       - update
       - watch
   - apiGroups:
+      - batch
       - apps
     resources:
+      - jobs
       - deployments
       - daemonsets
       - replicasets
