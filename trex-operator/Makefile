@@ -140,7 +140,7 @@ operator-build: ensure_digests
 .PHONY: operator-push
 operator-push:
 	if [ -n "$(RELEASE)" ]; then \
-        ${CONTAINER_CLI} push ${REL_IMG} ;\
+	${CONTAINER_CLI} push ${REL_IMG} ;\
 	fi
 	${CONTAINER_CLI} push ${IMG}
 
