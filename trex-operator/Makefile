@@ -119,6 +119,7 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} delete -f -
 
 # Ensure proper digests for trex-container-app and trex-container-server
+.PHONY: ensure_digests
 ensure_digests:
 	cp roles/trexapp/defaults/main.yml.in roles/trexapp/defaults/main.yml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/trexapp/defaults/main.yml
@@ -127,18 +128,20 @@ ensure_digests:
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/trexconfig/defaults/main.yml
 
 # Build the operator image
+.PHONY: operator-build
 operator-build: ensure_digests
-        if [ -n "$(RELEASE)" ]; then \
-        BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . -t ${IMG}  -t ${REL_IMG} ;\
-        else \
-        BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . --label quay.expires-after=2w -t ${IMG} ;\
-        fi
+	if [ -n "$(RELEASE)" ]; then \
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . -t ${IMG}  -t ${REL_IMG} ;\
+	else \
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . --label quay.expires-after=2w -t ${IMG} ;\
+	fi
 
 # Push the operator image
+.PHONY: operator-push
 operator-push:
 	if [ -n "$(RELEASE)" ]; then \
         ${CONTAINER_CLI} push ${REL_IMG} ;\
-        fi
+	fi
 	${CONTAINER_CLI} push ${IMG}
 
 PATH  := $(PATH):$(PWD)/bin
@@ -216,15 +219,16 @@ bundle: kustomize operator-sdk
 # Build the bundle image, using local bundle image name
 .PHONY: bundle-build
 bundle-build: bundle
-        if [ -n "$(RELEASE)" ]; then \
-        BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Dockerfile \
-                -t bundle . ; \
-        else \
-        BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Dockerfile --label quay.expires-after=2w \
-                -t bundle . ; \
-        fi
+	if [ -n "$(RELEASE)" ]; then \
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Dockerfile \
+	        -t bundle . ; \
+	else \
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Dockerfile --label quay.expires-after=2w \
+	        -t bundle . ; \
+	fi
 
 # Tag local bundle image with our registry BUNDLE_IMG
+.PHONY: bundle-tag
 bundle-tag:
 	${CONTAINER_CLI} tag bundle $(BUNDLE_IMG)
 	if [ -n "$(RELEASE)" ]; then \
