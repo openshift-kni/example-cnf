@@ -1,6 +1,4 @@
 ---
-# if replica = 1, recommended not to set maxUnavailable to 0 or 0% and minAvailable to 100%
-# https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/design/adding-pod-disruption-budgets.md#limitations-on-pod-disruption-budgets
 apiVersion: v1
 kind: List
 items:
@@ -10,7 +8,7 @@ items:
       name: cnf-app-pdb-min
       namespace: "{{ ansible_operator_meta.namespace }}"
     spec:
-      minAvailable: "{{ (size|int == 1)|ternary(0,1) }}"
+      minAvailable: "{{ (size|int == 1)|ternary(1,2) }}"
       selector:
         matchLabels:
           example-cnf-type: cnf-app
@@ -20,7 +18,7 @@ items:
       name: cnf-app-pdb-max
       namespace: "{{ ansible_operator_meta.namespace }}"
     spec:
-      maxUnavailable: "{{ (size|int == 1)|ternary(1,2) }}"
+      maxUnavailable: "{{ (size|int == 1)|ternary(0,1) }}"
       selector:
         matchLabels:
           example-cnf-type: cnf-app

@@ -34,6 +34,10 @@
     state: present
     definition: "{{ lookup('template', 'deployment.yml') }}"
 
+# if replica = 1, recommended not to set maxUnavailable to 0 or 0% and minAvailable to 100% for upgrades
+# https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/design/adding-pod-disruption-budgets.md#limitations-on-pod-disruption-budgets
+# TODO (in a new patch): update PDB during upgrades to avoid issues during node draining, something like:
+# https://medium.com/@tamber/solution-avoid-kubernetes-openshift-node-drain-failure-due-to-active-poddisruptionbudget-df68efed2c4f
 - name: Create PodDisruptionBudget for LoadBalancer pod
   k8s:
     state: present
