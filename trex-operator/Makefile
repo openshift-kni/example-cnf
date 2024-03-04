@@ -120,9 +120,9 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 
 # Ensure proper digests for trex-container-app and trex-container-server
 ensure_digests:
-	cp roles/trexapp/defaults/main.yml roles/trexapp/defaults/main.yml
+	cp roles/trexapp/defaults/main.yml.in roles/trexapp/defaults/main.yml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/trexapp/defaults/main.yml
-	cp roles/trexconfig/defaults/main.yml roles/trexconfig/defaults/main.yml
+	cp roles/trexconfig/defaults/main.yml.in roles/trexconfig/defaults/main.yml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-server:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-server@.*/trex-container-server@$${DIGEST}\"   # $(TREX_VER)/" roles/trexconfig/defaults/main.yml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/trexconfig/defaults/main.yml
 
