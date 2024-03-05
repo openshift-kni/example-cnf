@@ -20,8 +20,8 @@ DEFAULT_CHANNEL  ?= alpha
 CONTAINER_CLI    ?= podman
 CLUSTER_CLI      ?= oc
 OPERATOR_NAME    := trex-operator
-OPERATOR_SDK_VER ?= 1.33.0
 KUSTOMIZE_VER    := 5.0.1
+OPM_VER          := 1.23.0
 TREX_VER         ?= v$(shell bash -c '. ../versions.cfg; echo "$${VERSIONS[trex-container-app]}"')
 
 # CHANNELS define the bundle channels used in the bundle.
@@ -45,17 +45,15 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 
 # IMAGE_TAG_BASE defines the docker.io namespace and part of the image name for remote images.
 # This variable is used to construct full image tags for bundle and catalog images.
-#
-# For example, running 'make bundle-build bundle-push catalog-build catalog-push' will build and push both
-# openshift.io/trex-operator-bundle:$VERSION and openshift.io/trex-operator-catalog:$VERSION.
-IMAGE_TAG_BASE ?= openshift.io/trex-operator
+IMAGE_TAG_BASE ?= $(REGISTRY)/$(ORG)/$(OPERATOR_NAME)
 
 # BUNDLE_IMG defines the image:tag used for the bundle.
 # You can use it as an arg. (E.g make bundle-build BUNDLE_IMG=<some-registry>/<project-name-bundle>:<tag>)
-BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
+BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(TAG)
+REL_BUNDLE_IMG ?= $(IMAGE_TAG_BASE)-bundle:v$(VERSION)
 
 # BUNDLE_GEN_FLAGS are the flags passed to the operator-sdk generate bundle command
-BUNDLE_GEN_FLAGS ?= -q --overwrite --version $(VERSION) $(BUNDLE_METADATA_OPTS)
+BUNDLE_GEN_FLAGS ?= -q --overwrite --version $(TAG) $(BUNDLE_METADATA_OPTS)
 
 # USE_IMAGE_DIGESTS defines if images are resolved via tags or digests
 # You can enable this value if you would like to use SHA Based Digests
@@ -114,8 +112,10 @@ deploy: kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/c
 	echo "---" >> trex-allinone.yaml
 	$(KUSTOMIZE) build config/default >> trex-allinone.yaml
 
+# Custom tasks for our operator build and push
+# Undeploy controller from the K8s cluster specified in ~/.kube/config.
 .PHONY: undeploy
-undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
+undeploy:
 	$(KUSTOMIZE) build config/default | ${CLUSTER_CLI} delete -f -
 
 # Ensure proper digests for trex-container-app and trex-container-server
@@ -246,17 +246,18 @@ bundle-push: bundle-tag
 .PHONY: version # Display the version
 version:
 	@echo $(VERSION)
-
 # OPM task
+
+# Download opm locally if necessary.
 .PHONY: opm
 OPM = ./bin/opm
-opm: ## Download opm locally if necessary.
+opm:
 ifeq (,$(wildcard $(OPM)))
 ifeq (,$(shell which opm 2>/dev/null))
 	@{ \
 	set -e ;\
 	mkdir -p $(dir $(OPM)) ;\
-	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.23.0/$(OS)-$(ARCH)-opm ;\
+	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v$(OPM_VER)/$(OS)-$(ARCH)-opm ;\
 	chmod +x $(OPM) ;\
 	}
 else
