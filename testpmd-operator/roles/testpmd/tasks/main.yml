@@ -19,7 +19,7 @@
 - name: Check if networks parameter is empty
   fail:
     msg: "networks or resources parameter is required"
-  when: 
+  when:
     - networks|length == 0
     - resources|length == 0
 
@@ -50,7 +50,7 @@
     loop_var: network_item
 
 - name: "Parse resources if defined and when sriov network is not defined"
-  set_fact: 
+  set_fact:
     network_resources: "{{ network_resources | combine({item.name: item.count}) }}"
   loop: "{{ resources }}"
   when:
@@ -85,7 +85,7 @@
 # https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/design/adding-pod-disruption-budgets.md#limitations-on-pod-disruption-budgets
 # TODO (in a new patch): update PDB during upgrades to avoid issues during node draining, something like:
 # https://medium.com/@tamber/solution-avoid-kubernetes-openshift-node-drain-failure-due-to-active-poddisruptionbudget-df68efed2c4f
-- name: Create PodDisruptionBudget for LoadBalancer pod
+- name: Create PodDisruptionBudget for TestPMD pod
   kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', 'pdb.yml') }}"
