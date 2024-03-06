@@ -16,6 +16,7 @@ rules:
       - pods/exec
       - pods/log
       - configmaps
+      - lists
     verbs:
       - create
       - delete
@@ -31,6 +32,18 @@ rules:
       - daemonsets
       - replicasets
       - statefulsets
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - policy
+    resources:
+      - poddisruptionbudgets
     verbs:
       - create
       - delete
