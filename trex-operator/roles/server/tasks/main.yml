@@ -9,10 +9,22 @@
     msg: "networks parameter is empty"
   when: networks|length == 0
 
+- name: print networks
+  debug:
+    var: networks
+
 - include_tasks: network-parse.yaml
   loop: "{{ networks }}"
   loop_control:
     loop_var: network_item
+
+- name: Updated network resources after reading networks
+  debug:
+    var: network_resources
+
+- name: Updated network name list after reading networks
+  debug:
+    var: network_name_list
 
 - name: Create ServiceAccount for TRex resource
   k8s:

@@ -24,6 +24,10 @@
   set_fact:
     networks: "{{ packet_generator_networks + cnf_app_networks }}"
 
+- name: print networks
+  debug:
+    var: networks
+
 - name: "Parse CNF App network {{ network_item }}"
   include_tasks: network-parse.yaml
   loop: "{{ cnf_app_networks }}"
@@ -34,11 +38,31 @@
   set_fact:
     cnf_app_network_resources: "{{ network_resources }}"
 
+- name: print cnf_app_network_resources
+  debug:
+    var: cnf_app_network_resources
+
+- name: Updated network resources after reading cnf_app_networks
+  debug:
+    var: network_resources
+
+- name: Updated network name list after reading cnf_app_networks
+  debug:
+    var: network_name_list
+
 - name: "Parse Packet generator network {{ network_item }}"
   include_tasks: network-parse.yaml
   loop: "{{ packet_generator_networks }}"
   loop_control:
     loop_var: network_item
+
+- name: Updated network resources after reading packet_generator_networks
+  debug:
+    var: network_resources
+
+- name: Updated network name list after reading packet_generator_networks
+  debug:
+    var: network_name_list
 
 - name: Create ServiceAccount for LoadBalancer resource
   k8s:
