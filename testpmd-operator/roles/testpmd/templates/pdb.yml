@@ -8,7 +8,7 @@ items:
       name: cnf-app-pdb-min
       namespace: "{{ ansible_operator_meta.namespace }}"
     spec:
-      minAvailable: 1
+      minAvailable: 0
       selector:
         matchLabels:
           example-cnf-type: cnf-app
@@ -18,7 +18,7 @@ items:
       name: cnf-app-pdb-max
       namespace: "{{ ansible_operator_meta.namespace }}"
     spec:
-      maxUnavailable: 0
+      maxUnavailable: 1
       selector:
         matchLabels:
           example-cnf-type: cnf-app

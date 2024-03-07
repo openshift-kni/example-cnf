@@ -8,7 +8,7 @@ items:
       name: pkt-gen-pdb-min
       namespace: "{{ ansible_operator_meta.namespace }}"
     spec:
-      minAvailable: 1
+      minAvailable: 0
       selector:
         matchLabels:
           example-cnf-type: pkt-gen
@@ -18,7 +18,7 @@ items:
       name: pkt-gen-pdb-max
       namespace: "{{ ansible_operator_meta.namespace }}"
     spec:
-      maxUnavailable: 0
+      maxUnavailable: 1
       selector:
         matchLabels:
           example-cnf-type: pkt-gen
