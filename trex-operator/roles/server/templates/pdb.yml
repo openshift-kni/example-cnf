@@ -12,13 +12,3 @@ items:
       selector:
         matchLabels:
           example-cnf-type: pkt-gen
-  - apiVersion: policy/v1
-    kind: PodDisruptionBudget
-    metadata:
-      name: pkt-gen-pdb-max
-      namespace: "{{ ansible_operator_meta.namespace }}"
-    spec:
-      maxUnavailable: 1
-      selector:
-        matchLabels:
-          example-cnf-type: pkt-gen

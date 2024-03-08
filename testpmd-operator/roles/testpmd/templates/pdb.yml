@@ -12,13 +12,3 @@ items:
       selector:
         matchLabels:
           example-cnf-type: cnf-app
-  - apiVersion: policy/v1
-    kind: PodDisruptionBudget
-    metadata:
-      name: cnf-app-pdb-max
-      namespace: "{{ ansible_operator_meta.namespace }}"
-    spec:
-      maxUnavailable: 1
-      selector:
-        matchLabels:
-          example-cnf-type: cnf-app
