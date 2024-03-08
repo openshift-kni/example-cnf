@@ -219,7 +219,9 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	macs := strings.Split(strings.ReplaceAll(macStr, "\r\n", "\n"), "\n")
 
-	log.Info("Get processed mac string from command executed", "processed-mac-string", macStr)
+	log.Info("Get processed mac string from command executed", "processed-mac-string", macs)
+
+	log.Info("Create CR for", "pod-uid", pod.UID, "node-name", pod.Spec.NodeName, "resources", resourcesMapList, "macs", macs)
 
 	err = r.createCR(req, pod.UID, pod.Spec.NodeName, resourcesMapList, macs)
 	if err != nil {
@@ -256,22 +258,28 @@ func (r *CNFAppMacReconciler) createCR(req ctrl.Request, uid types.UID, nodename
 	resInterface := []interface{}{}
 	macIdx := 0
 	for _, item := range resourcesMapList {
+		log.Info("Create CR - check resource", "resource", item)
 		pciList := item["pci"].([]string)
 		devInterface := []interface{}{}
 		for _, pci := range pciList {
+			log.Info("Create CR - check PCI", "pci", pci)
 			dev := map[string]interface{}{
 				"pci": pci,
 				"mac": macs[macIdx],
 			}
 			macIdx++
+			log.Info("Create CR - check dev", "dev", dev)
 			devInterface = append(devInterface, dev)
 		}
+		log.Info("Create CR - check devInterface", "devInterface", devInterface)
 		res := map[string]interface{}{
 			"name":    item["name"],
 			"devices": devInterface,
 		}
+		log.Info("Create CR - check res", "res", res)
 		resInterface = append(resInterface, res)
 	}
+	log.Info("Create CR - check resInterface", "resInterface", resInterface)
 
 	name := req.NamespacedName.Name
 	namespace := req.NamespacedName.Namespace
@@ -285,6 +293,7 @@ func (r *CNFAppMacReconciler) createCR(req ctrl.Request, uid types.UID, nodename
 		"uid":                uid,
 	}
 	owners = append(owners, owner)
+	log.Info("Create CR - check owners", "owners", owners)
 
 	macCR := &unstructured.Unstructured{
 		Object: map[string]interface{}{
