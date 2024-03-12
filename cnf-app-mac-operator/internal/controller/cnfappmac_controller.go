@@ -47,28 +47,39 @@ type CNFAppMacReconciler struct {
 	Scheme *runtime.Scheme
 }
 
+// Structures used for building CNFAppMac CR
 type Device struct {
-	mac string
-	pci string
+	Mac string `json:"mac,omitempty"`
+	Pci string `json:"pci,omitempty"`
 }
 
 type Resource struct {
-	name    string
-	devices []Device
+	Name    string   `json:"name,omitempty"`
+	Devices []Device `json:"devices,omitempty"`
 }
 
+// Structure that summarizes the content from NetStatus
+type NetInfo struct {
+	Name       string
+	Mac        string
+	PciAddress string
+}
+
+// Structures used for extracting the information from network-status annotation
 type Pci struct {
-	pciAddress string `json:"pci-address"`
+	PciAddress string `json:"pci-address,omitempty"`
 }
 
 type DeviceInfo struct {
-	pci Pci `json:"pci"`
+	Type    string `json:"type,omitempty"`
+	Version string `json:"version,omitempty"`
+	Pci     Pci    `json:"pci,omitempty"`
 }
 
 type NetStatus struct {
-	name       string     `json:"name"`
-	mac        string     `json:"mac"`
-	deviceInfo DeviceInfo `json:"device-info"`
+	Name       string     `json:"name,omitempty"`
+	Mac        string     `json:"mac,omitempty"`
+	DeviceInfo DeviceInfo `json:"device-info,omitempty"`
 }
 
 // getWatchNamespace returns the Namespace the operator should be watching for changes
@@ -162,74 +173,80 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	resInterface := []Resource{}
 
 	// Try using network-status annotation, else use the legacy method
-	netStatusStr, ok := pod.Annotations["k8s.v1.cni.cncf.io/network-status"]
+	netStatusesStr, ok := pod.Annotations["k8s.v1.cni.cncf.io/network-status"]
 	if ok {
 		// Remove line breaks and unmarshal the JSON object that represents the network-status annotation
-		netStatusStr = strings.TrimSuffix(netStatusStr, "\n")
-		var netStatus []NetStatus
-		log.Info("Network status for pod", "raw-net-status", netStatusStr)
-		json.Unmarshal([]byte(netStatusStr), &netStatus)
-		log.Info("Unmarshalled network status", "unmarshalled-net-status", netStatus)
-		if len(netStatus) == 0 {
+		netStatusesStr = strings.ReplaceAll(netStatusesStr, "\n", "")
+		log.Info("network-status annotation for pod", "raw-net-status", netStatusesStr)
+		var netStatuses []NetStatus
+		json.Unmarshal([]byte(netStatusesStr), &netStatuses)
+		log.Info("Unmarshalled network-status annotation", "unmarshalled-net-status", netStatuses)
+		if len(netStatuses) == 0 {
 			return ctrl.Result{}, nil
 		}
 
-		// Start retrieving the information we need:
-		// - for each network:
-		//	- extract MAC address
-		//	- extract PCI address
-		// if network already exists, just append MAC and PCI address, else add a new element
-		for _, item := range netStatus {
-			// This object also contains def iface info, we need to discard it (it doesn't have device-info field)
-			if item.name != "ovn-kubernetes" {
-				// Extract the data we need
-				rawNetName := item.name
-				netName := strings.Split(rawNetName, "/")[0]
-				macAddr := item.mac
-				pciAddr := item.deviceInfo.pci.pciAddress
-				log.Info("Extracted items", "net", netName, "mac", macAddr, "pci", pciAddr)
+		// Translate each NetStatus into NetInfo structure
+		// If network already exists, just append MAC and PCI address, else add a new element
+		for _, netStatus := range netStatuses {
 
-				// Check if network is already saved in resInterface
+			// Only take the network info if we have a PCI device with a PCI address
+			// Discard ovn-kubernetes name
+			if netStatus.Name != "ovn-kubernetes" && netStatus.DeviceInfo.Type == "pci" &&
+				len(netStatus.DeviceInfo.Pci.PciAddress) > 0 {
+
+				// Extract the data we need
+				var netItem = NetInfo{
+					Name:       strings.Split(netStatus.Name, "/")[1],
+					Mac:        netStatus.Mac,
+					PciAddress: netStatus.DeviceInfo.Pci.PciAddress,
+				}
+				log.Info("Extracted NetInfo item", "net-item", netItem)
+
+				// Create the new Device to be included
+				dev := Device{
+					Pci: netItem.PciAddress,
+					Mac: netItem.Mac,
+				}
+				log.Info("Device to add", "dev", dev)
+
+				// Check if Resource is already saved in resInterface
 				// If that's true, then append MAC and PCI address to it
-				netExists := false
-				for i, netItem := range resInterface {
-					if netItem.name == netName {
-						log.Info("Network exists, status before updating it", "net-before", resInterface[i])
-						netExists = true
-						currentDevs := netItem.devices
-						dev := Device{
-							pci: pciAddr,
-							mac: macAddr,
-						}
+				netFound := false
+				for i := 0; i < len(resInterface) && !netFound; i++ {
+					resItem := resInterface[i]
+					if resItem.Name == netItem.Name {
+						netFound = true
+						log.Info("Resource exists, status before updating it", "res-before", resInterface[i])
+
+						// Extract current Device list and append the new Device
+						currentDevs := resItem.Devices
 						currentDevs = append(currentDevs, dev)
 
-						// Let's build a new object to replace the current one
-						net := Resource{
-							name:    netName,
-							devices: currentDevs,
+						// Let's build a new Resource object to replace the current one
+						res := Resource{
+							Name:    netItem.Name,
+							Devices: currentDevs,
 						}
-						resInterface[i] = net
-						log.Info("Network status after updating it", "net-after", resInterface[i])
+						resInterface[i] = res
+						log.Info("Resource status after updating it", "res-after", resInterface[i])
 					}
 				}
-				// If network does not exist, append new element to resInterface
-				if !netExists {
+				// If Resource does not exist yet, append new element to resInterface
+				if !netFound {
+					log.Info("New Resource to be included in the list")
+
 					devInterface := []Device{}
-					dev := Device{
-						pci: pciAddr,
-						mac: macAddr,
-					}
 					devInterface = append(devInterface, dev)
 
-					net := Resource{
-						name:    netName,
-						devices: devInterface,
+					res := Resource{
+						Name:    netItem.Name,
+						Devices: devInterface,
 					}
-					log.Info("Adding network to list", "net", net)
-					resInterface = append(resInterface, net)
+					log.Info("Adding Resource to list", "res", res)
+					resInterface = append(resInterface, res)
 				}
-				log.Info("List status after iteration", "list", resInterface)
 			}
+			log.Info("List status after iteration", "list", resInterface)
 		}
 
 		err = r.createCR(req, pod.UID, pod.Spec.NodeName, resInterface)
@@ -324,7 +341,7 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 		macs := strings.Split(strings.ReplaceAll(macStr, "\r\n", "\n"), "\n")
 
-		log.Info("Get processed mac string from command executed", "processed-mac-string", macStr)
+		log.Info("Get processed mac string from command executed", "processed-mac-string", macs)
 
 		resInterface := generateResInterface(resourcesMapList, macs)
 
@@ -367,15 +384,15 @@ func generateResInterface(resourcesMapList []map[string]interface{}, macs []stri
 		devInterface := []Device{}
 		for _, pci := range pciList {
 			dev := Device{
-				pci: pci,
-				mac: macs[macIdx],
+				Pci: pci,
+				Mac: macs[macIdx],
 			}
 			macIdx++
 			devInterface = append(devInterface, dev)
 		}
 		res := Resource{
-			name:    item["name"].(string),
-			devices: devInterface,
+			Name:    item["name"].(string),
+			Devices: devInterface,
 		}
 		resInterface = append(resInterface, res)
 	}
