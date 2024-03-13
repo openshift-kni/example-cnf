@@ -1,6 +1,11 @@
 ---
 - debug:
     msg: "Gather network info of network: {{ network_item.name }}"
+
+- name: Initialize variable that checks if resource name is already on the dict
+  set_fact:
+    resource_exists: false
+
 - set_fact:
     net: "{{ network_item.name.split('/')[1] }}"
   when: "'/' in network_item.name"
@@ -9,18 +14,65 @@
     net: "{{ network_item.name }}"
   when: "'/' not in network_item.name"
 
+- name: print net
+  debug:
+    var: net
+
 - set_fact:
     net_def: "{{ lookup('k8s', kind='NetworkAttachmentDefinition', namespace=ansible_operator_meta.namespace, resource_name=net) }}"
   failed_when: net_def|length == 0
 
+- name: print net_def
+  debug:
+    var: net_def
+
 - set_fact:
     network_port_count: "{{ network_item.count|default(1) }}"
+
+- name: print network_port_count
+  debug:
+    var: network_port_count
 
 - set_fact:
     network_resource_name: "{{ net_def['metadata']['annotations']['k8s.v1.cni.cncf.io/resourceName'] }}"
 
-- set_fact:
+- name: print network_resource_name
+  debug:
+    var: network_resource_name
+
+- name: Update resource_exists if the resource is in the dict
+  set_fact:
+    resource_exists: true
+  with_dict: "{{ network_resources }}"
+  when: "network_resource_name in item.key"
+
+- name: print resource_exists
+  debug:
+    var: resource_exists
+
+- name: Include new network resource if it was not included before
+  set_fact:
     network_resources: "{{ network_resources | combine( {network_resource_name : network_port_count} ) }}"
+  when: not resource_exists
+
+- name: Update network resource
+  block:
+    - name: Update count for network resource
+      set_fact:
+        network_resources: "{{ network_resources | combine(new_item, recursive=true) }}"
+      vars:
+        new_item: "{ '{{ item.key }}': {{ item.value|int + network_port_count|int }} }"
+      with_dict: "{{ network_resources }}"
+      when: "network_resource_name in item.key"
+  when: resource_exists
+
+- name: print network_resources
+  debug:
+    var: network_resources
 
 - set_fact:
     network_name_list: "{{ network_name_list + [net] }}"
+
+- name: print network_name_list
+  debug:
+    var: network_name_list

@@ -33,12 +33,24 @@
   loop_control:
     index_var: idx
 
+- name: print eth_peer
+  debug:
+    var: eth_peer
+
 - name: "Parse network"
   include_tasks: network-parse.yaml
   when: networks|default([])|length > 0
   loop: "{{ networks }}"
   loop_control:
     loop_var: network_item
+
+- name: print network_resources after parsing networks
+  debug:
+    var: network_resources
+
+- name: print network_name_list after parsing networks
+  debug:
+    var: network_name_list
 
 - name: "Parse resources if defined and when sriov network is not defined"
   set_fact:

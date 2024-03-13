@@ -47,6 +47,41 @@ type CNFAppMacReconciler struct {
 	Scheme *runtime.Scheme
 }
 
+// Structures used for building CNFAppMac CR
+type Device struct {
+	Mac string `json:"mac,omitempty"`
+	Pci string `json:"pci,omitempty"`
+}
+
+type Resource struct {
+	Name    string   `json:"name,omitempty"`
+	Devices []Device `json:"devices,omitempty"`
+}
+
+// Structure that summarizes the content from NetStatus
+type NetInfo struct {
+	Name       string
+	Mac        string
+	PciAddress string
+}
+
+// Structures used for extracting the information from network-status annotation
+type Pci struct {
+	PciAddress string `json:"pci-address,omitempty"`
+}
+
+type DeviceInfo struct {
+	Type    string `json:"type,omitempty"`
+	Version string `json:"version,omitempty"`
+	Pci     Pci    `json:"pci,omitempty"`
+}
+
+type NetStatus struct {
+	Name       string     `json:"name,omitempty"`
+	Mac        string     `json:"mac,omitempty"`
+	DeviceInfo DeviceInfo `json:"device-info,omitempty"`
+}
+
 // getWatchNamespace returns the Namespace the operator should be watching for changes
 func getWatchNamespace() (string, error) {
 	// WatchNamespaceEnvVar is the constant for env variable WATCH_NAMESPACE
@@ -134,96 +169,186 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	podName := req.NamespacedName.Name
 	namespace := req.NamespacedName.Namespace
 
-	// Check if the pod has additional networks via NetworkAttachmentDefinitions
-	networkStr, ok := pod.Annotations["k8s.v1.cni.cncf.io/networks"]
-	var networks []map[string]interface{}
+	// Custom object we need to build the CNFAppMac CR
+	resInterface := []Resource{}
+
+	// Try using network-status annotation, else use the legacy method
+	netStatusesStr, ok := pod.Annotations["k8s.v1.cni.cncf.io/network-status"]
 	if ok {
-		log.Info("Network annotations for pod", "raw-net-annotations", networkStr)
-		json.Unmarshal([]byte(networkStr), &networks)
-		log.Info("Unmarshalled network annotations", "unmarshalled-net-annotations", networks)
-		if len(networks) == 0 {
+		// Remove line breaks and unmarshal the JSON object that represents the network-status annotation
+		netStatusesStr = strings.ReplaceAll(netStatusesStr, "\n", "")
+		log.Info("network-status annotation for pod", "raw-net-status", netStatusesStr)
+		var netStatuses []NetStatus
+		json.Unmarshal([]byte(netStatusesStr), &netStatuses)
+		log.Info("Unmarshalled network-status annotation", "unmarshalled-net-status", netStatuses)
+		if len(netStatuses) == 0 {
 			return ctrl.Result{}, nil
 		}
-		// Check if one of the nework has hardcode mac, pod will be skipped
-		for _, item := range networks {
-			log.Info("Individual network item", "net-item", item)
-			if _, ok = item["mac"]; ok {
+
+		// Translate each NetStatus into NetInfo structure
+		// If network already exists, just append MAC and PCI address, else add a new element
+		for _, netStatus := range netStatuses {
+
+			// Only take the network info if we have a PCI device with a PCI address
+			// Discard ovn-kubernetes name
+			if netStatus.Name != "ovn-kubernetes" && netStatus.DeviceInfo.Type == "pci" &&
+				len(netStatus.DeviceInfo.Pci.PciAddress) > 0 {
+
+				// Extract the data we need
+				var netItem = NetInfo{
+					Name:       strings.Split(netStatus.Name, "/")[1],
+					Mac:        netStatus.Mac,
+					PciAddress: netStatus.DeviceInfo.Pci.PciAddress,
+				}
+				log.Info("Extracted NetInfo item", "net-item", netItem)
+
+				// Create the new Device to be included
+				dev := Device{
+					Pci: netItem.PciAddress,
+					Mac: netItem.Mac,
+				}
+				log.Info("Device to add", "dev", dev)
+
+				// Check if Resource is already saved in resInterface
+				// If that's true, then append MAC and PCI address to it
+				netFound := false
+				for i := 0; i < len(resInterface) && !netFound; i++ {
+					resItem := resInterface[i]
+					if resItem.Name == netItem.Name {
+						netFound = true
+						log.Info("Resource exists, status before updating it", "res-before", resInterface[i])
+
+						// Extract current Device list and append the new Device
+						currentDevs := resItem.Devices
+						currentDevs = append(currentDevs, dev)
+
+						// Let's build a new Resource object to replace the current one
+						res := Resource{
+							Name:    netItem.Name,
+							Devices: currentDevs,
+						}
+						resInterface[i] = res
+						log.Info("Resource status after updating it", "res-after", resInterface[i])
+					}
+				}
+				// If Resource does not exist yet, append new element to resInterface
+				if !netFound {
+					log.Info("New Resource to be included in the list")
+
+					devInterface := []Device{}
+					devInterface = append(devInterface, dev)
+
+					res := Resource{
+						Name:    netItem.Name,
+						Devices: devInterface,
+					}
+					log.Info("Adding Resource to list", "res", res)
+					resInterface = append(resInterface, res)
+				}
+			}
+			log.Info("List status after iteration", "list", resInterface)
+		}
+
+		err = r.createCR(req, pod.UID, pod.Spec.NodeName, resInterface)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+	} else {
+		// Check if the pod has additional networks via NetworkAttachmentDefinitions
+		networkStr, ok := pod.Annotations["k8s.v1.cni.cncf.io/networks"]
+		var networks []map[string]interface{}
+		if ok {
+			log.Info("Network annotations for pod", "raw-net-annotations", networkStr)
+			json.Unmarshal([]byte(networkStr), &networks)
+			log.Info("Unmarshalled network annotations", "unmarshalled-net-annotations", networks)
+			if len(networks) == 0 {
 				return ctrl.Result{}, nil
 			}
-		}
-	} else {
-		// CNF application, but does not have required annotations
-		// This can be case of shift-on-stack where sriov-cnf will not work with annotations
-		// Try alternate method
-		log.Info("No network annotations for pod, trying alternative method")
-		err = r.getNetworksFromResources(req, pod, &networks)
-		if err != nil {
-			log.Error(err, "Failed to get Networks from Resources")
-			return ctrl.Result{}, err
-		}
-	}
-
-	log.Info("Pod Info", "Node", pod.Spec.NodeName)
-
-	var resourcesMapList []map[string]interface{}
-	if len(networks) > 0 {
-		var nwNameList []string
-		for _, item := range networks {
-			log.Info("Networks", "name", item["name"], "net-details", item)
-			if !containsString(nwNameList, item["name"].(string)) {
-				nwNameList = append(nwNameList, item["name"].(string))
+			// Check if one of the nework has hardcode mac, pod will be skipped
+			for _, item := range networks {
+				log.Info("Individual network item", "net-item", item)
+				if _, ok = item["mac"]; ok {
+					return ctrl.Result{}, nil
+				}
 			}
-		}
-
-		for _, nwName := range nwNameList {
-			// Get Resource name from the network name
-			netAttach := &unstructured.Unstructured{}
-			netAttach.SetKind("NetworkAttachmentDefinition")
-			netAttach.SetAPIVersion("k8s.cni.cncf.io/v1")
-			nmName := req.NamespacedName
-			nmName.Name = nwName
-			err = r.Get(ctx, nmName, netAttach)
+		} else {
+			// CNF application, but does not have required annotations
+			// This can be case of shift-on-stack where sriov-cnf will not work with annotations
+			// Try alternate method
+			log.Info("No network annotations for pod, trying alternative method")
+			err = r.getNetworksFromResources(req, pod, &networks)
 			if err != nil {
+				log.Error(err, "Failed to get Networks from Resources")
 				return ctrl.Result{}, err
 			}
-			log.Info("Resource name for network", "net", nwName, "resource", netAttach)
-			resName := netAttach.GetAnnotations()["k8s.v1.cni.cncf.io/resourceName"]
-			resourcesMap, _ := r.getResMap(resName, podName, namespace, nwName)
-			resourcesMapList = append(resourcesMapList, resourcesMap)
 		}
-	} else {
-		resStr, err := getContainerEnvValue(podName, namespace, "NETWORK_NAME_LIST")
-		log.Info("Resources", "NETWORK_NAME_LIST", resStr)
+
+		log.Info("Pod Info", "Node", pod.Spec.NodeName)
+
+		var resourcesMapList []map[string]interface{}
+		if len(networks) > 0 {
+			var nwNameList []string
+			for _, item := range networks {
+				log.Info("Networks", "name", item["name"], "net-details", item)
+				if !containsString(nwNameList, item["name"].(string)) {
+					nwNameList = append(nwNameList, item["name"].(string))
+				}
+			}
+
+			for _, nwName := range nwNameList {
+				// Get Resource name from the network name
+				netAttach := &unstructured.Unstructured{}
+				netAttach.SetKind("NetworkAttachmentDefinition")
+				netAttach.SetAPIVersion("k8s.cni.cncf.io/v1")
+				nmName := req.NamespacedName
+				nmName.Name = nwName
+				err = r.Get(ctx, nmName, netAttach)
+				if err != nil {
+					return ctrl.Result{}, err
+				}
+				log.Info("Network attachment definition", "net", nwName, "resource", netAttach)
+				resName := netAttach.GetAnnotations()["k8s.v1.cni.cncf.io/resourceName"]
+				log.Info("Resource name for network", "resourceName", resName)
+				resourcesMap, _ := r.getResMap(resName, podName, namespace, nwName)
+				resourcesMapList = append(resourcesMapList, resourcesMap)
+			}
+		} else {
+			resStr, err := getContainerEnvValue(podName, namespace, "NETWORK_NAME_LIST")
+			log.Info("Resources", "NETWORK_NAME_LIST", resStr)
+			if err != nil {
+				log.Error(err, "Failed to get env NETWORK_NAME_LIST")
+				return ctrl.Result{}, err
+			}
+			resList := strings.Split(strings.ReplaceAll(resStr, "\r\n", ""), ",")
+			for _, resName := range resList {
+				resourcesMap, _ := r.getResMap(resName, podName, namespace, resName)
+				resourcesMapList = append(resourcesMapList, resourcesMap)
+			}
+		}
+
+		macStr, err := getContainerLogValue(req.NamespacedName.Name, req.NamespacedName.Namespace)
 		if err != nil {
-			log.Error(err, "Failed to get env NETWORK_NAME_LIST")
 			return ctrl.Result{}, err
 		}
-		resList := strings.Split(strings.ReplaceAll(resStr, "\r\n", ""), ",")
-		for _, resName := range resList {
-			resourcesMap, _ := r.getResMap(resName, podName, namespace, resName)
-			resourcesMapList = append(resourcesMapList, resourcesMap)
+
+		if macStr == "" {
+			log.Info("No MAC address retrieved, exiting")
+			return ctrl.Result{}, nil
 		}
-	}
 
-	macStr, err := getContainerLogValue(req.NamespacedName.Name, req.NamespacedName.Namespace)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
+		log.Info("Get mac string from command executed", "mac-string", macStr)
 
-	if macStr == "" {
-		log.Info("No MAC address retrieved, exiting")
-		return ctrl.Result{}, nil
-	}
+		macs := strings.Split(strings.ReplaceAll(macStr, "\r\n", "\n"), "\n")
 
-	log.Info("Get mac string from command executed", "mac-string", macStr)
+		log.Info("Get processed mac string from command executed", "processed-mac-string", macs)
 
-	macs := strings.Split(strings.ReplaceAll(macStr, "\r\n", "\n"), "\n")
+		resInterface := generateResInterface(resourcesMapList, macs)
 
-	log.Info("Get processed mac string from command executed", "processed-mac-string", macStr)
-
-	err = r.createCR(req, pod.UID, pod.Spec.NodeName, resourcesMapList, macs)
-	if err != nil {
-		return ctrl.Result{}, err
+		err = r.createCR(req, pod.UID, pod.Spec.NodeName, resInterface)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 	}
 
 	return ctrl.Result{}, nil
@@ -251,27 +376,32 @@ func (r *CNFAppMacReconciler) getResMap(resName, podName, namespace, nwName stri
 	return resourcesMap, nil
 }
 
-func (r *CNFAppMacReconciler) createCR(req ctrl.Request, uid types.UID, nodename string, resourcesMapList []map[string]interface{}, macs []string) error {
-	log := r.Log.WithValues("cnfappmac", req.NamespacedName)
-	resInterface := []interface{}{}
+func generateResInterface(resourcesMapList []map[string]interface{}, macs []string) []Resource {
+	resInterface := []Resource{}
 	macIdx := 0
 	for _, item := range resourcesMapList {
 		pciList := item["pci"].([]string)
-		devInterface := []interface{}{}
+		devInterface := []Device{}
 		for _, pci := range pciList {
-			dev := map[string]interface{}{
-				"pci": pci,
-				"mac": macs[macIdx],
+			dev := Device{
+				Pci: pci,
+				Mac: macs[macIdx],
 			}
 			macIdx++
 			devInterface = append(devInterface, dev)
 		}
-		res := map[string]interface{}{
-			"name":    item["name"],
-			"devices": devInterface,
+		res := Resource{
+			Name:    item["name"].(string),
+			Devices: devInterface,
 		}
 		resInterface = append(resInterface, res)
 	}
+
+	return resInterface
+}
+
+func (r *CNFAppMacReconciler) createCR(req ctrl.Request, uid types.UID, nodename string, resInterface []Resource) error {
+	log := r.Log.WithValues("cnfappmac", req.NamespacedName)
 
 	name := req.NamespacedName.Name
 	namespace := req.NamespacedName.Namespace
@@ -325,7 +455,7 @@ func (r *CNFAppMacReconciler) getNetworksFromResources(req ctrl.Request, pod *co
 		return err
 	}
 
-	for k, _ := range pod.Spec.Containers[0].Resources.Limits {
+	for k := range pod.Spec.Containers[0].Resources.Limits {
 		netName, ok := r.getNetworkName(k, listObj)
 		if ok {
 			entry := map[string]interface{}{"name": netName}
