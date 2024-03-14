@@ -26,6 +26,10 @@ spec:
 {% endfor %}
 {% endfor %}
         ]'
+{% if runtimeClassName is defined and runtimeClassName|length %}
+        irq-load-balancing.crio.io: "disable"
+        cpu-load-balancing.crio.io: "disable"
+{% endif %}
       labels:
         example-cnf-type: lb-app
         restart-on-reboot: "true"
@@ -42,8 +46,8 @@ spec:
                 - pkt-gen
             topologyKey: kubernetes.io/hostname
       serviceAccountName: loadbalancer-account
-{% if high_perf_runtime is defined and high_perf_runtime|length %}
-      runtimeClassName: "{{ high_perf_runtime }}"
+{% if runtimeClassName is defined and runtimeClassName|length %}
+      runtimeClassName: "{{ runtimeClassName }}"
 {% endif %}
 {% if numa_aware_topology is defined and numa_aware_topology | length %}
       schedulerName: "{{ numa_aware_topology }}"
@@ -149,11 +153,11 @@ spec:
         imagePullPolicy: "{{ image_pull_policy }}"
         resources:
           limits:
-            memory: "756Mi"
+            memory: "512Mi"
             cpu: 2
           requests:
-            memory: "256Mi"
-            cpu: 50m
+            memory: "512Mi"
+            cpu: 2
         volumeMounts:
         - name: log-dir
           mountPath: /var/log/testpmd
