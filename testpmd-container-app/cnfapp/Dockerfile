@@ -58,6 +58,7 @@ RUN dnf install -y \
     python3 \
     rdma-core \
     tcpdump \
+    lshw \
     && dnf clean all
 
 # Copy scripts
