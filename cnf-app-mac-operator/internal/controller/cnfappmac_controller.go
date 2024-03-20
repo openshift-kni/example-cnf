@@ -40,6 +40,8 @@ import (
 	examplecnfv1 "github.com/openshift-kni/example-cnf/tree/main/cnf-app-mac-operator/api/v1"
 )
 
+const MAC_KEYWORD = "mac"
+
 // CNFAppMacReconciler reconciles a CNFAppMac object
 type CNFAppMacReconciler struct {
 	client.Client
@@ -173,88 +175,101 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	resInterface := []Resource{}
 
 	// Try using network-status annotation, else use the legacy method
+	macUsedInNetStatus := true
 	netStatusesStr, ok := pod.Annotations["k8s.v1.cni.cncf.io/network-status"]
 	if ok {
 		// Remove line breaks and unmarshal the JSON object that represents the network-status annotation
 		netStatusesStr = strings.ReplaceAll(netStatusesStr, "\n", "")
 		log.Info("network-status annotation for pod", "raw-net-status", netStatusesStr)
-		var netStatuses []NetStatus
-		json.Unmarshal([]byte(netStatusesStr), &netStatuses)
-		log.Info("Unmarshalled network-status annotation", "unmarshalled-net-status", netStatuses)
-		if len(netStatuses) == 0 {
-			return ctrl.Result{}, nil
-		}
 
-		// Translate each NetStatus into NetInfo structure
-		// If network already exists, just append MAC and PCI address, else add a new element
-		for _, netStatus := range netStatuses {
+		// In OCP 4.12-13, network-status annotation does not include the "mac" attribute for PCI devices,
+		// even using mac capability. In that case, let's switch to legacy mode directly
+		// In that case, the occurence of MAC_KEYWORK must be 0 (or 1 because it appears in ovn-kubernetes interface).
+		if strings.Count(netStatusesStr, MAC_KEYWORD) <= 1 {
+			macUsedInNetStatus = false
+		} else {
 
-			// Only take the network info if we have a PCI device with a PCI address
-			// Discard ovn-kubernetes name
-			if netStatus.Name != "ovn-kubernetes" && netStatus.DeviceInfo.Type == "pci" &&
-				len(netStatus.DeviceInfo.Pci.PciAddress) > 0 {
+			var netStatuses []NetStatus
+			json.Unmarshal([]byte(netStatusesStr), &netStatuses)
+			log.Info("Unmarshalled network-status annotation", "unmarshalled-net-status", netStatuses)
+			if len(netStatuses) == 0 {
+				return ctrl.Result{}, nil
+			}
 
-				// Extract the data we need
-				var netItem = NetInfo{
-					Name:       strings.Split(netStatus.Name, "/")[1],
-					Mac:        netStatus.Mac,
-					PciAddress: netStatus.DeviceInfo.Pci.PciAddress,
-				}
-				log.Info("Extracted NetInfo item", "net-item", netItem)
+			// Translate each NetStatus into NetInfo structure
+			// If network already exists, just append MAC and PCI address, else add a new element
+			for _, netStatus := range netStatuses {
 
-				// Create the new Device to be included
-				dev := Device{
-					Pci: netItem.PciAddress,
-					Mac: netItem.Mac,
-				}
-				log.Info("Device to add", "dev", dev)
+				// Only take the network info if we have a PCI device with a PCI address
+				// Discard ovn-kubernetes name
+				if netStatus.Name != "ovn-kubernetes" && netStatus.DeviceInfo.Type == "pci" &&
+					len(netStatus.DeviceInfo.Pci.PciAddress) > 0 {
 
-				// Check if Resource is already saved in resInterface
-				// If that's true, then append MAC and PCI address to it
-				netFound := false
-				for i := 0; i < len(resInterface) && !netFound; i++ {
-					resItem := resInterface[i]
-					if resItem.Name == netItem.Name {
-						netFound = true
-						log.Info("Resource exists, status before updating it", "res-before", resInterface[i])
+					// Extract the data we need
+					var netItem = NetInfo{
+						Name:       strings.Split(netStatus.Name, "/")[1],
+						Mac:        netStatus.Mac,
+						PciAddress: netStatus.DeviceInfo.Pci.PciAddress,
+					}
+					log.Info("Extracted NetInfo item", "net-item", netItem)
 
-						// Extract current Device list and append the new Device
-						currentDevs := resItem.Devices
-						currentDevs = append(currentDevs, dev)
+					// Create the new Device to be included
+					dev := Device{
+						Pci: netItem.PciAddress,
+						Mac: netItem.Mac,
+					}
+					log.Info("Device to add", "dev", dev)
 
-						// Let's build a new Resource object to replace the current one
+					// Check if Resource is already saved in resInterface
+					// If that's true, then append MAC and PCI address to it
+					netFound := false
+					for i := 0; i < len(resInterface) && !netFound; i++ {
+						resItem := resInterface[i]
+						if resItem.Name == netItem.Name {
+							netFound = true
+							log.Info("Resource exists, status before updating it", "res-before", resInterface[i])
+
+							// Extract current Device list and append the new Device
+							currentDevs := resItem.Devices
+							currentDevs = append(currentDevs, dev)
+
+							// Let's build a new Resource object to replace the current one
+							res := Resource{
+								Name:    netItem.Name,
+								Devices: currentDevs,
+							}
+							resInterface[i] = res
+							log.Info("Resource status after updating it", "res-after", resInterface[i])
+						}
+					}
+					// If Resource does not exist yet, append new element to resInterface
+					if !netFound {
+						log.Info("New Resource to be included in the list")
+
+						devInterface := []Device{}
+						devInterface = append(devInterface, dev)
+
 						res := Resource{
 							Name:    netItem.Name,
-							Devices: currentDevs,
+							Devices: devInterface,
 						}
-						resInterface[i] = res
-						log.Info("Resource status after updating it", "res-after", resInterface[i])
+						log.Info("Adding Resource to list", "res", res)
+						resInterface = append(resInterface, res)
 					}
 				}
-				// If Resource does not exist yet, append new element to resInterface
-				if !netFound {
-					log.Info("New Resource to be included in the list")
-
-					devInterface := []Device{}
-					devInterface = append(devInterface, dev)
-
-					res := Resource{
-						Name:    netItem.Name,
-						Devices: devInterface,
-					}
-					log.Info("Adding Resource to list", "res", res)
-					resInterface = append(resInterface, res)
-				}
+				log.Info("List status after iteration", "list", resInterface)
 			}
-			log.Info("List status after iteration", "list", resInterface)
-		}
 
-		err = r.createCR(req, pod.UID, pod.Spec.NodeName, resInterface)
-		if err != nil {
-			return ctrl.Result{}, err
+			err = r.createCR(req, pod.UID, pod.Spec.NodeName, resInterface)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
 		}
-
-	} else {
+	}
+	// We will use the legacy method if:
+	// - No network-status annotation is detected in the pods under test
+	// - Even having the network-status annotation, "mac" attribute is not present
+	if !ok || !macUsedInNetStatus {
 		// Check if the pod has additional networks via NetworkAttachmentDefinitions
 		networkStr, ok := pod.Annotations["k8s.v1.cni.cncf.io/networks"]
 		var networks []map[string]interface{}
