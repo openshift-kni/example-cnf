@@ -413,7 +413,11 @@ func generateResInterface(resourcesMapList []map[string]interface{}, macs []stri
 	resInterface := []Resource{}
 	// PCI-MAC binding is in opposite order: first element of PCI array is linked to
 	// the last MAC address, and so on.
+	// Set macIdx according to the array of MACs received, it may happen that the last item saved is ""
 	macIdx := len(macs)-1
+	if macs[macIdx] == "" {
+		macIdx--
+	}
 	for _, item := range resourcesMapList {
 		pciList := item["pci"].([]string)
 		devInterface := []Device{}
