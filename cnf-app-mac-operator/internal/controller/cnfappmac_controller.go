@@ -177,8 +177,6 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// Try using network-status annotation, else use the legacy method
 	macUsedInNetStatus := true
 	netStatusesStr, ok := pod.Annotations["k8s.v1.cni.cncf.io/network-status"]
-	// This is for debug purposes
-	ok = false
 	if ok {
 		// Remove line breaks and unmarshal the JSON object that represents the network-status annotation
 		netStatusesStr = strings.ReplaceAll(netStatusesStr, "\n", "")
