@@ -177,6 +177,8 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// Try using network-status annotation, else use the legacy method
 	macUsedInNetStatus := true
 	netStatusesStr, ok := pod.Annotations["k8s.v1.cni.cncf.io/network-status"]
+	// This is for debug purposes
+	ok = false
 	if ok {
 		// Remove line breaks and unmarshal the JSON object that represents the network-status annotation
 		netStatusesStr = strings.ReplaceAll(netStatusesStr, "\n", "")
@@ -302,6 +304,8 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		log.Info("Pod Info", "Node", pod.Spec.NodeName)
 
 		var resourcesMapList []map[string]interface{}
+		// Auxiliary variable that checks all resource names in the pod
+		var resNameList []string
 		if len(networks) > 0 {
 			var nwNameList []string
 			for _, item := range networks {
@@ -325,8 +329,15 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 				log.Info("Network attachment definition", "net", nwName, "resource", netAttach)
 				resName := netAttach.GetAnnotations()["k8s.v1.cni.cncf.io/resourceName"]
 				log.Info("Resource name for network", "resourceName", resName)
-				resourcesMap, _ := r.getResMap(resName, podName, namespace, nwName)
-				resourcesMapList = append(resourcesMapList, resourcesMap)
+				// Different networks can belong to the same resource
+				if !containsString(resNameList, resName) {
+					resNameList = append(resNameList, resName)
+					resourcesMap, _ := r.getResMap(resName, podName, namespace, nwName)
+					resourcesMapList = append(resourcesMapList, resourcesMap)
+					log.Info("Appended Resource Map", "resourceMap", resourcesMap)
+				} else {
+					log.Info("Not appended Resource Map because resource is already present", "resName", resName)
+				}
 			}
 		} else {
 			resStr, err := getContainerEnvValue(podName, namespace, "NETWORK_NAME_LIST")
@@ -337,8 +348,15 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			}
 			resList := strings.Split(strings.ReplaceAll(resStr, "\r\n", ""), ",")
 			for _, resName := range resList {
-				resourcesMap, _ := r.getResMap(resName, podName, namespace, resName)
-				resourcesMapList = append(resourcesMapList, resourcesMap)
+				// Different networks can belong to the same resource
+				if !containsString(resNameList, resName) {
+					resNameList = append(resNameList, resName)
+					resourcesMap, _ := r.getResMap(resName, podName, namespace, resName)
+					resourcesMapList = append(resourcesMapList, resourcesMap)
+					log.Info("Appended Resource Map", "resourceMap", resourcesMap)
+				} else {
+					log.Info("Not appended Resource Map because resource is already present", "resName", resName)
+				}
 			}
 		}
 
@@ -393,7 +411,9 @@ func (r *CNFAppMacReconciler) getResMap(resName, podName, namespace, nwName stri
 
 func generateResInterface(resourcesMapList []map[string]interface{}, macs []string) []Resource {
 	resInterface := []Resource{}
-	macIdx := 0
+	// PCI-MAC binding is in opposite order: first element of PCI array is linked to
+	// the last MAC address, and so on.
+	macIdx := len(macs)-1
 	for _, item := range resourcesMapList {
 		pciList := item["pci"].([]string)
 		devInterface := []Device{}
@@ -402,7 +422,7 @@ func generateResInterface(resourcesMapList []map[string]interface{}, macs []stri
 				Pci: pci,
 				Mac: macs[macIdx],
 			}
-			macIdx++
+			macIdx--
 			devInterface = append(devInterface, dev)
 		}
 		res := Resource{
