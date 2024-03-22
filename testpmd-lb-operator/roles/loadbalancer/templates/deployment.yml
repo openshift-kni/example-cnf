@@ -26,7 +26,7 @@ spec:
 {% endfor %}
 {% endfor %}
         ]'
-{% if runtimeClassName is defined and runtimeClassName|length %}
+{% if runtime_class_name is defined and runtime_class_name|length %}
         irq-load-balancing.crio.io: "disable"
         cpu-load-balancing.crio.io: "disable"
 {% endif %}
@@ -46,8 +46,8 @@ spec:
                 - pkt-gen
             topologyKey: kubernetes.io/hostname
       serviceAccountName: loadbalancer-account
-{% if runtimeClassName is defined and runtimeClassName|length %}
-      runtimeClassName: "{{ runtimeClassName }}"
+{% if runtime_class_name is defined and runtime_class_name|length %}
+      runtimeClassName: "{{ runtime_class_name }}"
 {% endif %}
 {% if numa_aware_topology is defined and numa_aware_topology | length %}
       schedulerName: "{{ numa_aware_topology }}"

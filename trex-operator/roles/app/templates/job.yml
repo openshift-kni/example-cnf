@@ -9,7 +9,7 @@ spec:
     metadata:
       labels:
         example-cnf-type: pkt-gen-app
-{% if runtimeClassName is defined and runtimeClassName|length %}
+{% if runtime_class_name is defined and runtime_class_name|length %}
       annotations:
         irq-load-balancing.crio.io: "disable"
         cpu-load-balancing.crio.io: "disable"
@@ -17,8 +17,8 @@ spec:
     spec:
       restartPolicy: Never
       serviceAccountName: trex-app-account
-{% if runtimeClassName is defined and runtimeClassName|length %}
-      runtimeClassName: "{{ runtimeClassName }}"
+{% if runtime_class_name is defined and runtime_class_name | length %}
+      runtimeClassName: "{{ runtime_class_name }}"
 {% endif %}
       containers:
       - name: trex-app
