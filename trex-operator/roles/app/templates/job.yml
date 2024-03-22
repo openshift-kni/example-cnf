@@ -9,9 +9,17 @@ spec:
     metadata:
       labels:
         example-cnf-type: pkt-gen-app
+{% if runtime_class_name is defined and runtime_class_name|length %}
+      annotations:
+        irq-load-balancing.crio.io: "disable"
+        cpu-load-balancing.crio.io: "disable"
+{% endif %}
     spec:
       restartPolicy: Never
       serviceAccountName: trex-app-account
+{% if runtime_class_name is defined and runtime_class_name | length %}
+      runtimeClassName: "{{ runtime_class_name }}"
+{% endif %}
       containers:
       - name: trex-app
         image: "{{ image_app }}"
@@ -81,6 +89,13 @@ spec:
             port: 8095
           initialDelaySeconds: 30
           periodSeconds: 10
+        resources:
+          limits:
+            cpu: 4
+            memory: 1024Mi
+          requests:
+            cpu: 4
+            memory: 1024Mi
         terminationMessagePolicy: FallbackToLogsOnError
       volumes:
       - name: varlog
