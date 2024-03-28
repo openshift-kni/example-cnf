@@ -26,8 +26,13 @@ rules:
       - watch
   - apiGroups:
       - batch
+      - apps
     resources:
       - jobs
+      - deployments
+      - daemonsets
+      - replicasets
+      - statefulsets
     verbs:
       - create
       - delete
@@ -36,13 +41,15 @@ rules:
       - patch
       - update
       - watch
+  ##
+  ## Rules for examplecnf.openshift.io/v1, Kind: TRexApp
+  ##
   - apiGroups:
-      - apps
+      - examplecnf.openshift.io
     resources:
-      - deployments
-      - daemonsets
-      - replicasets
-      - statefulsets
+      - trexapps
+      - trexapps/status
+      - trexapps/finalizers
     verbs:
       - create
       - delete
@@ -71,6 +78,7 @@ rules:
     resources:
       - trexconfigs
       - trexconfigs/status
+      - trexconfigs/finalizers
     verbs:
       - create
       - delete
@@ -91,23 +99,6 @@ rules:
       - events.k8s.io
     resources:
       - events
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  ##
-  ## Rules for examplecnf.openshift.io/v1, Kind: TRexApp
-  ##
-  - apiGroups:
-      - examplecnf.openshift.io
-    resources:
-      - trexapps
-      - trexapps/status
-      - trexapps/finalizers
     verbs:
       - create
       - delete
@@ -181,4 +172,4 @@ rules:
       - patch
       - update
       - watch
-# +kubebuilder:scaffold:rules
+#+kubebuilder:scaffold:rules

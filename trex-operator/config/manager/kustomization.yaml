@@ -1,8 +1,2 @@
 resources:
 - manager.yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-images:
-- name: controller
-  newName: quay.io/rh-nfv-int/trex-operator
-  newTag: v0.2.13-202306051035.6f84e8e

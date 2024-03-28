@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.17] - 2024-02-29
+
+- Changed scaffolding, this time really based on operator-sdk v1.33.0
+
 ## [0.2.16] - 2023-01-12
 
 - Lifecycle webserver included in container images consumed from trex-container-app to cover CNF Certification requirements for liveness, readiness and startup probes

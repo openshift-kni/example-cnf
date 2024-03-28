@@ -1,4 +1,5 @@
 ---
+# defaults file for TRexConfig
 # these images are not hardcoded - they are replaced by the trex-operator Makefile launched by the Github actions defined for this repo
 # https://github.com/openshift-kni/example-cnf/blob/main/trex-operator/Makefile - See "ensure_digests" task
 image_server: "quay.io/rh-nfv-int/trex-container-server@sha256:190d69aef293d1719952969edcca8042d99e17b0d62d1a085cdd7b01cb5e1f1d" # v0.2.6

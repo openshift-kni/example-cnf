@@ -1,5 +1,5 @@
-## Append samples you want in your CSV to this file as resources ##
+## Append samples of your project ##
 resources:
-- examplecnf_v1_trexconfig.yaml
 - examplecnf_v1_trexapp.yaml
-# +kubebuilder:scaffold:manifestskustomizesamples
+- examplecnf_v1_trexconfig.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples

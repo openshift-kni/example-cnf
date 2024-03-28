@@ -2,6 +2,13 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: trexconfig-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: trex-operator
+    app.kubernetes.io/part-of: trex-operator
+    app.kubernetes.io/managed-by: kustomize
   name: trexconfig-editor-role
 rules:
 - apiGroups:
