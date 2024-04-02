@@ -215,17 +215,19 @@ This says that, if load balancer is not enabled, then TRex is connected to the `
 The network schema would be as follows:
 
 ```
-TRex -- (intel-numa0-net1|2) -- CNFApplication
+TRex -- (intel-numa0-net1|2) -- CNF Application
 ```
 
 Traffic Flow
 ------------------------
 
-Here, we will depict the traffic flow for the case of the load balancer mode (since the direct mode is quite simple), including the SRIOV setup already described above.
+**Load balancer mode:**
 
-![Flow](documentation/trex_flow_4_ports_bi_directional.png)
+Here, we will depict the traffic flow for the case of the load balancer mode, including the SRIOV setup already described above.
 
-Traffic Flow (just considering one replica pod from the CNF Application as target, but the same flow applies to all CNF Application replicas deployed in the scenario):
+![Flow](documentation/lb_mode.png)
+
+Traffic flow is the following (just considering one replica pod from the CNF Application as target, but the same flow applies to all CNF Application replicas deployed in the scenario):
 
 - TRex (Traffic Generator) generates and sends traffic from Port 0 to TestPMD LB.
 
@@ -244,6 +246,25 @@ Traffic Flow (just considering one replica pod from the CNF Application as targe
 - TRex calculates statistics by comparing the incoming traffic on Port 1 (processed traffic) with the outgoing traffic on Port 0 (original traffic sent by TRex) and vice versa.
 
 This configuration simulates a traffic flow from TRex to TestPMD LB, then to the CNF Application, and finally back to TRex for evaluation. TestPMD LB serves as a load balancer to distribute traffic between its ports, and the CNF Application processes and loops back the traffic to TRex for analysis using the TestPMD MAC forwarding mode. TestPMD LB ensures zero traffic loss throughout the rolling update process.
+
+**Direct mode:**
+
+The direct mode case is a simplification of the load balancing mode. It's depicted in the following diagram:
+
+![Flow](documentation/direct_mode.png)
+
+Traffic flow is the following:
+
+- TRex (Traffic Generator) generates and sends traffic from Port 0 to the CNF Application.
+
+- The CNF Application receives incoming traffic from TRex on one of its ports.
+
+- The CNF Application processes the received traffic and passes it back to TRex for evaluation, using the TestPMD MAC forwarding mode.
+
+- TRex receives the processed traffic on Port 1.
+
+- TRex calculates statistics by comparing the incoming traffic on Port 1 (processed traffic) with the outgoing traffic on Port 0 (original traffic sent by TRex) and vice versa.
+
 
 Network troubleshooting
 ------------------------
