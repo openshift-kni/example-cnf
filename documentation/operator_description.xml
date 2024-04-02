@@ -1,0 +1,342 @@
+<mxfile host="app.diagrams.net" modified="2024-04-02T13:59:07.262Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36" etag="rUNvtWrXTa09I11XEp0C" version="24.2.1" type="device" pages="5">
+  <diagram name="Template" id="EFJ4v1UH2XTTZv7_sY1F">
+    <mxGraphModel dx="1434" dy="786" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="S8-6U9qcPtSJ4QcdnsGz-1" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=crd" vertex="1" parent="1">
+          <mxGeometry x="510" y="130" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="S8-6U9qcPtSJ4QcdnsGz-2" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=deploy" vertex="1" parent="1">
+          <mxGeometry x="510" y="390" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="S8-6U9qcPtSJ4QcdnsGz-3" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=api" vertex="1" parent="1">
+          <mxGeometry x="150" y="390" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="S8-6U9qcPtSJ4QcdnsGz-4" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=ing" vertex="1" parent="1">
+          <mxGeometry x="150" y="130" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="S8-6U9qcPtSJ4QcdnsGz-5" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.005;entryY=0.63;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.995;exitY=0.63;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="S8-6U9qcPtSJ4QcdnsGz-4" target="S8-6U9qcPtSJ4QcdnsGz-1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="130" y="330" as="sourcePoint" />
+            <mxPoint x="180" y="280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="S8-6U9qcPtSJ4QcdnsGz-6" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.005;exitY=0.63;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.995;entryY=0.63;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="S8-6U9qcPtSJ4QcdnsGz-2" target="S8-6U9qcPtSJ4QcdnsGz-3">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="440" as="sourcePoint" />
+            <mxPoint x="390" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="S8-6U9qcPtSJ4QcdnsGz-8" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.995;entryY=0.63;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="S8-6U9qcPtSJ4QcdnsGz-2" target="S8-6U9qcPtSJ4QcdnsGz-1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="510" y="400" as="sourcePoint" />
+            <mxPoint x="560" y="350" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="557" y="370" />
+              <mxPoint x="720" y="370" />
+              <mxPoint x="720" y="187" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="S8-6U9qcPtSJ4QcdnsGz-9" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.9;exitY=0.2;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.28;entryY=0.99;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="S8-6U9qcPtSJ4QcdnsGz-3" target="S8-6U9qcPtSJ4QcdnsGz-1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="260" y="420" as="sourcePoint" />
+            <mxPoint x="310" y="370" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="400" y="410" />
+              <mxPoint x="400" y="219" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="S8-6U9qcPtSJ4QcdnsGz-10" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Custom Resource Definition (CRD) extends k8s API by adding custom object XXX&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="121.88" y="220" width="150" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="S8-6U9qcPtSJ4QcdnsGz-11" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Custom Resource (CR) implements CRD:&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;- spec defines the desired state of XXX&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;- status defined the observed state of XXX&lt;/font&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="481.88" y="230" width="150" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="S8-6U9qcPtSJ4QcdnsGz-12" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Ansible role/Golang code (depending on the type of operator) manages reconciliation. It is a one-time reconciliation triggered by the creation of the CR config. It will perform what it is coded in the controller-manager logic&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="92.82" y="470" width="208.12" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="S8-6U9qcPtSJ4QcdnsGz-13" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Operator implements design pattern for continuous objects monitoring within k8s. It watches the state of the CR object and triggers reconciliation when the CR is created&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="452.82" y="470" width="208.12" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="eqfEqnuPuIW_PwWKcK1g-1" value="&lt;b&gt;&lt;font style=&quot;font-size: 22px;&quot;&gt;xxx&lt;/font&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="320" y="80" width="170" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="trex-operator" id="BmyIllqPcgQ5kfxb-tHF">
+    <mxGraphModel dx="1434" dy="786" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="WvBlQFqUd28ttsUJJQLO-0" />
+        <mxCell id="WvBlQFqUd28ttsUJJQLO-1" parent="WvBlQFqUd28ttsUJJQLO-0" />
+        <mxCell id="WvBlQFqUd28ttsUJJQLO-2" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=crd" vertex="1" parent="WvBlQFqUd28ttsUJJQLO-1">
+          <mxGeometry x="510" y="130" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="WvBlQFqUd28ttsUJJQLO-3" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=deploy" vertex="1" parent="WvBlQFqUd28ttsUJJQLO-1">
+          <mxGeometry x="510" y="390" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="WvBlQFqUd28ttsUJJQLO-4" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=api" vertex="1" parent="WvBlQFqUd28ttsUJJQLO-1">
+          <mxGeometry x="150" y="390" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="WvBlQFqUd28ttsUJJQLO-5" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=ing" vertex="1" parent="WvBlQFqUd28ttsUJJQLO-1">
+          <mxGeometry x="150" y="130" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="WvBlQFqUd28ttsUJJQLO-6" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.005;entryY=0.63;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.995;exitY=0.63;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="WvBlQFqUd28ttsUJJQLO-1" source="WvBlQFqUd28ttsUJJQLO-5" target="WvBlQFqUd28ttsUJJQLO-2">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="130" y="330" as="sourcePoint" />
+            <mxPoint x="180" y="280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WvBlQFqUd28ttsUJJQLO-7" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.005;exitY=0.63;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.995;entryY=0.63;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="WvBlQFqUd28ttsUJJQLO-1" source="WvBlQFqUd28ttsUJJQLO-3" target="WvBlQFqUd28ttsUJJQLO-4">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="440" as="sourcePoint" />
+            <mxPoint x="390" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WvBlQFqUd28ttsUJJQLO-8" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.995;entryY=0.63;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="WvBlQFqUd28ttsUJJQLO-1" source="WvBlQFqUd28ttsUJJQLO-3" target="WvBlQFqUd28ttsUJJQLO-2">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="510" y="400" as="sourcePoint" />
+            <mxPoint x="560" y="350" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="557" y="370" />
+              <mxPoint x="720" y="370" />
+              <mxPoint x="720" y="187" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WvBlQFqUd28ttsUJJQLO-9" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.9;exitY=0.2;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.28;entryY=0.99;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="WvBlQFqUd28ttsUJJQLO-1" source="WvBlQFqUd28ttsUJJQLO-4" target="WvBlQFqUd28ttsUJJQLO-2">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="260" y="420" as="sourcePoint" />
+            <mxPoint x="310" y="370" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="400" y="410" />
+              <mxPoint x="400" y="219" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="WvBlQFqUd28ttsUJJQLO-10" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Custom Resource Definition (CRD) extends k8s API by adding a custom object. There are two CRDs:&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;TRexConfig and TRexApp&lt;/font&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="WvBlQFqUd28ttsUJJQLO-1">
+          <mxGeometry x="121.86999999999999" y="230" width="150" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="WvBlQFqUd28ttsUJJQLO-11" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;A Custom Resource (CR) implements each CRD:&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;- spec defines the desired state of TRexConfig/TRexApp&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;- status defined the observed state of TRexConfig/TRexApp&lt;/font&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="WvBlQFqUd28ttsUJJQLO-1">
+          <mxGeometry x="457.81" y="230" width="198.12" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="WvBlQFqUd28ttsUJJQLO-12" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Ansible roles manage reconciliation. This operator uses:&lt;/font&gt;&lt;div&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;- app role for TRexApp CR&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;- server role for TRexConfig CR&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;It is a one-time reconciliation triggered by the creation of the CR config. It will perform what it is coded in the Ansible playbooks included on each role&lt;/font&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="WvBlQFqUd28ttsUJJQLO-1">
+          <mxGeometry x="86.4" y="480" width="220.94" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="WvBlQFqUd28ttsUJJQLO-13" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;TRex Operator implements design pattern for continuous TRexConfig and TRexApp objects monitoring within k8s. It watches the state of the CR objects and triggers reconciliation when the CR is created. The controller-manager is used for this purpose.&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="WvBlQFqUd28ttsUJJQLO-1">
+          <mxGeometry x="443.29" y="490" width="227.18" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="MldmiolDkgEX01bLn1qU-0" value="&lt;b&gt;&lt;font style=&quot;font-size: 22px;&quot;&gt;trex-operator&lt;/font&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="WvBlQFqUd28ttsUJJQLO-1">
+          <mxGeometry x="320" y="80" width="170" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="testpmd-lb-operator" id="d69CAathCyy4RItPGpEC">
+    <mxGraphModel dx="1434" dy="786" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="Jf6O0i9JSdD_9Nt0i4k3-0" />
+        <mxCell id="Jf6O0i9JSdD_9Nt0i4k3-1" parent="Jf6O0i9JSdD_9Nt0i4k3-0" />
+        <mxCell id="Jf6O0i9JSdD_9Nt0i4k3-2" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=crd" vertex="1" parent="Jf6O0i9JSdD_9Nt0i4k3-1">
+          <mxGeometry x="510" y="130" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="Jf6O0i9JSdD_9Nt0i4k3-3" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=deploy" vertex="1" parent="Jf6O0i9JSdD_9Nt0i4k3-1">
+          <mxGeometry x="510" y="390" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="Jf6O0i9JSdD_9Nt0i4k3-4" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=api" vertex="1" parent="Jf6O0i9JSdD_9Nt0i4k3-1">
+          <mxGeometry x="150" y="390" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="Jf6O0i9JSdD_9Nt0i4k3-5" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=ing" vertex="1" parent="Jf6O0i9JSdD_9Nt0i4k3-1">
+          <mxGeometry x="150" y="130" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="Jf6O0i9JSdD_9Nt0i4k3-6" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.005;entryY=0.63;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.995;exitY=0.63;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="Jf6O0i9JSdD_9Nt0i4k3-1" source="Jf6O0i9JSdD_9Nt0i4k3-5" target="Jf6O0i9JSdD_9Nt0i4k3-2">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="130" y="330" as="sourcePoint" />
+            <mxPoint x="180" y="280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Jf6O0i9JSdD_9Nt0i4k3-7" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.005;exitY=0.63;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.995;entryY=0.63;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="Jf6O0i9JSdD_9Nt0i4k3-1" source="Jf6O0i9JSdD_9Nt0i4k3-3" target="Jf6O0i9JSdD_9Nt0i4k3-4">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="440" as="sourcePoint" />
+            <mxPoint x="390" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Jf6O0i9JSdD_9Nt0i4k3-8" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.995;entryY=0.63;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="Jf6O0i9JSdD_9Nt0i4k3-1" source="Jf6O0i9JSdD_9Nt0i4k3-3" target="Jf6O0i9JSdD_9Nt0i4k3-2">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="510" y="400" as="sourcePoint" />
+            <mxPoint x="560" y="350" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="557" y="370" />
+              <mxPoint x="720" y="370" />
+              <mxPoint x="720" y="187" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Jf6O0i9JSdD_9Nt0i4k3-9" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.9;exitY=0.2;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.28;entryY=0.99;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="Jf6O0i9JSdD_9Nt0i4k3-1" source="Jf6O0i9JSdD_9Nt0i4k3-4" target="Jf6O0i9JSdD_9Nt0i4k3-2">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="260" y="420" as="sourcePoint" />
+            <mxPoint x="310" y="370" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="400" y="410" />
+              <mxPoint x="400" y="219" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Jf6O0i9JSdD_9Nt0i4k3-10" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Custom Resource Definition (CRD) extends k8s API by adding a custom object. Only one CR is created: LoadBalancer&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="Jf6O0i9JSdD_9Nt0i4k3-1">
+          <mxGeometry x="121.86999999999999" y="230" width="150" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="Jf6O0i9JSdD_9Nt0i4k3-11" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;A Custom Resource (CR) implements each CRD:&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;- spec defines the desired state of LoadBalancer&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;- status defined the observed state of LoadBalancer&lt;/font&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="Jf6O0i9JSdD_9Nt0i4k3-1">
+          <mxGeometry x="457.81" y="230" width="198.12" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="Jf6O0i9JSdD_9Nt0i4k3-12" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Ansible roles manage reconciliation. This operator uses loadbalancer role for LoadBalancer CR.&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;It is a one-time reconciliation triggered by the creation of the CR config. It will perform what it is coded in the Ansible playbooks included on the role&lt;/font&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="Jf6O0i9JSdD_9Nt0i4k3-1">
+          <mxGeometry x="86.4" y="480" width="220.94" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="Jf6O0i9JSdD_9Nt0i4k3-13" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;TestPMD LB Operator implements design pattern for continuous LoadBalancer monitoring within k8s. It watches the state of the CR objects and triggers reconciliation when the CR is created. The controller-manager is used for this purpose.&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="Jf6O0i9JSdD_9Nt0i4k3-1">
+          <mxGeometry x="443.29" y="490" width="227.18" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="Jf6O0i9JSdD_9Nt0i4k3-14" value="&lt;b&gt;&lt;font style=&quot;font-size: 22px;&quot;&gt;testpmd-lb-operator&lt;/font&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="Jf6O0i9JSdD_9Nt0i4k3-1">
+          <mxGeometry x="279" y="80" width="270" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="testpmd-operator" id="BrCURMqQgWLmrzcI4sIo">
+    <mxGraphModel dx="1434" dy="786" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="fKB9-SXHmJ6vuCauUHzS-0" />
+        <mxCell id="fKB9-SXHmJ6vuCauUHzS-1" parent="fKB9-SXHmJ6vuCauUHzS-0" />
+        <mxCell id="fKB9-SXHmJ6vuCauUHzS-2" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=crd" vertex="1" parent="fKB9-SXHmJ6vuCauUHzS-1">
+          <mxGeometry x="510" y="130" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="fKB9-SXHmJ6vuCauUHzS-3" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=deploy" vertex="1" parent="fKB9-SXHmJ6vuCauUHzS-1">
+          <mxGeometry x="510" y="390" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="fKB9-SXHmJ6vuCauUHzS-4" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=api" vertex="1" parent="fKB9-SXHmJ6vuCauUHzS-1">
+          <mxGeometry x="150" y="390" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="fKB9-SXHmJ6vuCauUHzS-5" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=ing" vertex="1" parent="fKB9-SXHmJ6vuCauUHzS-1">
+          <mxGeometry x="150" y="130" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="fKB9-SXHmJ6vuCauUHzS-6" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.005;entryY=0.63;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.995;exitY=0.63;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="fKB9-SXHmJ6vuCauUHzS-1" source="fKB9-SXHmJ6vuCauUHzS-5" target="fKB9-SXHmJ6vuCauUHzS-2">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="130" y="330" as="sourcePoint" />
+            <mxPoint x="180" y="280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fKB9-SXHmJ6vuCauUHzS-7" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.005;exitY=0.63;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.995;entryY=0.63;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="fKB9-SXHmJ6vuCauUHzS-1" source="fKB9-SXHmJ6vuCauUHzS-3" target="fKB9-SXHmJ6vuCauUHzS-4">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="440" as="sourcePoint" />
+            <mxPoint x="390" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fKB9-SXHmJ6vuCauUHzS-8" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.995;entryY=0.63;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="fKB9-SXHmJ6vuCauUHzS-1" source="fKB9-SXHmJ6vuCauUHzS-3" target="fKB9-SXHmJ6vuCauUHzS-2">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="510" y="400" as="sourcePoint" />
+            <mxPoint x="560" y="350" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="557" y="370" />
+              <mxPoint x="720" y="370" />
+              <mxPoint x="720" y="187" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fKB9-SXHmJ6vuCauUHzS-9" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.9;exitY=0.2;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.28;entryY=0.99;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="fKB9-SXHmJ6vuCauUHzS-1" source="fKB9-SXHmJ6vuCauUHzS-4" target="fKB9-SXHmJ6vuCauUHzS-2">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="260" y="420" as="sourcePoint" />
+            <mxPoint x="310" y="370" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="400" y="410" />
+              <mxPoint x="400" y="219" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fKB9-SXHmJ6vuCauUHzS-10" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Custom Resource Definition (CRD) extends k8s API by adding a custom object. Only one CR is created: TestPMD&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="fKB9-SXHmJ6vuCauUHzS-1">
+          <mxGeometry x="121.86999999999999" y="230" width="150" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="fKB9-SXHmJ6vuCauUHzS-11" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;A Custom Resource (CR) implements each CRD:&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;- spec defines the desired state of&amp;nbsp;&lt;/font&gt;&lt;span style=&quot;font-size: 14px; background-color: initial;&quot;&gt;TestPMD&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;- status defined the observed state of&amp;nbsp;&lt;/font&gt;&lt;span style=&quot;font-size: 14px; background-color: initial;&quot;&gt;TestPMD&lt;/span&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="fKB9-SXHmJ6vuCauUHzS-1">
+          <mxGeometry x="457.81" y="230" width="198.12" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="fKB9-SXHmJ6vuCauUHzS-12" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Ansible roles manage reconciliation. This operator uses testpmd role for TestPMD&amp;nbsp;CR.&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;It is a one-time reconciliation triggered by the creation of the CR config. It will perform what it is coded in the Ansible playbooks included on the role&lt;/font&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="fKB9-SXHmJ6vuCauUHzS-1">
+          <mxGeometry x="86.4" y="480" width="220.94" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="fKB9-SXHmJ6vuCauUHzS-13" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;TestPMD Operator implements design pattern for continuous LoadBalancer monitoring within k8s. It watches the state of the CR objects and triggers reconciliation when the CR is created. The controller-manager is used for this purpose.&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="fKB9-SXHmJ6vuCauUHzS-1">
+          <mxGeometry x="443.29" y="490" width="227.18" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="fKB9-SXHmJ6vuCauUHzS-14" value="&lt;b&gt;&lt;font style=&quot;font-size: 22px;&quot;&gt;testpmd-operator&lt;/font&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="fKB9-SXHmJ6vuCauUHzS-1">
+          <mxGeometry x="279" y="80" width="270" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="cnf-app-mac-operator" id="VNjoHYqh8bRsg8Q6GLzg">
+    <mxGraphModel dx="1434" dy="786" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="rmfW4cpfra5qfbzwHCZW-0" />
+        <mxCell id="rmfW4cpfra5qfbzwHCZW-1" parent="rmfW4cpfra5qfbzwHCZW-0" />
+        <mxCell id="rmfW4cpfra5qfbzwHCZW-2" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=crd" vertex="1" parent="rmfW4cpfra5qfbzwHCZW-1">
+          <mxGeometry x="510" y="130" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="rmfW4cpfra5qfbzwHCZW-3" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=deploy" vertex="1" parent="rmfW4cpfra5qfbzwHCZW-1">
+          <mxGeometry x="510" y="390" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="rmfW4cpfra5qfbzwHCZW-4" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=api" vertex="1" parent="rmfW4cpfra5qfbzwHCZW-1">
+          <mxGeometry x="150" y="390" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="rmfW4cpfra5qfbzwHCZW-5" value="" style="aspect=fixed;sketch=0;html=1;dashed=0;whitespace=wrap;fillColor=#EA6B66;strokeColor=#ffffff;points=[[0.005,0.63,0],[0.1,0.2,0],[0.9,0.2,0],[0.5,0,0],[0.995,0.63,0],[0.72,0.99,0],[0.5,1,0],[0.28,0.99,0]];shape=mxgraph.kubernetes.icon2;prIcon=ing" vertex="1" parent="rmfW4cpfra5qfbzwHCZW-1">
+          <mxGeometry x="150" y="130" width="93.75" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="rmfW4cpfra5qfbzwHCZW-6" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.005;entryY=0.63;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.995;exitY=0.63;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="rmfW4cpfra5qfbzwHCZW-1" source="rmfW4cpfra5qfbzwHCZW-5" target="rmfW4cpfra5qfbzwHCZW-2">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="130" y="330" as="sourcePoint" />
+            <mxPoint x="180" y="280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rmfW4cpfra5qfbzwHCZW-7" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.005;exitY=0.63;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.995;entryY=0.63;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="rmfW4cpfra5qfbzwHCZW-1" source="rmfW4cpfra5qfbzwHCZW-3" target="rmfW4cpfra5qfbzwHCZW-4">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="440" as="sourcePoint" />
+            <mxPoint x="390" y="460" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rmfW4cpfra5qfbzwHCZW-8" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.995;entryY=0.63;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="rmfW4cpfra5qfbzwHCZW-1" source="rmfW4cpfra5qfbzwHCZW-3" target="rmfW4cpfra5qfbzwHCZW-2">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="510" y="400" as="sourcePoint" />
+            <mxPoint x="560" y="350" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="557" y="370" />
+              <mxPoint x="720" y="370" />
+              <mxPoint x="720" y="187" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rmfW4cpfra5qfbzwHCZW-9" value="" style="endArrow=classic;html=1;rounded=0;exitX=0.9;exitY=0.2;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.28;entryY=0.99;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="rmfW4cpfra5qfbzwHCZW-1" source="rmfW4cpfra5qfbzwHCZW-4" target="rmfW4cpfra5qfbzwHCZW-2">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="260" y="420" as="sourcePoint" />
+            <mxPoint x="310" y="370" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="400" y="410" />
+              <mxPoint x="400" y="219" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rmfW4cpfra5qfbzwHCZW-10" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Custom Resource Definition (CRD) extends k8s API by adding a custom object. Only one CR is created: CNFAppMac&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="rmfW4cpfra5qfbzwHCZW-1">
+          <mxGeometry x="121.86999999999999" y="230" width="150" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="rmfW4cpfra5qfbzwHCZW-11" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;A Custom Resource (CR) implements each CRD:&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;- spec defines the desired state of&amp;nbsp;&lt;/font&gt;&lt;span style=&quot;font-size: 14px; background-color: initial;&quot;&gt;CNFAppMac&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;- status defined the observed state of&amp;nbsp;&lt;/font&gt;&lt;span style=&quot;font-size: 14px; background-color: initial;&quot;&gt;CNFAppMac&lt;/span&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="rmfW4cpfra5qfbzwHCZW-1">
+          <mxGeometry x="457.81" y="230" width="198.12" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="rmfW4cpfra5qfbzwHCZW-12" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;Golang code manages reconciliation.&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;It is a one-time reconciliation triggered by the creation of the CR config. It will perform what it is coded in the controller&#39;s Golang code provided by the operator&lt;/font&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="rmfW4cpfra5qfbzwHCZW-1">
+          <mxGeometry x="86.4" y="480" width="220.94" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="rmfW4cpfra5qfbzwHCZW-13" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;CNFAppMac Operator implements design pattern for continuous CNFAppMac monitoring within k8s. It watches the state of the CR objects and triggers reconciliation when the CR is created. The controller-manager is used for this purpose.&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="rmfW4cpfra5qfbzwHCZW-1">
+          <mxGeometry x="443.29" y="490" width="227.18" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="rmfW4cpfra5qfbzwHCZW-14" value="&lt;b&gt;&lt;font style=&quot;font-size: 22px;&quot;&gt;cnf-app-mac-operator&lt;/font&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="rmfW4cpfra5qfbzwHCZW-1">
+          <mxGeometry x="279" y="80" width="270" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

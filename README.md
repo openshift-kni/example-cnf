@@ -18,6 +18,9 @@ It is providing the following operators:
         * In `trexconfig-<x>` pod logs, you can see the trex statistics printed periodically.
         * The summary of the test execution can be seen at the end of the `trex-app` job logs.
         * In `trex-operator-controller-manager-<x>` pod, you can see the execution of the Ansible playbooks that ensures the reconciliation loop of the operator.
+
+![Operator behavior](documentation/trex-operator.png)
+
 * testpmd-lb-operator
     * It represents a modified TestPMD (Packet Manipulation Daemon) instance, called TestPMD LoadBalancer (LB), implementing a custom load balancing forwarding module, using two components:
         * LoadBalancer CR, creating the pod that perform load balancing between its ports. Related pod is `loadbalancer-<x>` pod. This pod is composed by two containers: `loadbalancer`, which performs the load balancing forwarding, and `listener`, an auxiliary module that is listening to the CNFAppMac component created by the cnf-app-mac-operator to retrieve the MAC addresses of the TestPMD instances launched by the testpmd-operator (i.e. the CNF Application), then serving this information to the `loadbalancer` container.
@@ -26,6 +29,9 @@ It is providing the following operators:
         * To see the TestPMD LB statistics printed periodically for this module, you can rely on `loadbalancer-<x>` pod logs (which prints `loadbalancer` container logs).
         * In `testpmd-lb-operator-controller-manager-<x>` pod, you can see the execution of the Ansible playbooks that ensures the reconciliation loop of the operator.
     * The LoadBalancer is not currently replicated; only one instance is deployed. It's supposed that, up to now, it's not belonging to any update-upgrade process of the example-cnf, so that it has to be deployed in an isolated worker node, whereas the other components of this CNF (TRex and CNF Application) have to be deployed in a different worker node. Pod anti-affinity rules ensure this setup.
+
+![Operator behavior](documentation/testpmd-lb-operator.png)
+
 * testpmd-operator
     * Final application, also known as CNF Application, which is a standard TestPMD instance using the default MAC forwarding module. It uses two components:
         * TestPMD CR, which creates replicated pods to implement the MAC forwarding module as final application. Related pods are `testpmd-app-<x>` pods.
@@ -33,17 +39,20 @@ It is providing the following operators:
     * Following information can be extracted from pod logs:
         * To see the TestPMD statistics printed periodically for this module, you can rely on `testpmd-app-<x>` pod logs. Each log will offer you the statistics of each replica pod.
         * In `testpmd-operator-controller-manager-<x>` pod, you can see the execution of the Ansible playbooks that ensures the reconciliation loop of the operator.
+
+![Operator behavior](documentation/testpmd-operator.png)
+
 * cnf-app-mac-operator
     * Auxiliary operator just composed by one component, which is CNFAppMac Operator, a Golang-based operator in charge of ensuring reconciliation for CNFAppMac CR, which is a wrapper created for each `testpmd-app-<x>` and linked to them, and that are used to extract the network information of these pods (network, MAC and PCI addresses), to be offered to other components of the solution, such as the `listener` contaoner deployed by TestPMD LB.
+
+![Operator behavior](documentation/cnf-app-mac-operator.png)
 
 You can use them from the [Example CNF Catalog](https://quay.io/repository/rh-nfv-int/nfv-example-cnf-catalog?tab=tags).
 
 How operators are created
 ------------------------
 
-The four operators defined in this repository are built with [Operator SDK tool](https://sdk.operatorframework.io/docs/building-operators/). Their behavior is depicted in the next diagram:
-
-![Operator behavior](documentation/operator_behavior.png)
+The four operators defined in this repository are built with [Operator SDK tool](https://sdk.operatorframework.io/docs/building-operators/).
 
 We can differentiate between these two cases:
 
@@ -198,7 +207,7 @@ According to [this code](https://github.com/rh-nfv-int/nfv-example-cnf-deploy/bl
 - `pack_nw` corresponds to `packet_generator_networks` and uses `lb_gen_port_mac_list`, having two MAC addresses starting with `40:...`, and correspond to the interfaces that connect the TestPMD LB with TRex. It uses `intel-numa0-net3|4` networks.
 - `cnf_nw` corresponds to `cnf_app_networks` and uses `lb_cnf_port_mac_list`, having two MAC addresses starting with `60:...`, and correspond to the interfaces that connect the TestPMD Load Balancer with the CNF Application. It uses `intel-numa0-net1|2` networks.
 
-Also, note that TRex uses static MAC addresses starting with `20:...`. The only MAC addresses that are created dynamically are the ones from CNF Application.
+Also, note that TRex uses static MAC addresses starting with `20:...`. The only MAC addresses that are created dynamically are the ones from CNF Application. To capture them, CNFAppMac CR is used, which saves the MAC and PCI addresses from the CNF Application pods and serve them to the other components of the architecture.
 
 So, network schema is as follows (which was already depicted in the flow diagram):
 
@@ -212,6 +221,8 @@ In this case, the network used by TRex varies, according to [this code](https://
 
 This says that, if load balancer is not enabled, then TRex is connected to the `cnf_app_networks`, which is, in fact, `intel-numa0-net1|2`, so it doesn't use `intel-numa0-net3|4` in this case.
 
+Similarly to the load balancing case, TRex uses static MAC addresses starting with `20:...`, and the CNF Application uses random MAC addresses which are eventually provided, together with the PCI addresses, by the CNFAppMac CR.
+
 The network schema would be as follows:
 
 ```
@@ -223,7 +234,7 @@ Traffic Flow
 
 **Load balancer mode:**
 
-Here, we will depict the traffic flow for the case of the load balancer mode, including the SRIOV setup already described above.
+Here, we will depict the traffic flow for the case of the load balancer mode, including the SRIOV setup already described above. Diagram above represents the data plane traffic.
 
 ![Flow](documentation/lb_mode.png)
 
@@ -249,7 +260,7 @@ This configuration simulates a traffic flow from TRex to TestPMD LB, then to the
 
 **Direct mode:**
 
-The direct mode case is a simplification of the load balancing mode. It's depicted in the following diagram:
+The direct mode case is a simplification of the load balancing mode. It's depicted in the following diagram, which also represents the data plane traffic:
 
 ![Flow](documentation/direct_mode.png)
 
