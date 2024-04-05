@@ -121,11 +121,11 @@ undeploy:
 # Ensure proper digests for trex-container-app and trex-container-server
 .PHONY: ensure_digests
 ensure_digests:
-	cp roles/trexapp/defaults/main.yml.in roles/trexapp/defaults/main.yml
-	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/trexapp/defaults/main.yml
-	cp roles/trexconfig/defaults/main.yml.in roles/trexconfig/defaults/main.yml
-	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-server:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-server@.*/trex-container-server@$${DIGEST}\"   # $(TREX_VER)/" roles/trexconfig/defaults/main.yml
-	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/trexconfig/defaults/main.yml
+	cp roles/app/defaults/main.yml.in roles/app/defaults/main.yml
+	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/app/defaults/main.yml
+	cp roles/server/defaults/main.yml.in roles/server/defaults/main.yml
+	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-server:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-server@.*/trex-container-server@$${DIGEST}\"   # $(TREX_VER)/" roles/server/defaults/main.yml
+	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/server/defaults/main.yml
 
 # Build the operator image
 .PHONY: operator-build
