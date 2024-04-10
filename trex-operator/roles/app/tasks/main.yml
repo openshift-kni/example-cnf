@@ -4,7 +4,7 @@
   requeue_after:
     time: 1m
 - name: check if treconfig is available
-  k8s_info:
+  kubernetes.core.k8s_info:
     kind: TRexConfig
     api_version: examplecnf.openshift.io/v1
   register: trex_config

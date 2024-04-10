@@ -1,6 +1,6 @@
 ---
 - name: get the list of incomplete jobs
-  k8s_info:
+  kubernetes.core.k8s_info:
     kind: Job
     api_version: batch/v1
     label_selectors:
@@ -24,21 +24,21 @@
   when: "active_jobs|int == 0"  
   block:
     - name: Create ServiceAccount for trexapp job resource
-      k8s:
+      kubernetes.core.k8s:
         state: present
         definition: "{{ lookup('template', 'service_account.yml') }}"
 
     - name: Create Role for trexapp job resource
-      k8s:
+      kubernetes.core.k8s:
         state: present
         definition: "{{ lookup('template', 'role.yml') }}"
 
     - name: Create RoleBinding for trexapp job resource
-      k8s:
+      kubernetes.core.k8s:
         state: present
         definition: "{{ lookup('template', 'role_binding.yml') }}"
 
     - name: create trexapp job
-      k8s:
+      kubernetes.core.k8s:
         state: present
         definition: "{{ lookup('template', 'job.yml') }}"
