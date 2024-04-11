@@ -200,31 +200,26 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			return ctrl.Result{}, nil
 		}
 
-		// Declare the vars that will save the MAC and PCI addresses, in default order
+		// Declare the var that will save the MAC addresses, in default order
 		var macAddresses []string
-		var pciAddresses []string
 
-		// Do a first iteration of the netStatuses list to fill in the two lists declared before
+		// Do a first iteration of the netStatuses list to fill in the list declared before
 		// MAC addresses are only retrieved if macUsedInNetStatus value is true
-		for _, netStatus := range netStatuses {
+		if macUsedInNetStatus {
+			for _, netStatus := range netStatuses {
 
-			// Only take the network info if we have a PCI device with a PCI address
-			// Discard ovn-kubernetes name
-			if netStatus.Name != "ovn-kubernetes" && netStatus.DeviceInfo.Type == "pci" &&
-				len(netStatus.DeviceInfo.Pci.PciAddress) > 0 {
+				// Only take the network info if we have a PCI device with a PCI address
+				// Discard ovn-kubernetes name
+				if netStatus.Name != "ovn-kubernetes" && netStatus.DeviceInfo.Type == "pci" &&
+					len(netStatus.DeviceInfo.Pci.PciAddress) > 0 {
 
-				if macUsedInNetStatus {
 					macAddresses = append(macAddresses, netStatus.Mac)
 					log.Info("Adding item to macAddresses", "item", netStatus.Mac)
 				}
-				pciAddresses = append(pciAddresses, netStatus.DeviceInfo.Pci.PciAddress)
-				log.Info("Adding item to pciAddresses", "item", netStatus.DeviceInfo.Pci.PciAddress)
 			}
-		}
+		} else {
 
-		// If MACs cannot be extracted from annotations, then extract them from testpmd logs
-		if !macUsedInNetStatus {
-
+			// If MACs cannot be extracted from annotations, then extract them from testpmd logs
 			macStr, err := getContainerLogValue(podName, namespace)
 			if err != nil {
 				return ctrl.Result{}, err
@@ -241,42 +236,25 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 			log.Info("Get processed mac string from command executed", "processed-mac-string", macs)
 
-			for _, macAddr := range macs {
-				if macAddr != "" {
-					macAddresses = append(macAddresses, macAddr)
-					log.Info("Adding item to macAddresses", "item", macAddr)
+			// We need to save the MACs in opposite order since it's the correct order to be followed;
+			// testpmd logs swap them
+			for i := len(macs) - 1; i >= 0; i-- {
+				if macs[i] != "" {
+					macAddresses = append(macAddresses, macs[i])
+					log.Info("Adding item to macAddresses", "item", macs[i])
 				}
 			}
-
 		}
 
 		log.Info("Final status of macAddresses list", "macAddresses", macAddresses)
-		log.Info("Final status of pciAddresses list", "pciAddresses", pciAddresses)
-
-		// Booleans that will determine if we have to swap/not swap the order of MAC addresses.
-		arePciAddressesSwapped := false
-		swapMacAddresses := false
-		// Item to start the iteration of the macAddresses list
-		macIdx := 0
-
-		// Determine if PCI addresses appear in the order expected by testpmd (from lower to higher)
-		// We are currently considering that there will only be two network interfaces.
-		if pciAddresses[0] > pciAddresses[1] {
-			arePciAddressesSwapped = true
-		}
-
-		// MACs have to be swapped if:
-		// - MAC annotation exists (macUsedInNetStatus = true) and PCI addresses are swapped (arePciAddressesSwapped = true)
-		// - MAC annotation does not exist (macUsedInNetStatus = false) and PCI addresses are not swapped (arePciAddressesSwapped = false)
-		if (macUsedInNetStatus && arePciAddressesSwapped) || (!macUsedInNetStatus && !arePciAddressesSwapped) {
-			swapMacAddresses = true
-			macIdx = len(macAddresses) - 1
-		}
 
 		// Translate each NetStatus into NetInfo structure.
 		// We will follow the same order than the interfaces that appear listed in the annotations.
 		// MAC addresses will be filled according to the order of PCI interfaces that is expected by testpmd.
 		// If network already exists, just append MAC and PCI address, else add a new element
+
+		// Item to start the iteration of the macAddresses list
+		macIdx := 0
 		for _, netStatus := range netStatuses {
 
 			// Only take the network info if we have a PCI device with a PCI address
@@ -287,11 +265,7 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 				// MAC address is obtained from macAddresses list, according to the order in which
 				// testpmd is handling it.
 				macAddress := macAddresses[macIdx]
-				if swapMacAddresses {
-					macIdx--
-				} else {
-					macIdx++
-				}
+				macIdx++
 
 				// Extract the data we need
 				var netItem = NetInfo{
