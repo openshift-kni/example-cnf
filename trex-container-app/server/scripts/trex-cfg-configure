@@ -78,6 +78,10 @@ def main():
 
     src_mac = get_src_mac()
     if not src_mac:
+        print("Source mac address is not available, checking with PCI devices")
+        print("WARNING: this method is likely to fail")
+        # WARNING: if reaching this line (it should not happen normally, but it happened
+        # once while debugging), note that get_pci_mac is likely to fail
         src_mac = get_pci_mac(pci_list)
     if not src_mac:
         print("ERROR: Source mac address is not available, exiting...")
@@ -253,15 +257,18 @@ def get_pci_mac(pci_list):
     for pci in pci_list:
         print("get_pci_mac - starting with pci", pci)
         idx += 1
+        # The PCI device refers to a specific physfn
         path = "/sys/bus/pci/devices/" + pci + "/physfn/"
         pf = os.path.realpath(path)
         print("get_pci_mac - get pf path", pf)
-        print("get_pci_mac - get folders from pf + /net", ','.join(os.listdir(pf + "/net")))
+        # Try to extract the net for that physfn
+        # WARNING: it may happen that pf_name is empty, so get_vf_mac call will fail
         for item in os.listdir(pf + "/net"):
             pf_name = item
             print("get_pci_mac - extracted pf_name:", pf_name)
         print("get_pci_mac - get path", path)
         print("get_pci_mac - get folders from path", ','.join(os.listdir(path)))
+        # Look for the folder where we have the PCI address
         for item in os.listdir(path):
             print("get_pci_mac - extracted item from path:", item)
             if os.path.islink(path + item):
@@ -270,6 +277,7 @@ def get_pci_mac(pci_list):
                 if pci in rel:
                     vf = item.replace('virtfn', '')
                     print("get_pci_mac - this is the vf:", vf)
+                    # Apply the MAC address to that interface
                     get_vf_mac(pf_name, vf, mac[idx])
     return mac
 
