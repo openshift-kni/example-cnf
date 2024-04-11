@@ -24,10 +24,10 @@ spec:
         control-plane: controller-manager
         example-cnf-type: trex-operator
     spec:
-      securityContext:
-        runAsNonRoot: true
-        seccompProfile:
-          type: RuntimeDefault
+      #securityContext:
+      #  runAsNonRoot: true
+      #  seccompProfile:
+      #    type: RuntimeDefault
       containers:
       - args:
         - --leader-elect

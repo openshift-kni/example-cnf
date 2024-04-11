@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
-## [0.2.17] - 2024-02-29
+## [0.2.17] - 2024-04-12
 
 - Changed scaffolding, this time really based on operator-sdk v1.33.0
 

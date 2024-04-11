@@ -63,10 +63,6 @@ ifeq ($(USE_IMAGE_DIGESTS), true)
 	BUNDLE_GEN_FLAGS += --use-image-digests
 endif
 
-# Set the Operator SDK version to use. By default, what is installed on the system is used.
-# This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
-OPERATOR_SDK_VERSION ?= v1.33.0
-
 # Image URL to use all building/pushing image targets
 IMG ?= $(IMAGE_TAG_BASE):v$(TAG)
 REL_IMG ?= $(IMAGE_TAG_BASE):v$(VERSION)
@@ -191,7 +187,7 @@ ifeq (, $(shell which operator-sdk 2>/dev/null))
 	@{ \
 	set -e ;\
 	mkdir -p $(dir $(OPERATOR_SDK)) ;\
-	curl -sSLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$(OS)_$(ARCH) ;\
+	curl -sSLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VER)/operator-sdk_$(OS)_$(ARCH) ;\
 	chmod +x $(OPERATOR_SDK) ;\
 	}
 else
@@ -221,10 +217,10 @@ bundle: kustomize operator-sdk
 bundle-build: bundle
 	if [ -n "$(RELEASE)" ]; then \
 	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Dockerfile \
-	        -t bundle . ; \
+		-t bundle . ; \
 	else \
 	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Dockerfile --label quay.expires-after=2w \
-	        -t bundle . ; \
+		-t bundle . ; \
 	fi
 
 # Tag local bundle image with our registry BUNDLE_IMG
