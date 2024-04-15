@@ -1,6 +1,6 @@
 module github.com/openshift-kni/example-cnf/tree/main/cnf-app-mac-operator
 
-go 1.20
+go 1.22.2
 
 require (
 	github.com/go-logr/logr v1.2.4
