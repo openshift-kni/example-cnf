@@ -1,8 +1,5 @@
 ---
 # tasks file for TRexApp
-- name: requeue request
-  requeue_after:
-    time: 1m
 - name: check if treconfig is available
   kubernetes.core.k8s_info:
     kind: TRexConfig
