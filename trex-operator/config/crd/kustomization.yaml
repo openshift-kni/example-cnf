@@ -2,6 +2,6 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/examplecnf.openshift.io_trexconfigs.yaml
 - bases/examplecnf.openshift.io_trexapps.yaml
-# +kubebuilder:scaffold:crdkustomizeresource
+- bases/examplecnf.openshift.io_trexconfigs.yaml
+#+kubebuilder:scaffold:crdkustomizeresource

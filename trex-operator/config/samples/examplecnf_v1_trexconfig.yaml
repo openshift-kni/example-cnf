@@ -1,6 +1,12 @@
 apiVersion: examplecnf.openshift.io/v1
 kind: TRexConfig
 metadata:
+  labels:
+    app.kubernetes.io/name: trexconfig
+    app.kubernetes.io/instance: trexconfig-sample
+    app.kubernetes.io/part-of: trex-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: trex-operator
   name: trexconfig1
 spec:
   cpu: 8

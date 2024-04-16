@@ -1,4 +1,5 @@
 ---
+# vars file for TRexConfig
 hugepage_1gb_count: 4Gi
 memory: 1000Mi
 cpu: 8
