@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 
+import os.path
 import sys
 
 def main():
     data = ''
-    with open('/sys/fs/cgroup/cpuset/cpuset.cpus') as f:
-        data = f.read()
+    if os.path.isfile('/sys/fs/cgroup/cpuset/cpuset.cpus'):
+        with open('/sys/fs/cgroup/cpuset/cpuset.cpus') as f:
+            data = f.read()
+    elif os.path.isfile('/sys/fs/cgroup/cpuset.cpus'):
+        # Applied to latest OCP 4.16 nightlies starting from 4.16.0 ec.5
+        with open('/sys/fs/cgroup/cpuset.cpus') as f:
+            data = f.read()
 
     out = []
     for item in data.split(','):

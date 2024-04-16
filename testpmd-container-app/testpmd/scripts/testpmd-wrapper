@@ -41,7 +41,17 @@ else
         done
     done
     
-    LCORES=$(cat /sys/fs/cgroup/cpuset/cpuset.cpus)
+    LCORES=""
+    if [ -f /sys/fs/cgroup/cpuset/cpuset.cpus ]; then
+        LCORES=$(cat /sys/fs/cgroup/cpuset/cpuset.cpus)
+    elif [ -f /sys/fs/cgroup/cpuset.cpus ]; then
+        # Applied to latest OCP 4.16 nightlies starting from 4.16.0 ec.5
+        LCORES=$(cat /sys/fs/cgroup/cpuset.cpus)
+    else
+        echo "Could not find file to extract cores, existing.."
+        exit 1
+    fi
+
     if [ -z $LCORES ]; then
         echo "Could not find cores, existing.."
         exit 1
