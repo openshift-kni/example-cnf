@@ -124,7 +124,6 @@ undeploy:
 # Ensure proper digests for testpmd-container-app-cnfapp
 .PHONY: ensure_digests
 ensure_digests:
-	cp roles/testpmd/defaults/main.yml.in roles/testpmd/defaults/main.yml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/testpmd-container-app-cnfapp:$(TESTPMD_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/testpmd-container-app-cnfapp@.*/testpmd-container-app-cnfapp@$${DIGEST}\"   # $(TESTPMD_VER)/" roles/testpmd/defaults/main.yml
 
 # Build the operator image
@@ -207,7 +206,6 @@ bundle: kustomize operator-sdk ## Generate bundle manifests and metadata, then v
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle $(BUNDLE_GEN_FLAGS)
 	DIGEST=$$(skopeo inspect docker://$(IMG) | jq -r '.Digest') && [ -n "$${DIGEST}" ] && sed -i -e 's/\(\s*image: .*\):v'$(TAG)'/\1@'$${DIGEST}'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	sed -i -e '/^# Copy.*/i LABEL com.redhat.openshift.versions="v4.6"\nLABEL com.redhat.delivery.backport=false\nLABEL com.redhat.delivery.operator.bundle=true' bundle.Dockerfile
-	cp relatedImages.yaml.in relatedImages.yaml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/testpmd-container-app-cnfapp:$(TESTPMD_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/testpmd-container-app-cnfapp@.*/testpmd-container-app-cnfapp@$${DIGEST}\"   # $(TESTPMD_VER)/" relatedImages.yaml
 	cat relatedImages.yaml >> bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	$(OPERATOR_SDK) bundle validate ./bundle

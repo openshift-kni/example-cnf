@@ -117,9 +117,7 @@ undeploy:
 # Ensure proper digests for trex-container-app and trex-container-server
 .PHONY: ensure_digests
 ensure_digests:
-	cp roles/app/defaults/main.yml.in roles/app/defaults/main.yml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/app/defaults/main.yml
-	cp roles/server/defaults/main.yml.in roles/server/defaults/main.yml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-server:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-server@.*/trex-container-server@$${DIGEST}\"   # $(TREX_VER)/" roles/server/defaults/main.yml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/server/defaults/main.yml
 
@@ -205,7 +203,6 @@ bundle: kustomize operator-sdk
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle $(BUNDLE_GEN_FLAGS)
 	DIGEST=$$(skopeo inspect docker://$(IMG) | jq -r '.Digest') && sed -i -e 's/\(\s*image: .*\):v'$(TAG)'/\1@'$${DIGEST}'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	sed -i -e '/^# Copy.*/i LABEL com.redhat.openshift.versions="v4.12"\nLABEL com.redhat.delivery.backport=false\nLABEL com.redhat.delivery.operator.bundle=true' bundle.Dockerfile
-	cp relatedImages.yaml.in relatedImages.yaml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-server:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-server@.*/trex-container-server@$${DIGEST}\"   # $(TREX_VER)/" relatedImages.yaml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" relatedImages.yaml
 	cat relatedImages.yaml >> bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml

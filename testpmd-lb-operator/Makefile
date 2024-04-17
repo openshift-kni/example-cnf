@@ -117,7 +117,6 @@ undeploy:
 # Ensure proper digests for testpmd-container-app-listener and testpmd-container-app-testpmd
 .PHONY: ensure_digests
 ensure_digests:
-	cp roles/loadbalancer/defaults/main.yml.in roles/loadbalancer/defaults/main.yml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/testpmd-container-app-testpmd:$(TESTPMD_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/testpmd-container-app-testpmd@.*/testpmd-container-app-testpmd@$${DIGEST}\"   # $(TESTPMD_VER)/" roles/loadbalancer/defaults/main.yml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/testpmd-container-app-listener:$(TESTPMD_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/testpmd-container-app-listener@.*/testpmd-container-app-listener@$${DIGEST}\"   # $(TESTPMD_VER)/" roles/loadbalancer/defaults/main.yml
 
@@ -202,7 +201,6 @@ bundle: kustomize operator-sdk
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle $(BUNDLE_GEN_FLAGS)
 	DIGEST=$$(skopeo inspect docker://$(IMG) | jq -r '.Digest') && sed -i -e 's/\(\s*image: .*\):v'$(TAG)'/\1@'$${DIGEST}'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	sed -i -e '/^# Copy.*/i LABEL com.redhat.openshift.versions="v4.6"\nLABEL com.redhat.delivery.backport=false\nLABEL com.redhat.delivery.operator.bundle=true' bundle.Dockerfile
-	cp relatedImages.yaml.in relatedImages.yaml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/testpmd-container-app-testpmd:$(TESTPMD_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/testpmd-container-app-testpmd@.*/testpmd-container-app-testpmd@$${DIGEST}\"   # $(TESTPMD_VER)/" relatedImages.yaml
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/testpmd-container-app-listener:$(TESTPMD_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/testpmd-container-app-listener@.*/testpmd-container-app-listener@$${DIGEST}\"   # $(TESTPMD_VER)/" relatedImages.yaml
 	cat relatedImages.yaml >> bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml

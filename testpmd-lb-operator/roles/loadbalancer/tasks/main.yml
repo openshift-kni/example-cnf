@@ -65,22 +65,22 @@
     var: network_name_list
 
 - name: Create ServiceAccount for LoadBalancer resource
-  k8s:
+  kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', 'service_account.yml') }}"
 
 - name: Create Role for LoadBalancer resource
-  k8s:
+  kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', 'role.yml') }}"
 
 - name: Create RoleBinding for LoadBalancer resource
-  k8s:
+  kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', 'role_binding.yml') }}"
 
 - name: Create LoadBalancer deployment
-  k8s:
+  kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', 'deployment.yml') }}"
 
@@ -89,6 +89,6 @@
 # TODO (in a new patch): update PDB during upgrades to avoid issues during node draining, something like:
 # https://medium.com/@tamber/solution-avoid-kubernetes-openshift-node-drain-failure-due-to-active-poddisruptionbudget-df68efed2c4f
 - name: Create PodDisruptionBudget for LoadBalancer pod
-  k8s:
+  kubernetes.core.k8s:
     state: present
     definition: "{{ lookup('template', 'pdb.yml') }}"
