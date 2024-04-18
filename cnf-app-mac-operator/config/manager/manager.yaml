@@ -75,8 +75,6 @@ spec:
             port: 8081
           initialDelaySeconds: 5
           periodSeconds: 10
-        # operator-sdk is not implementing startup probe up to now, using liveness probe endpoint
-        # while this feature is developed
         startupProbe:
           httpGet:
             path: /healthz
@@ -85,8 +83,8 @@ spec:
           periodSeconds: 10
         resources:
           limits:
-            cpu: 500m
-            memory: 128Mi
+            cpu: 1
+            memory: 512Mi
           requests:
             cpu: 10m
             memory: 64Mi

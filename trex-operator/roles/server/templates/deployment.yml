@@ -17,6 +17,10 @@ spec:
     metadata:
 {% if not skip_annot %}
       annotations:
+{% if runtime_class_name is defined and runtime_class_name|length %}
+        irq-load-balancing.crio.io: "disable"
+        cpu-load-balancing.crio.io: "disable"
+{% endif %}
         k8s.v1.cni.cncf.io/networks: |
           [
 {% for network in networks %}
@@ -55,6 +59,9 @@ spec:
 {% endif %}
             topologyKey: kubernetes.io/hostname
       serviceAccountName: trex-server-account
+{% if runtime_class_name is defined and runtime_class_name | length %}
+      runtimeClassName: "{{ runtime_class_name }}"
+{% endif %}
 {% if numa_aware_topology is defined and numa_aware_topology | length %}
       schedulerName: "{{ numa_aware_topology }}"
 {% endif %}
