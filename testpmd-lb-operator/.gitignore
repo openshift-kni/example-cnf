@@ -20,4 +20,4 @@ _cache
 build.sh
 bundle
 bundle.Dockerfile
-relatedImages.yaml
+
