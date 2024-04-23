@@ -36,13 +36,13 @@ spec:
         imagePullPolicy: IfNotPresent
         name: manager
         ports:
-        - name: "tcp-trex-internal-one"
+        - name: "tcp-tr-int-one"
           containerPort: 5050
         - name: "http-probe"
           containerPort: 6789
         - name: "http-metric"
           containerPort: 8080
-        - name: "tcp-trex-internal-two"
+        - name: "tcp-tr-int-two"
           containerPort: 8888
         env:
           - name: ANSIBLE_GATHERING

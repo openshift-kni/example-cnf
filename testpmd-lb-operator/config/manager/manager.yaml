@@ -45,13 +45,13 @@ spec:
         image: controller:latest
         name: manager
         ports:
-        - name: "tcp-lb-internal-one"
+        - name: "tcp-lb-int-one"
           containerPort: 5050
         - name: "http-probe"
           containerPort: 6789
         - name: "http-metric"
           containerPort: 8080
-        - name: "tcp-lb-internal-two"
+        - name: "tcp-lb-int-two"
           containerPort: 8888
         env:
         - name: ANSIBLE_GATHERING
