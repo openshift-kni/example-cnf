@@ -64,6 +64,13 @@ spec:
         command: {{ command }}
         image: "{{ image_server }}"
         imagePullPolicy: "{{ image_pull_policy }}"
+        ports:
+        - name: "tcp-trex-one"
+          containerPort: 4500
+        - name: "tcp-trex-two"
+          containerPort: 4501
+        - name: "http-probe"
+          containerPort: 8096
         securityContext:
 {% if privileged %}
           privileged: true

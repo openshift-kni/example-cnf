@@ -46,6 +46,11 @@ spec:
         image: controller:latest
         imagePullPolicy: IfNotPresent
         name: manager
+        ports:
+        - name: "http-metric"
+          containerPort: 8080
+        - name: "http-probe"
+          containerPort: 8081
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

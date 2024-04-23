@@ -54,6 +54,9 @@ spec:
 {% endif %}
       containers:
       - name: testpmd
+        ports:
+        - name: "http-probe"
+          containerPort: 8095
         image: "{{ image_testpmd }}"
         imagePullPolicy: "{{ image_pull_policy }}"
         securityContext:

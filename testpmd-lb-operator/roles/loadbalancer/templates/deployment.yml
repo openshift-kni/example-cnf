@@ -47,6 +47,9 @@ spec:
 {% endif %}
       containers:
       - name: loadbalancer
+        ports:
+        - name: "http-probe"
+          containerPort: 8095
         command: ["testpmd-wrapper"]
         args:
         - "--socket-mem {{ socket_memory }}"
@@ -142,6 +145,9 @@ spec:
           periodSeconds: 10
         terminationMessagePolicy: FallbackToLogsOnError
       - name: listener
+        ports:
+        - name: "http-probe"
+          containerPort: 8096
         image: "{{ image_listener }}"
         imagePullPolicy: "{{ image_pull_policy }}"
         resources:
