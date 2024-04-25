@@ -13,8 +13,9 @@ spec:
     metadata:
 {% if not skip_annot|bool %}
       annotations:
-{% if high_perf_runtime is defined and high_perf_runtime|length %}
+{% if runtime_class_name is defined and runtime_class_name | length %}
         irq-load-balancing.crio.io: "disable"
+        cpu-load-balancing.crio.io: "disable"
 {% endif %}
         k8s.v1.cni.cncf.io/networks: '[
 {% for network in networks %}
@@ -46,8 +47,8 @@ spec:
                 - lb-app
             topologyKey: kubernetes.io/hostname
       serviceAccountName: testpmd-account
-{% if high_perf_runtime is defined and high_perf_runtime|length %}
-      runtimeClassName: "{{ high_perf_runtime }}"
+{% if runtime_class_name is defined and runtime_class_name | length %}
+      runtimeClassName: "{{ runtime_class_name }}"
 {% endif %}
 {% if numa_aware_topology is defined and numa_aware_topology | length %}
       schedulerName: "{{ numa_aware_topology }}"
