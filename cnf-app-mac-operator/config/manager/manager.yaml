@@ -64,10 +64,10 @@ spec:
         lifecycle:
           postStart:
             exec:
-              command: ["/busybox/sh", "-c", "echo Hello from the postStart handler"]
+              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
           preStop:
             exec:
-              command: ["/busybox/sh", "-c", "echo Hello from the preStop handler"]
+              command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
         livenessProbe:
           httpGet:
             path: /healthz
