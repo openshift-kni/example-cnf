@@ -67,15 +67,7 @@ jobs:
         with:
           dciClientId: ${{ secrets.DCI_CLIENT_ID }}
           dciApiSecret: ${{ secrets.DCI_API_SECRET }}
-          dciTopics: '
-          OCP-4.11,
-          OCP-4.12,
-          OCP-4.13,
-          OCP-4.14,
-          OCP-4.15,
-          OCP-4.16,
-          OCP-4.17
-          '
+          dciTopics: 'all-OCP'
           componentName: nfv-example-cnf-index
           componentVersion: v${{ needs.build_all.outputs.version }}
           componentData: '{"url":"${{ env.QUAY_REGISTRY }}/rh-nfv-int/nfv-example-cnf-catalog"}'
