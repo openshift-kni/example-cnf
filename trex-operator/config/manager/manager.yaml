@@ -87,3 +87,4 @@ spec:
         terminationMessagePolicy: FallbackToLogsOnError
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
+      automountServiceAccountToken: false

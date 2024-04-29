@@ -97,3 +97,4 @@ spec:
             memory: 64Mi
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
+      automountServiceAccountToken: false

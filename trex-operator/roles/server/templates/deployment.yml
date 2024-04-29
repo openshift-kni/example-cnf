@@ -59,6 +59,7 @@ spec:
 {% endif %}
             topologyKey: kubernetes.io/hostname
       serviceAccountName: trex-server-account
+      automountServiceAccountToken: false
 {% if runtime_class_name is defined and runtime_class_name | length %}
       runtimeClassName: "{{ runtime_class_name }}"
 {% endif %}
