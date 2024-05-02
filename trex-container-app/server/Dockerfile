@@ -5,7 +5,8 @@ COPY utils/webserver.go .
 RUN go mod init webserver.go
 RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
 
-FROM quay.io/centos/centos:stream8
+# Use ubi8/ubi as image
+FROM registry.access.redhat.com/ubi8/ubi:latest
 
 ENV TREX_VER v2.85
 ENV TREX_REPO https://github.com/cisco-system-traffic-generator/trex-core.git
