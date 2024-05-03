@@ -44,15 +44,25 @@ RUN go mod init webserver.go
 RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
 
 ## testpmd image
-FROM quay.io/centos/centos:stream8
+# Use ubi8/ubi as image
+FROM registry.access.redhat.com/ubi8/ubi:latest
 
-# Required libraries and debugging tools
+# Install prerequisite packages from UBI repos
 RUN dnf install -y \
-    epel-release \
     libibverbs \
     logrotate \
-    numactl \
     python3 \
+    && dnf clean all
+
+# Install prerequisite packages from CentOS Stream repos
+COPY files/centos8-base.repo /etc/yum.repos.d/centos8-base.repo
+COPY files/centos8-app.repo /etc/yum.repos.d/centos8-app.repo
+
+RUN dnf install -y \
+    --enablerepo=centos8-base \
+    --enablerepo=centos8-app \
+    epel-release \
+    numactl \
     rdma-core \
     tcpdump \
     && dnf clean all

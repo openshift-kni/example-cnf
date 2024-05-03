@@ -12,10 +12,43 @@ ENV TREX_VER v2.85
 ENV TREX_REPO https://github.com/cisco-system-traffic-generator/trex-core.git
 ENV TRAFFICGEN_REPO https://github.com/atheurer/trafficgen
 
-# Install prerequisite packages
-RUN dnf install -y wget numactl numactl-devel make cmake git wget gcc gcc-c++ kernel-headers glibc-devel net-tools \
-        glibc-headers pciutils nfs-utils perf unzip xorg-x11-xauth yum-utils python39  iproute zlib-devel binutils \
-        tcpdump vim && yum clean all
+# Install prerequisite packages from UBI repos
+RUN dnf install -y \
+    wget \
+    make \
+    cmake \
+    git \
+    wget \
+    gcc \
+    gcc-c++ \
+    kernel-headers \
+    glibc-devel \
+    net-tools \
+    glibc-headers \
+    pciutils \
+    unzip \
+    xorg-x11-xauth \
+    yum-utils \
+    python39 \
+    iproute \
+    zlib-devel \
+    binutils \
+    vim \
+    && dnf clean all
+
+# Install prerequisite packages from CentOS Stream repos
+COPY files/centos8-base.repo /etc/yum.repos.d/centos8-base.repo
+COPY files/centos8-app.repo /etc/yum.repos.d/centos8-app.repo
+
+RUN dnf install -y \
+    --enablerepo=centos8-base \
+    --enablerepo=centos8-app \
+    numactl \
+    numactl-devel \
+    nfs-utils \
+    perf \
+    tcpdump \
+    && dnf clean all
 
 RUN mkdir -p /opt/trex && cd /opt/trex && git clone --branch ${TREX_VER} ${TREX_REPO}
 RUN cd /opt/trex/trex-core/linux_dpdk && \
