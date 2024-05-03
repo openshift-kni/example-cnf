@@ -57,10 +57,12 @@ RUN dnf install -y \
 # Install prerequisite packages from CentOS Stream repos
 COPY files/centos8-base.repo /etc/yum.repos.d/centos8-base.repo
 COPY files/centos8-app.repo /etc/yum.repos.d/centos8-app.repo
+COPY files/centos8-extras.repo /etc/yum.repos.d/centos8-extras.repo
 
 RUN dnf install -y \
     --enablerepo=centos8-base \
     --enablerepo=centos8-app \
+    --enablerepo=centos8-extras \
     epel-release \
     numactl \
     rdma-core \
