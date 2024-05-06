@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.16] - 2024-05-02
+
+- Move container image to UBI
+
 ## [0.2.15] - 2024-02-14
 
 - Changed skeleton, based on operator-sdk v1.33.0
