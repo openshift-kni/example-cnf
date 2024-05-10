@@ -15,7 +15,7 @@ spec:
   selector:
     matchLabels:
       control-plane: controller-manager
-  replicas: 1
+  replicas: 2
   template:
     metadata:
       annotations:
@@ -24,6 +24,16 @@ spec:
         control-plane: controller-manager
         example-cnf-type: trex-operator
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/created-by
+                operator: In
+                values:
+                - trex-operator
+            topologyKey: kubernetes.io/hostname
       #securityContext:
       #  runAsNonRoot: true
       #  seccompProfile:

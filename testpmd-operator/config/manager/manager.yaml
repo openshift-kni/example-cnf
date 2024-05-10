@@ -28,7 +28,7 @@ spec:
   selector:
     matchLabels:
       control-plane: controller-manager
-  replicas: 1
+  replicas: 2
   template:
     metadata:
       annotations:
@@ -36,6 +36,16 @@ spec:
       labels:
         control-plane: controller-manager
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/created-by
+                operator: In
+                values:
+                - testpmd-operator
+            topologyKey: kubernetes.io/hostname
       securityContext:
         runAsNonRoot: true
       containers:
