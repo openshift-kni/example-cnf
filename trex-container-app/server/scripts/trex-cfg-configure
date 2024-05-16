@@ -269,6 +269,7 @@ def get_mac_from_k8s_api():
         print("get_mac_from_k8s_api - MACs found:", ','.join(macs))
         return macs
     except ApiException as e:
+        print(e)
         return []
 
 ###########################
