@@ -6,6 +6,7 @@ import sys
 import random
 import re
 import subprocess
+import json
 
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
@@ -78,11 +79,8 @@ def main():
 
     src_mac = get_src_mac()
     if not src_mac:
-        print("Source mac address is not available, checking with PCI devices")
-        print("WARNING: this method is likely to fail")
-        # WARNING: if reaching this line (it should not happen normally, but it happened
-        # once while debugging), note that get_pci_mac is likely to fail
-        src_mac = get_pci_mac(pci_list)
+        print("Source mac address is not available, checking with k8s API")
+        src_mac = get_mac_from_k8s_api()
     if not src_mac:
         print("ERROR: Source mac address is not available, exiting...")
         sys.exit(1)
@@ -251,39 +249,28 @@ def get_cores(numa, count):
         val = f.read().split(',')[2:count+2]
         return ','.join(val)
 
-def get_pci_mac(pci_list):
-    mac = ["20:04:0f:f1:89:01","20:04:0f:f1:89:02"]
-    idx = -1
-    for pci in pci_list:
-        print("get_pci_mac - starting with pci", pci)
-        idx += 1
-        # The PCI device refers to a specific physfn
-        path = "/sys/bus/pci/devices/" + pci + "/physfn/"
-        pf = os.path.realpath(path)
-        print("get_pci_mac - get pf path", pf)
-        # Try to extract the net for that physfn
-        # WARNING: it may happen that pf_name is empty, so get_vf_mac call will fail
-        for item in os.listdir(pf + "/net"):
-            pf_name = item
-            print("get_pci_mac - extracted pf_name:", pf_name)
-        print("get_pci_mac - get path", path)
-        print("get_pci_mac - get folders from path", ','.join(os.listdir(path)))
-        # Look for the folder where we have the PCI address
-        for item in os.listdir(path):
-            print("get_pci_mac - extracted item from path:", item)
-            if os.path.islink(path + item):
-                rel = os.path.realpath(path + item)
-                print("get_pci_mac - it is a link, real path:", rel)
-                if pci in rel:
-                    vf = item.replace('virtfn', '')
-                    print("get_pci_mac - this is the vf:", vf)
-                    # Apply the MAC address to that interface
-                    get_vf_mac(pf_name, vf, mac[idx])
-    return mac
+def get_mac_from_k8s_api():
+    macs = []
+    namespace = "example-cnf"
+    label = "example-cnf-type=pkt-gen"
 
-def get_vf_mac(pf_name, vf, mac):
-    subprocess.check_output(["ip", "link", "set", pf_name, "vf", vf, "mac", mac])
-    subprocess.check_output(["ip", "link", "set", pf_name, "vf", vf, "trust", "on"])
+    config.load_incluster_config()
+    v1 = client.CoreV1Api()
+    try:
+        response = v1.list_namespaced_pod(namespace=namespace, label_selector=label)
+        # there is only one pod that matches this label, so let's iterate the networks over it
+        networks = json.loads(response.items[0].metadata.annotations['k8s.v1.cni.cncf.io/networks'])
+
+        for network in networks:
+            # just extract the MAC address
+            print("get_mac_from_k8s_api - mac found", network["mac"])
+            macs.append(network["mac"])
+
+        print("get_mac_from_k8s_api - MACs found:", ','.join(macs))
+        return macs
+    except ApiException as e:
+        print(e)
+        return []
 
 ###########################
 
