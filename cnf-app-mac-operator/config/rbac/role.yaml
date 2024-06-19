@@ -67,14 +67,6 @@ rules:
   - list
   - watch
 - apiGroups:
-  - security.openshift.io
-  resourceNames:
-  - hostnetwork
-  resources:
-  - securitycontextconstraints
-  verbs:
-  - use
-- apiGroups:
   - k8s.cni.cncf.io
   resources:
   - network-attachment-definitions
@@ -82,11 +74,3 @@ rules:
   - get
   - list
   - watch
-- apiGroups:
-  - security.openshift.io
-  resourceNames:
-  - hostnetwork
-  resources:
-  - securitycontextconstraints
-  verbs:
-  - use

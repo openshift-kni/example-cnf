@@ -81,14 +81,6 @@ rules:
       - update
       - watch
   - apiGroups:
-      - security.openshift.io
-    resources:
-      - securitycontextconstraints
-    resourceNames:
-      - privileged
-    verbs:
-      - use
-  - apiGroups:
       - events.k8s.io
     resources:
       - events
@@ -125,14 +117,6 @@ rules:
       - get
       - list
       - watch
-  - apiGroups:
-      - security.openshift.io
-    resources:
-      - securitycontextconstraints
-    resourceNames:
-      - privileged
-    verbs:
-      - use
   - apiGroups:
       - examplecnf.openshift.io
     resources:
