@@ -113,10 +113,18 @@ class STLS1_Wrapper(object):
     def signal_handler(self, sig, frame):
         log.info('You pressed Ctrl+C!')
         trexstats.force_exit = True
-        self.client.reset(ports = self.ports)
-        self.force_exit = True
-        clog.force_exit = True
-
+        try:
+            if self.duration == -1:
+                stats = self.client.get_stats()
+                warnings = self.client.get_warnings()
+                passed = trexstats.completed_stats(stats, warnings, self.port_a, self.port_b, self.profile, self.rate, self.duration)
+        except STLError as e:
+            passed = False
+            log.info(e)
+        finally:
+            self.client.reset(ports = self.ports)
+            self.force_exit = True
+            clog.force_exit = True
 
 def main():
     # run the tests
