@@ -71,7 +71,6 @@ spec:
           capabilities:
             drop:
               - "ALL"
-          readOnlyRootFilesystem: true
           runAsNonRoot: true
         lifecycle:
           postStart:
