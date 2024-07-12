@@ -66,6 +66,8 @@ spec:
           capabilities:
             drop:
               - "ALL"
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
         env:
         - name: WATCH_NAMESPACE
           valueFrom:
