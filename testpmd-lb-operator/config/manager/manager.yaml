@@ -71,6 +71,7 @@ spec:
           capabilities:
             drop:
               - "ALL"
+          runAsNonRoot: true
         lifecycle:
           postStart:
             exec:

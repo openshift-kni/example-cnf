@@ -79,6 +79,7 @@ spec:
           capabilities:
             drop:
               - "ALL"
+          runAsNonRoot: true
         livenessProbe:
           httpGet:
             path: /healthz

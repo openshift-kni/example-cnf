@@ -66,6 +66,7 @@ spec:
           capabilities:
             drop:
               - "ALL"
+          runAsNonRoot: true
         env:
         - name: WATCH_NAMESPACE
           valueFrom:
