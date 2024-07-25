@@ -3,7 +3,7 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION          := 0.2.16
+VERSION          := 0.2.17
 
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
@@ -253,11 +253,34 @@ OPERATOR_SDK = $(shell which operator-sdk)
 endif
 endif
 
+# Special task for yq
+.PHONY: yq
+YQ ?= $(LOCALBIN)/yq
+yq: ## Download yq locally if necessary.
+ifeq (,$(wildcard $(YQ)))
+ifeq (, $(shell which yq 2>/dev/null))
+	@{ \
+	set -e ;\
+	mkdir -p $(dir $(YQ)) ;\
+	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
+	curl -sSLo $(YQ) https://github.com/mikefarah/yq/releases/latest/download/yq_$${OS}_$${ARCH} ;\	
+	chmod +x $(YQ) ;\
+	}
+else
+YQ = $(shell which yq)
+endif
+endif
+
+# After generating the bundle, merge the required-annotations.yaml content
+# in the generated CSV, so that the CSV will include the annotations required
+# to pass preflight's RequiredAnnotations test
 .PHONY: bundle
-bundle: manifests kustomize operator-sdk ## Generate bundle manifests and metadata, then validate generated files.
+bundle: manifests kustomize operator-sdk yq # Generate bundle manifests and metadata, then validate generated files.
 	$(OPERATOR_SDK) generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle $(BUNDLE_GEN_FLAGS)
+	$(YQ) eval-all '. as $$item ireduce ({}; . * $$item )' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml ../utils/required-annotations.yaml > tmp_csv.yaml
+	mv tmp_csv.yaml bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	DIGEST=$$(skopeo inspect docker://$(IMG) | jq -r '.Digest') && sed -i -e 's/\(\s*image: .*\):v'$(TAG)'/\1@'$${DIGEST}'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	$(OPERATOR_SDK) bundle validate ./bundle
 

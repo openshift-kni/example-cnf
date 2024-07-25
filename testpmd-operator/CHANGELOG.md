@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.16] - 2024-07-31
+
+- Provide required-annotations.yaml file to update CSV annotations in order to pass Preflight's RequiredAnnotations test
+
 ## [0.2.15] - 2024-02-15
 
 - Changed skeleton, based on operator-sdk v1.33.0
