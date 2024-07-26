@@ -1,5 +1,7 @@
 ## Build image
-FROM quay.io/centos/centos:stream8 as build
+# Use Fedora as image to have access to all required packages
+# from Fedora repos (not requiring a RHEL subscription)
+FROM quay.io/fedora/fedora:latest as build
 
 ENV DPDK_VER=19.11
 ENV DPDK_DIR=/usr/src/dpdk-${DPDK_VER}
@@ -12,9 +14,10 @@ RUN dnf groupinstall -y "Development Tools" && \
     dnf clean all
 
 # Download the DPDK libraries
-RUN wget http://fast.dpdk.org/rel/dpdk-${DPDK_VER}.tar.xz -P /usr/src && \
-    tar -xpvf /usr/src/dpdk-${DPDK_VER}.tar.xz -C /usr/src && \
-    rm -f /usr/src/dpdk-${DPDK_VER}.tar.xz
+RUN wget http://fast.dpdk.org/rel/dpdk-${DPDK_VER}.tar.xz -P /tmp && \
+    tar -xpvf /tmp/dpdk-${DPDK_VER}.tar.xz -C /tmp && \
+    rm -f /tmp/dpdk-${DPDK_VER}.tar.xz && \
+    mv /tmp/dpdk-${DPDK_VER} /usr/src
 
 # Copy patch
 COPY dpdk-${DPDK_VER}-lb.patch /usr/src/
@@ -35,7 +38,7 @@ RUN cd ${DPDK_DIR}/app && patch -p2 < /usr/src/dpdk-${DPDK_VER}-lb.patch && \
     make -j $(nproc) && \
     cp testpmd /usr/local/bin
 
-# Image to build webserver
+## Image to build webserver
 FROM docker.io/library/golang:1.21 as build2
 
 WORKDIR /utils
@@ -52,18 +55,26 @@ RUN dnf install -y \
     libibverbs \
     logrotate \
     python3 \
+    wget \
     && dnf clean all
 
-# Install prerequisite packages from CentOS Stream repos
-COPY files/centos8-base.repo /etc/yum.repos.d/centos8-base.repo
-COPY files/centos8-app.repo /etc/yum.repos.d/centos8-app.repo
-COPY files/centos8-extras.repo /etc/yum.repos.d/centos8-extras.repo
+# Install epel-release from EPEL-8 repository
+
+RUN wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -P /tmp && \
+    cd /tmp && dnf install -y epel-release-latest-8.noarch.rpm
+
+# Install other required packages from Fedora repos
+# (not requiring a RHEL subscription)
+# .repo files obtained from Fedora container image
+COPY files/fedora-cisco-openh264.repo /etc/yum.repos.d/fedora-cisco-openh264.repo
+COPY files/fedora-updates-testing.repo /etc/yum.repos.d/fedora-updates-testing.repo
+COPY files/fedora-updates.repo /etc/yum.repos.d/fedora-updates.repo
+COPY files/fedora.repo /etc/yum.repos.d/fedora.repo
 
 RUN dnf install -y \
-    --enablerepo=centos8-base \
-    --enablerepo=centos8-app \
-    --enablerepo=centos8-extras \
-    epel-release \
+    --enablerepo=fedora-cisco-openh264 \
+    --enablerepo=updates \
+    --enablerepo=fedora \
     numactl \
     rdma-core \
     tcpdump \

@@ -1,5 +1,7 @@
 ## Build image
-FROM quay.io/centos/centos:stream8 as build
+# Use Fedora as image to have access to all required packages
+# from Fedora repos (not requiring a RHEL subscription)
+FROM quay.io/fedora/fedora:latest as build
 
 ENV DPDK_VER=23.11
 ENV DPDK_DIR=/usr/src/dpdk-${DPDK_VER}
@@ -55,18 +57,26 @@ RUN dnf install -y \
     libibverbs \
     logrotate \
     python3 \
+    wget \
     && dnf clean all
 
-# Install prerequisite packages from CentOS Stream repos
-COPY files/centos8-base.repo /etc/yum.repos.d/centos8-base.repo
-COPY files/centos8-app.repo /etc/yum.repos.d/centos8-app.repo
-COPY files/centos8-extras.repo /etc/yum.repos.d/centos8-extras.repo
+# Install epel-release from EPEL-8 repository
+
+RUN wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -P /tmp && \
+    cd /tmp && dnf install -y epel-release-latest-8.noarch.rpm
+
+# Install other required packages from Fedora repos
+# (not requiring a RHEL subscription)
+# .repo files obtained from Fedora container image
+COPY files/fedora-cisco-openh264.repo /etc/yum.repos.d/fedora-cisco-openh264.repo
+COPY files/fedora-updates-testing.repo /etc/yum.repos.d/fedora-updates-testing.repo
+COPY files/fedora-updates.repo /etc/yum.repos.d/fedora-updates.repo
+COPY files/fedora.repo /etc/yum.repos.d/fedora.repo
 
 RUN dnf install -y \
-    --enablerepo=centos8-base \
-    --enablerepo=centos8-app \
-    --enablerepo=centos8-extras \
-    epel-release \
+    --enablerepo=fedora-cisco-openh264 \
+    --enablerepo=updates \
+    --enablerepo=fedora \
     numactl \
     rdma-core \
     tcpdump \

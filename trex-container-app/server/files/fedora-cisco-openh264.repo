@@ -1,0 +1,29 @@
+[fedora-cisco-openh264]
+name=Fedora 40 openh264 (From Cisco) - x86_64
+metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-cisco-openh264-40&arch=x86_64
+type=rpm
+enabled=0
+metadata_expire=14d
+repo_gpgcheck=0
+gpgcheck=0
+skip_if_unavailable=True
+
+[fedora-cisco-openh264-debuginfo]
+name=Fedora 40 openh264 (From Cisco) - x86_64 - Debug
+metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-cisco-openh264-debug-40&arch=x86_64
+type=rpm
+enabled=0
+metadata_expire=14d
+repo_gpgcheck=0
+gpgcheck=0
+skip_if_unavailable=True
+
+[fedora-cisco-openh264-source]
+name=Fedora 40 openh264 (From Cisco) - x86_64 - Source
+metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-cisco-openh264-source-40&arch=x86_64
+type=rpm
+enabled=0
+metadata_expire=14d
+repo_gpgcheck=0
+gpgcheck=0
+skip_if_unavailable=True

@@ -1,0 +1,30 @@
+[updates]
+name=Fedora 40 - x86_64 - Updates
+metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-f40&arch=x86_64
+enabled=0
+countme=1
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+metadata_expire=6h
+skip_if_unavailable=False
+
+[updates-debuginfo]
+name=Fedora 40 - x86_64 - Updates - Debug
+metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-debug-f40&arch=x86_64
+enabled=0
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+metadata_expire=6h
+skip_if_unavailable=False
+
+[updates-source]
+name=Fedora 40 - Updates Source
+metalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-source-f40&arch=x86_64
+enabled=0
+repo_gpgcheck=0
+type=rpm
+gpgcheck=0
+metadata_expire=6h
+skip_if_unavailable=False

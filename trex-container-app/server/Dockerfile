@@ -36,13 +36,18 @@ RUN dnf install -y \
     vim \
     && dnf clean all
 
-# Install prerequisite packages from CentOS Stream repos
-COPY files/centos8-base.repo /etc/yum.repos.d/centos8-base.repo
-COPY files/centos8-app.repo /etc/yum.repos.d/centos8-app.repo
+# Install other required packages from Fedora repos
+# (not requiring a RHEL subscription)
+# .repo files obtained from Fedora container image
+COPY files/fedora-cisco-openh264.repo /etc/yum.repos.d/fedora-cisco-openh264.repo
+COPY files/fedora-updates-testing.repo /etc/yum.repos.d/fedora-updates-testing.repo
+COPY files/fedora-updates.repo /etc/yum.repos.d/fedora-updates.repo
+COPY files/fedora.repo /etc/yum.repos.d/fedora.repo
 
 RUN dnf install -y \
-    --enablerepo=centos8-base \
-    --enablerepo=centos8-app \
+    --enablerepo=fedora-cisco-openh264 \
+    --enablerepo=updates \
+    --enablerepo=fedora \
     numactl \
     numactl-devel \
     nfs-utils \
