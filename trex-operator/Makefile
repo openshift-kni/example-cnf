@@ -215,15 +215,15 @@ endif
 
 ## Generate bundle manifests and metadata, then validate generated files.
 # After generating the bundle, merge the required-annotations.yaml content
-# in the generated annotations.yaml file, so that the CSV will include the
-# annotations required to pass preflight's RequiredAnnotations test
+# in the generated CSV, so that the CSV will include the annotations required
+# to pass preflight's RequiredAnnotations test
 .PHONY: bundle
 bundle: kustomize operator-sdk yq
 	$(OPERATOR_SDK) generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle $(BUNDLE_GEN_FLAGS)
-	$(YQ) eval-all '. as $$item ireduce ({}; . * $$item )' bundle/metadata/annotations.yaml ../utils/required-annotations.yaml > tmp.yaml
-	mv tmp.yaml bundle/metadata/annotations.yaml
+	$(YQ) eval-all '. as $$item ireduce ({}; . * $$item )' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml ../utils/required-annotations.yaml > tmp_csv.yaml
+	mv tmp_csv.yaml bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml	
 	DIGEST=$$(skopeo inspect docker://$(IMG) | jq -r '.Digest') && sed -i -e 's/\(\s*image: .*\):v'$(TAG)'/\1@'$${DIGEST}'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	sed -i -e '/^# Copy.*/i LABEL com.redhat.openshift.versions="v4.12"\nLABEL com.redhat.delivery.backport=false\nLABEL com.redhat.delivery.operator.bundle=true' bundle.Dockerfile
 	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-server:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-server@.*/trex-container-server@$${DIGEST}\"   # $(TREX_VER)/" relatedImages.yaml
