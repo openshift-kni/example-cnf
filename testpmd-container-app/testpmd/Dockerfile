@@ -1,3 +1,22 @@
+## Image to extract DPDK libraries
+# In Fedora image, there are issues with tar command:
+# "Cannot change mode to xxxxxxx: Operation not permitted"
+# Proposed workaround is to disable seccomp: https://github.com/docker/docker-ce-packaging/issues/1012
+# Instead of that, let's decompress the content of DPDK
+# Use ubi8/ubi as image
+FROM registry.access.redhat.com/ubi8/ubi:latest as dpdk-build
+
+ENV DPDK_VER=19.11
+
+# Install prerequisite packages
+RUN dnf install --skip-broken -y wget xz && \
+    dnf clean all
+
+# Download the DPDK libraries
+RUN wget http://fast.dpdk.org/rel/dpdk-${DPDK_VER}.tar.xz -P /usr/src && \
+    tar -xpvf /usr/src/dpdk-${DPDK_VER}.tar.xz -C /usr/src && \
+    rm -f /usr/src/dpdk-${DPDK_VER}.tar.xz
+
 ## Build image
 # Use Fedora as image to have access to all required packages
 # from Fedora repos (not requiring a RHEL subscription)
@@ -13,13 +32,11 @@ RUN dnf groupinstall -y "Development Tools" && \
     dnf install --skip-broken -y wget numactl numactl-devel make libibverbs-devel logrotate rdma-core tcpdump && \
     dnf clean all
 
-# Download the DPDK libraries
-ADD http://fast.dpdk.org/rel/dpdk-${DPDK_VER}.tar.gz /usr/src
+# Copy DPDK libraries
+COPY --from=dpdk-build /usr/src/dpdk-${DPDK_VER} /usr/src/dpdk-${DPDK_VER}
 
 # Copy patch
 COPY dpdk-${DPDK_VER}-lb.patch /usr/src/
-
-RUN ls -la /usr/src
 
 # Configuration
 RUN sed -i -e 's/EAL_IGB_UIO=y/EAL_IGB_UIO=n/' \
