@@ -15,9 +15,7 @@ RUN dnf groupinstall -y "Development Tools" && \
 RUN pip3.9 install meson ninja pyelftools
 
 # Download the DPDK libraries
-RUN wget http://fast.dpdk.org/rel/dpdk-${DPDK_VER}.tar.xz -P /usr/src && \
-    tar -xpvf /usr/src/dpdk-${DPDK_VER}.tar.xz -C /usr/src && \
-    rm -f /usr/src/dpdk-${DPDK_VER}.tar.xz
+ADD http://fast.dpdk.org/rel/dpdk-${DPDK_VER}.tar.gz /usr/src
 
 # Build it with support for mlx5 driver
 RUN cd ${DPDK_DIR} && \

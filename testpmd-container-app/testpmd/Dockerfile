@@ -14,13 +14,12 @@ RUN dnf groupinstall -y "Development Tools" && \
     dnf clean all
 
 # Download the DPDK libraries
-RUN wget http://fast.dpdk.org/rel/dpdk-${DPDK_VER}.tar.xz -P /tmp && \
-    tar -xpvf /tmp/dpdk-${DPDK_VER}.tar.xz -C /tmp && \
-    rm -f /tmp/dpdk-${DPDK_VER}.tar.xz && \
-    mv /tmp/dpdk-${DPDK_VER} /usr/src
+ADD http://fast.dpdk.org/rel/dpdk-${DPDK_VER}.tar.gz /usr/src
 
 # Copy patch
 COPY dpdk-${DPDK_VER}-lb.patch /usr/src/
+
+RUN ls -la /usr/src
 
 # Configuration
 RUN sed -i -e 's/EAL_IGB_UIO=y/EAL_IGB_UIO=n/' \
