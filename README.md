@@ -386,3 +386,19 @@ Utils
 Under [utils](utils) folder, you can find some utilities included in example-cnf to extend the functionalities offered by the tool.
 
 - [webserver.go](utils/webserver.go): a Golang-based webserver to implement liveness, readiness and startup probes in the container images offered in [testpmd-container-app](testpmd-container-app) and [trex-container-app](trex-container-app) folders. The Makefiles offered in these directories take care of copying the webserver code from the utils directory to each image's directory.
+- [support-images](support_images): projects where you can find the Dockerfile required to build some of the images used as build images by the example-cnf images. These images can be found on quay.io/rh-nfv-int and they are publicly available, you only need credentials to access quay.io. The images can be built with the following commands (you need to run it in a RHEL host with a valid RHEL subscription to be able to download the packages installed in the images, and you need a valid quay.io credentials to push it to quay.io):
+
+```
+# build images
+$ cd utils/support-images
+$ podman build dpdk-19.11 -f dpdk-19.11/Dockerfile -t "quay.io/rh-nfv-int/dpdk-19.11:v0.0.1"
+$ podman build dpdk-23.11 -f dpdk-23.11/Dockerfile -t "quay.io/rh-nfv-int/dpdk-23.11:v0.0.1"
+$ podman build ubi8-base-testpmd -f ubi8-base-testpmd/Dockerfile -t "quay.io/rh-nfv-int/ubi8-base-testpmd:v0.0.1"
+$ podman build ubi8-base-trex -f ubi8-base-trex/Dockerfile -t "quay.io/rh-nfv-int/ubi8-base-trex:v0.0.1"
+
+# push images (to quay.io/rh-nfv-int)
+$ podman push quay.io/rh-nfv-int/dpdk-19.11:v0.0.1
+$ podman push quay.io/rh-nfv-int/dpdk-23.11:v0.0.1
+$ podman push quay.io/rh-nfv-int/ubi8-base-testpmd:v0.0.1
+$ podman push quay.io/rh-nfv-int/ubi8-base-trex:v0.0.1
+```
