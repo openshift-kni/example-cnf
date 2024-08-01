@@ -12,6 +12,16 @@ RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
 ## testpmd image
 FROM quay.io/rh-nfv-int/ubi8-base-testpmd:v0.0.1
 
+LABEL name="NFV Example Testpmd LB Application" \
+      maintainer="telcoci@redhat.com" \
+      vendor="fredco" \
+      version="v0.2.11" \
+      release="v0.2.11" \
+      summary="An example CNF for platform validation" \
+      description="An example CNF for platform validation"
+
+COPY licenses /licenses
+
 # copy testpmd runtime cmdline file
 COPY testpmd-runtime-cmds.txt /root/testpmd-runtime-cmds.txt
 
