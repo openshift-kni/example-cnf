@@ -6,6 +6,17 @@ RUN go mod init webserver.go
 RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
 
 FROM registry.access.redhat.com/ubi8/python-39:latest
+
+LABEL name="NFV Example Listener Application" \
+      maintainer="telcoci@redhat.com" \
+      vendor="fredco" \
+      version="v0.2.11" \
+      release="v0.2.11" \
+      summary="An example CNF for platform validation" \
+      description="An example CNF for platform validation"
+
+COPY licenses /licenses
+
 USER root
 RUN pip3 install kubernetes
 

@@ -7,6 +7,16 @@ RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
 
 FROM registry.access.redhat.com/ubi8/python-311:latest
 
+LABEL name="NFV Example TRexApp Application" \
+      maintainer="telcoci@redhat.com" \
+      vendor="fredco" \
+      version="v0.2.11" \
+      release="v0.2.11" \
+      summary="An example CNF for platform validation" \
+      description="An example CNF for platform validation"
+
+COPY licenses /licenses
+
 ENV TREX_VER v2.85
 ENV TREX_REPO https://github.com/cisco-system-traffic-generator/trex-core.git
 ENV TRAFFICGEN_REPO https://github.com/atheurer/trafficgen

@@ -15,10 +15,10 @@ FROM quay.io/rh-nfv-int/ubi8-base-testpmd:v0.0.1
 LABEL name="NFV Example CNF Application" \
       maintainer="telcoci@redhat.com" \
       vendor="fredco" \
-      version="v0.2.10" \
-      release="v0.2.10" \
-      summary="An example CNF for platform valiation" \
-      description="An example CNF for platform valiation"
+      version="v0.2.11" \
+      release="v0.2.11" \
+      summary="An example CNF for platform validation" \
+      description="An example CNF for platform validation"
 
 COPY licenses /licenses
 
