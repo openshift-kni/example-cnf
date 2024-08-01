@@ -1,7 +1,5 @@
 FROM quay.io/operator-framework/ansible-operator:v1.33.0
 
-MAINTAINER telcoci@redhat.com
-
 LABEL name="NFV Example CNF LB Operator" \
       maintainer="telcoci@redhat.com" \
       vendor="fredco" \

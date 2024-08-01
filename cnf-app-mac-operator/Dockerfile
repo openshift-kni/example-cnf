@@ -26,8 +26,6 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o ma
 # Use ubi8/ubi as image
 FROM registry.access.redhat.com/ubi8/ubi:latest
 
-MAINTAINER telcoci@redhat.com
-
 LABEL name="NFV Example CNF App MAC Operator" \
       maintainer="telcoci@redhat.com" \
       vendor="fredco" \
