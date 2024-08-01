@@ -383,7 +383,7 @@ $ ip -s -d link show dev ens2f0
 Utils
 ------------------------
 
-Under [utils](utils) folder, you can find some utilities included in example-cnf to extend the functionalities offered by the tool.
+Under [utils](utils) folder, you can find some utilities included in example-cnf to extend the functionalities offered by the tool:
 
 - [webserver.go](utils/webserver.go): a Golang-based webserver to implement liveness, readiness and startup probes in the container images offered in [testpmd-container-app](testpmd-container-app) and [trex-container-app](trex-container-app) folders. The Makefiles offered in these directories take care of copying the webserver code from the utils directory to each image's directory.
 - [required-annotations.yaml](utils/required-annotations.yaml): annotations to be appended to the CSVs to pass Preflight's RequiredAnnotations tests. They are appended automatically thanks to the Makefile tasks from each operator.
