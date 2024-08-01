@@ -3,28 +3,28 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION := 0.2.17
+VERSION := 0.2.18
 
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
-OPERATOR_SDK_VER ?= 1.33.0
+OPERATOR_SDK_VER            ?= 1.36.0
 
 # Other custom variables
-SHELL            := /bin/bash
-DATE             ?= $(shell date --utc +%Y%m%d%H%M)
-SHA              ?= $(shell git rev-parse --short HEAD)
-
-TAG              := $(VERSION)-$(DATE).$(SHA)
-REGISTRY         ?= quay.io
-ORG              ?= rh-nfv-int
-DEFAULT_CHANNEL  ?= alpha
-CONTAINER_CLI    ?= podman
-CLUSTER_CLI      ?= oc
-OPERATOR_NAME    := testpmd-operator
-KUSTOMIZE_VER    := 5.0.1
-OPM_VER          := 1.23.0
+SHELL                       := /bin/bash
+DATE                        ?= $(shell date --utc +%Y%m%d%H%M)
+SHA                         ?= $(shell git rev-parse --short HEAD)
+TAG                         := $(VERSION)-$(DATE).$(SHA)
+REGISTRY                    ?= quay.io
+ORG                         ?= rh-nfv-int
+DEFAULT_CHANNEL             ?= alpha
+CONTAINER_CLI               ?= podman
+CLUSTER_CLI                 ?= oc
+OPERATOR_NAME               := testpmd-operator
+KUSTOMIZE_VER               := 5.3.0
+OPM_VER                     := 1.23.0
+ANSIBLE_OPERATOR_PLUGIN_VER := 1.35.0
 # TESTPMD_VER determines the DPDK version to use
-TESTPMD_VER      ?= v$(shell bash -c '. ../versions.cfg; echo "$${VERSIONS[testpmd-container-app]}"')
+TESTPMD_VER                 ?= v$(shell bash -c '. ../versions.cfg; echo "$${VERSIONS[testpmd-container-app]}"')
 
 
 # CHANNELS define the bundle channels used in the bundle.
@@ -65,10 +65,6 @@ USE_IMAGE_DIGESTS ?= false
 ifeq ($(USE_IMAGE_DIGESTS), true)
 	BUNDLE_GEN_FLAGS += --use-image-digests
 endif
-
-# Set the Operator SDK version to use. By default, what is installed on the system is used.
-# This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
-OPERATOR_SDK_VERSION ?= v1.33.0
 
 # Image URL to use all building/pushing image targets
 IMG ?= $(IMAGE_TAG_BASE):v$(TAG)
@@ -172,7 +168,7 @@ ifeq (,$(shell which ansible-operator 2>/dev/null))
 	@{ \
 	set -e ;\
 	mkdir -p $(dir $(ANSIBLE_OPERATOR)) ;\
-	curl -sSLo $(ANSIBLE_OPERATOR) https://github.com/operator-framework/ansible-operator-plugins/releases/download/$(OPERATOR_SDK_VER)/ansible-operator_$(OS)_$(ARCH) ;\
+	curl -sSLo $(ANSIBLE_OPERATOR) https://github.com/operator-framework/ansible-operator-plugins/releases/download/v$(ANSIBLE_OPERATOR_PLUGIN_VER)/ansible-operator_$(OS)_$(ARCH) ;\
 	chmod +x $(ANSIBLE_OPERATOR) ;\
 	}
 else
@@ -181,14 +177,14 @@ endif
 endif
 
 .PHONY: operator-sdk
-OPERATOR_SDK ?= ./bin/operator-sdk
+OPERATOR_SDK = $(shell pwd)/bin/operator-sdk
 operator-sdk: ## Download operator-sdk locally if necessary.
 ifeq (,$(wildcard $(OPERATOR_SDK)))
 ifeq (, $(shell which operator-sdk 2>/dev/null))
 	@{ \
 	set -e ;\
 	mkdir -p $(dir $(OPERATOR_SDK)) ;\
-	curl -sSLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/$(OPERATOR_SDK_VERSION)/operator-sdk_$(OS)_$(ARCH) ;\
+	curl -sSLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/v$(OPERATOR_SDK_VER)/operator-sdk_$(OS)_$(ARCH) ;\
 	chmod +x $(OPERATOR_SDK) ;\
 	}
 else

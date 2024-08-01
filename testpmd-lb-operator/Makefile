@@ -3,26 +3,27 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION          := 0.2.16
+VERSION                     := 0.2.17
 
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
-OPERATOR_SDK_VER ?= 1.33.0
+OPERATOR_SDK_VER            ?= 1.36.0
 
 # Other custom variables
-SHELL            := /bin/bash
-DATE             ?= $(shell date --utc +%Y%m%d%H%M)
-SHA              ?= $(shell git rev-parse --short HEAD)
-TAG              := $(VERSION)-$(DATE).$(SHA)
-REGISTRY         ?= quay.io
-ORG              ?= rh-nfv-int
-DEFAULT_CHANNEL  ?= alpha
-CONTAINER_CLI    ?= podman
-CLUSTER_CLI      ?= oc
-OPERATOR_NAME    := testpmd-lb-operator
-KUSTOMIZE_VER    := 5.0.1
-OPM_VER          := 1.23.0
-TESTPMD_VER      ?= v$(shell bash -c '. ../versions.cfg; echo "$${VERSIONS[testpmd-container-app]}"')
+SHELL                       := /bin/bash
+DATE                        ?= $(shell date --utc +%Y%m%d%H%M)
+SHA                         ?= $(shell git rev-parse --short HEAD)
+TAG                         := $(VERSION)-$(DATE).$(SHA)
+REGISTRY                    ?= quay.io
+ORG                         ?= rh-nfv-int
+DEFAULT_CHANNEL             ?= alpha
+CONTAINER_CLI               ?= podman
+CLUSTER_CLI                 ?= oc
+OPERATOR_NAME               := testpmd-lb-operator
+KUSTOMIZE_VER               := 5.3.0
+OPM_VER                     := 1.23.0
+ANSIBLE_OPERATOR_PLUGIN_VER := 1.35.0
+TESTPMD_VER                 ?= v$(shell bash -c '. ../versions.cfg; echo "$${VERSIONS[testpmd-container-app]}"')
 
 # CHANNELS define the bundle channels used in the bundle.
 # Add a new line here if you would like to change its default config. (E.g CHANNELS = "candidate,fast,stable")
@@ -166,7 +167,7 @@ ifeq (,$(shell which ansible-operator 2>/dev/null))
 	@{ \
 	set -e ;\
 	mkdir -p $(dir $(ANSIBLE_OPERATOR)) ;\
-	curl -sSLo $(ANSIBLE_OPERATOR) https://github.com/operator-framework/ansible-operator-plugins/releases/download/$(OPERATOR_SDK_VER)/ansible-operator_$(OS)_$(ARCH) ;\
+	curl -sSLo $(ANSIBLE_OPERATOR) https://github.com/operator-framework/ansible-operator-plugins/releases/download/v$(ANSIBLE_OPERATOR_PLUGIN_VER)/ansible-operator_$(OS)_$(ARCH) ;\
 	chmod +x $(ANSIBLE_OPERATOR) ;\
 	}
 else
