@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.19] - 2024-08-01
+
+- Provide updated spec.icon field in config/manifests/bases/trex-operator.clusterserviceversion.yaml
+
 ## [0.2.18] - 2024-07-31
 
 - Provide required-annotations.yaml file to update CSV annotations in order to pass Preflight's RequiredAnnotations test
