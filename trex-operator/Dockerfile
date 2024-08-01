@@ -5,8 +5,8 @@ MAINTAINER telcoci@redhat.com
 LABEL name="NFV Example CNF TRex Operator" \
       maintainer="telcoci@redhat.com" \
       vendor="fredco" \
-      version="v0.2.17" \
-      release="v0.2.17" \
+      version="v0.2.19" \
+      release="v0.2.19" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 
