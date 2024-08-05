@@ -61,5 +61,7 @@ ENV TREX_DIR="/opt/trex/trex-core/scripts"
 ENV TRAFFICGEN_DIR="/opt/trafficgen"
 
 # Copy scripts
-COPY scripts /usr/local/bin
+COPY --chmod=550 scripts /usr/local/bin
 COPY --chmod=550 --from=build /utils/webserver /usr/local/bin/
+
+USER 65532:65532

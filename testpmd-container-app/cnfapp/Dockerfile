@@ -27,5 +27,7 @@ COPY --chmod=550 --from=build2 /utils/webserver /usr/local/bin/
 COPY --chmod=550 --from=build /usr/local/bin/dpdk-testpmd /usr/local/bin/testpmd
 COPY --chmod=550 scripts/testpmd-run /usr/local/bin/testpmd-run
 
+USER 65532:65532
+
 # Prepare entrypoint
 ENTRYPOINT ["/usr/local/bin/testpmd-run"]

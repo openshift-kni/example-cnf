@@ -26,6 +26,8 @@ COPY licenses /licenses
 COPY testpmd-runtime-cmds.txt /root/testpmd-runtime-cmds.txt
 
 # Copy scripts
-COPY scripts /usr/local/bin
+COPY --chmod=550 scripts /usr/local/bin
 COPY --chmod=550 --from=build2 /utils/webserver /usr/local/bin/
-COPY --from=build /usr/local/bin/testpmd /usr/local/bin/testpmd
+COPY --chmod=550 --from=build /usr/local/bin/testpmd /usr/local/bin/testpmd
+
+USER 65532:65532

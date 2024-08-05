@@ -21,7 +21,9 @@ USER root
 RUN pip3 install kubernetes
 
 # Copy scripts
-COPY scripts /usr/local/bin
+COPY --chmod=550 scripts /usr/local/bin
 COPY --chmod=550 --from=build /utils/webserver /usr/local/bin/
+
+USER 65532:65532
 
 ENTRYPOINT ["testpmd-wrapper"]
