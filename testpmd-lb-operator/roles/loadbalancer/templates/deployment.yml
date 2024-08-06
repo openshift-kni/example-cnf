@@ -57,7 +57,7 @@ spec:
         ports:
         - name: "http-probe"
           containerPort: 8095
-        command: ["testpmd-wrapper"]
+        command: ["/usr/local/bin/example-cnf/testpmd-wrapper"]
         args:
         - "--socket-mem {{ socket_memory }}"
         - "-n {{ memory_channels }}"

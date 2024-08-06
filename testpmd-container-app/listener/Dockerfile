@@ -17,13 +17,27 @@ LABEL name="NFV Example Listener Application" \
 
 COPY licenses /licenses
 
+# Install Kubernetes
 USER root
 RUN pip3 install kubernetes
 
+# Create custom user to avoid using root account
+RUN useradd example-cnf
+
+# This is to be able to manage some files that belong to root account
+RUN usermod -a -G root example-cnf
+
+# Create some support folders that will be needed during execution
+RUN mkdir -p /var/log/testpmd
+RUN chmod 750 /var/log/testpmd
+RUN chown example-cnf /var/log/testpmd
+
 # Copy scripts
 COPY --chmod=550 scripts /usr/local/bin
-COPY --chmod=550 --from=build /utils/webserver /usr/local/bin/
+COPY --chmod=550 --from=build /utils/webserver /usr/local/bin/webserver
 
-USER 65532:65532
+# Move to the custom user
+USER example-cnf
 
-ENTRYPOINT ["testpmd-wrapper"]
+# Prepare entrypoint
+ENTRYPOINT ["/usr/local/bin/testpmd-wrapper"]

@@ -60,8 +60,15 @@ WORKDIR /opt/trex/trex-core/scripts
 ENV TREX_DIR="/opt/trex/trex-core/scripts"
 ENV TRAFFICGEN_DIR="/opt/trafficgen"
 
+# Create custom user to avoid using root account
+RUN useradd example-cnf
+
+# This is to be able to manage some files that belong to root account
+RUN usermod -a -G root example-cnf
+
 # Copy scripts
 COPY --chmod=550 scripts /usr/local/bin
-COPY --chmod=550 --from=build /utils/webserver /usr/local/bin/
+COPY --chmod=550 --from=build /utils/webserver /usr/local/bin/webserver
 
-USER 65532:65532
+# Move to the custom user
+USER example-cnf
