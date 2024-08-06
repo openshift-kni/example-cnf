@@ -19,9 +19,9 @@ if [ -z ${NETWORK_NAME_LIST} ]; then
         exit 1
     fi
     echo "NETWORK_NAME_LIST is empty, lb mode, running directly"
-    PCI=$(lb-direct --pci)
-    LCORES=$(lb-direct --lcore)
-    CNF_PCI=$(lb-direct --dutpci)
+    PCI=$(/usr/local/bin/example-cnf/lb-direct --pci)
+    LCORES=$(/usr/local/bin/example-cnf/lb-direct --lcore)
+    CNF_PCI=$(/usr/local/bin/example-cnf/lb-direct --dutpci)
 else
     PCI=""
     IFS=',' read -r -a NETWORK_ARRAY <<< "$NETWORK_NAME_LIST"
@@ -57,7 +57,7 @@ else
         exit 1
     fi
     
-    CORES_STR=$(expand-cpus)
+    CORES_STR=$(/usr/local/bin/example-cnf/expand-cpus)
     IFS=',' read -ra CORES_ARR <<< "$CORES_STR"
     CORES_LEN=${#CORES_ARR[@]}
     if [[ $CORES_LEN -gt $TESTPMD_CPU_COUNT ]]; then
@@ -109,7 +109,7 @@ function sig_term() {
 trap sig_term SIGTERM
 
 if [[ $RUN_APP == "1" ]]; then
-    testpmd-run
+    /usr/local/bin/example-cnf/testpmd-run
 else
     sleep infinity
 fi

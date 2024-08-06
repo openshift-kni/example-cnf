@@ -33,9 +33,6 @@ RUN mkdir -p /var/log/testpmd
 RUN chmod 750 /var/log/testpmd
 RUN chown example-cnf /var/log/testpmd
 
-# Change some permissions on files that will require modifications during execution
-RUN chmod 664 /var/lib/testpmd/env.txt
-
 # Copy scripts
 COPY --chmod=550 --from=build2 /utils/webserver /usr/local/bin/webserver
 COPY --chmod=550 --from=build /usr/local/bin/dpdk-testpmd /usr/local/bin/testpmd
