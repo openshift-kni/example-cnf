@@ -11,7 +11,7 @@ RUN_APP=${run_app:=1}
 
 LOG_FILE="/var/log/testpmd/app.log"
 
-# Wait till the /var/log/testpmd.log file is created
+# Wait till the /var/log/testpmd/app.log file is created
 n=5
 if [[ $RUN_APP == "0" ]]; then
     # add extra deploy for debugging

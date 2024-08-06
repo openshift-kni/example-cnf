@@ -54,7 +54,6 @@ if [[ $((CORE_COUNT_CFG + 2)) != $TREX_CPU ]]; then
 fi
 
 SERVER="/usr/local/bin/trex-server"
-chmod +x $SERVER
 
 if [[ $RUN_SERVER == "1" ]]; then
     sleep $RUN_DELAY

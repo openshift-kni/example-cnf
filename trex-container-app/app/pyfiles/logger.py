@@ -7,11 +7,11 @@ log = logging.getLogger('run-trex')
 log.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-fh = logging.FileHandler('/var/log/run-trex.log')
+fh = logging.FileHandler('/var/log/trex/run-trex.log')
 fh.setLevel(logging.DEBUG)
 fh.setFormatter(formatter)
 
-fhd = logging.FileHandler('/var/log/trex.log')
+fhd = logging.FileHandler('/var/log/trex/trex.log')
 fhd.setLevel(logging.DEBUG)
 fhd.setFormatter(formatter)
 
