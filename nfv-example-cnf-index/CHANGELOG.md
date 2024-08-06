@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.3.6] - 2024-08-05
+
+- Include latest updates on operators and containers. See CHANGELOG.md of each component for more information
+
 ## [0.3.5] - 2024-01-12
 
 - Lifecycle webserver included in some container images to cover CNF Certification requirements for liveness, readiness and startup probes

@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.20] - 2024-08-05
+
+- Updated OperatorSDK to v1.36.0
+- Updated Kustomize to v5.3.0
+
 ## [0.2.19] - 2024-08-01
 
 - Provide updated spec.icon field in config/manifests/bases/trex-operator.clusterserviceversion.yaml

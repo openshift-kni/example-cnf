@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.18] - 2024-08-05
+
+- Updated OperatorSDK to v1.36.0
+- Updated Kustomize to v5.3.0
+
 ## [0.2.17] - 2024-08-01
 
 - Provide updated spec.icon field in config/manifests/bases/testpmd-operator.clusterserviceversion.yaml

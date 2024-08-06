@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM golang:1.22.2 as builder
+FROM golang:1.22.5 as builder
 ARG TARGETOS
 ARG TARGETARCH
 
@@ -29,8 +29,8 @@ FROM registry.access.redhat.com/ubi8/ubi:latest
 LABEL name="NFV Example CNF App MAC Operator" \
       maintainer="telcoci@redhat.com" \
       vendor="fredco" \
-      version="v0.2.18" \
-      release="v0.2.18" \
+      version="v0.2.19" \
+      release="v0.2.19" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 
