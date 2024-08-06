@@ -38,9 +38,6 @@ RUN mkdir -p /var/log/testpmd
 RUN chmod 750 /var/log/testpmd
 RUN chown example-cnf /var/log/testpmd
 
-# Change some permissions on files that will require modifications during execution
-RUN chmod 664 /var/lib/testpmd/env.txt
-
 # copy testpmd runtime cmdline file
 COPY --chmod=550 testpmd-runtime-cmds.txt /usr/local/bin/example-cnf/testpmd-runtime-cmds.txt
 
