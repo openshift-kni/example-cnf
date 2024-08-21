@@ -23,7 +23,7 @@ ENV TRAFFICGEN_REPO https://github.com/atheurer/trafficgen
 
 USER root
 
-RUN yum install -y nc && yum clean all
+RUN yum install -y nc sudo && yum clean all
 RUN mkdir -p /opt/trex && cd /opt/trex && git clone --branch ${TREX_VER}  ${TREX_REPO}
 RUN cd /opt && git clone  ${TRAFFICGEN_REPO}
 RUN pip3 install pyyaml kubernetes

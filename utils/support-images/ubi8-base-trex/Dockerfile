@@ -7,4 +7,5 @@ RUN dnf install -y \
     nfs-utils \
     perf \
     tcpdump \
+    sudo \
     && dnf clean all

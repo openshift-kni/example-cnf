@@ -109,7 +109,7 @@ function sig_term() {
 trap sig_term SIGTERM
 
 if [[ $RUN_APP == "1" ]]; then
-    /usr/local/bin/example-cnf/testpmd-run
+    sudo /usr/local/bin/example-cnf/testpmd-run
 else
     sleep infinity
 fi

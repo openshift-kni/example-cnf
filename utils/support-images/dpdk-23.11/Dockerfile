@@ -5,7 +5,7 @@ ENV DPDK_DIR=/usr/src/dpdk-${DPDK_VER}
 
 # Install prerequisite packages
 RUN dnf groupinstall -y "Development Tools" && \
-    dnf install --skip-broken -y wget numactl numactl-devel gcc libibverbs-devel logrotate rdma-core tcpdump python39 && \
+    dnf install --skip-broken -y wget numactl numactl-devel gcc libibverbs-devel logrotate rdma-core tcpdump python39 sudo && \
     dnf clean all
 
 # Install Meson, Ninja and pyelftools packages with pip, required to build DPDK. Python >= 3.7 is required

@@ -12,4 +12,5 @@ RUN dnf install -y \
     numactl \
     rdma-core \
     tcpdump \
+    sudo \
     && dnf clean all

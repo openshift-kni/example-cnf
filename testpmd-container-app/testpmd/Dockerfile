@@ -28,6 +28,9 @@ RUN useradd example-cnf
 # This is to be able to manage some files that belong to root account
 RUN usermod -a -G root example-cnf
 
+# Allow example-cnf to use sudo permissions without asking for password
+RUN echo -e "example-cnf\tALL=(ALL)\tNOPASSWD: ALL" > /etc/sudoers.d/example-cnf
+
 # Create a folder managed by the custom user to place the scripts to launch
 RUN mkdir -p /usr/local/bin/example-cnf
 RUN chmod 750 /usr/local/bin/example-cnf
