@@ -328,7 +328,7 @@ bundle-build: bundle ## Build the bundle image.
 	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Dockerfile \
 		-t bundle . ; \
 	else \
-	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Dockerfile --label quay.expires-after=2w \
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Dockerfile --label quay.expires-after=1w \
 		-t bundle . ; \
 	fi
 
@@ -351,7 +351,7 @@ operator-build: kustomize ## Build the operator image
 	if [ -n "$(RELEASE)" ]; then \
 	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . -t ${IMG} -t $(REL_IMG); \
 	else \
-	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . --label quay.expires-after=2w -t ${IMG}; \
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build . --label quay.expires-after=1w -t ${IMG}; \
 	fi
 
 .PHONY: operator-push
