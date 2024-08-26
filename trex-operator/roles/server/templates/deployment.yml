@@ -83,7 +83,7 @@ spec:
           privileged: true
 {% else %}
           capabilities:
-            add: ["IPC_LOCK", "NET_ADMIN"]
+            add: ["IPC_LOCK", "NET_ADMIN", "AUDIT_WRITE"]
 {% endif %}
         resources:
           limits:
