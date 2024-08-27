@@ -34,9 +34,9 @@ if [[ $MODE == "lb" ]]; then
         sleep infinity
         exit 1
     fi
-    sudo /usr/local/bin/trex-cfg-configure $CORES $LB_MACS
+    /usr/local/bin/trex-cfg-configure $CORES $LB_MACS
 else
-    sudo /usr/local/bin/trex-cfg-configure $CORES
+    /usr/local/bin/trex-cfg-configure $CORES
 fi
 
 # Read the number of cores from the trex cfg
@@ -53,7 +53,7 @@ if [[ $((CORE_COUNT_CFG + 2)) != $TREX_CPU ]]; then
     exit 1
 fi
 
-SERVER="sudo /usr/local/bin/trex-server"
+SERVER="sudo -E /usr/local/bin/trex-server"
 
 if [[ $RUN_SERVER == "1" ]]; then
     sleep $RUN_DELAY

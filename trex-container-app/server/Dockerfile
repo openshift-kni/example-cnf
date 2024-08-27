@@ -69,6 +69,10 @@ RUN usermod -a -G root example-cnf
 # Allow example-cnf to use sudo permissions without asking for password
 RUN echo -e "example-cnf\tALL=(ALL)\tNOPASSWD: ALL" > /etc/sudoers.d/example-cnf
 
+# Make sure /etc/trex_cfg.yaml is present and with proper permissions
+RUN touch /etc/trex_cfg.yaml
+RUN chmod 664 /etc/trex_cfg.yaml
+
 # Copy scripts
 COPY --chmod=550 scripts /usr/local/bin
 COPY --chmod=550 --from=build /utils/webserver /usr/local/bin/webserver
