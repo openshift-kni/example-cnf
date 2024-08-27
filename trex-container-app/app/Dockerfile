@@ -38,6 +38,9 @@ RUN useradd example-cnf
 # This is to be able to manage some files that belong to root account
 RUN usermod -a -G root example-cnf
 
+# Allow example-cnf to use sudo permissions without asking for password
+RUN echo -e "example-cnf\tALL=(ALL)\tNOPASSWD: ALL" > /etc/sudoers.d/example-cnf
+
 # Create some support folders that will be needed during execution
 RUN mkdir -p /var/log/trex
 RUN chmod 750 /var/log/trex
