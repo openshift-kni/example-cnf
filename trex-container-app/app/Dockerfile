@@ -23,7 +23,7 @@ ENV TRAFFICGEN_REPO https://github.com/atheurer/trafficgen
 
 USER root
 
-RUN yum install -y nc sudo && yum clean all
+RUN yum install -y nc && yum clean all
 RUN mkdir -p /opt/trex && cd /opt/trex && git clone --branch ${TREX_VER}  ${TREX_REPO}
 RUN cd /opt && git clone  ${TRAFFICGEN_REPO}
 RUN pip3 install pyyaml kubernetes
@@ -38,13 +38,10 @@ RUN useradd example-cnf
 # This is to be able to manage some files that belong to root account
 RUN usermod -a -G root example-cnf
 
-# Allow example-cnf to use sudo permissions without asking for password
-RUN echo -e "example-cnf\tALL=(ALL)\tNOPASSWD: ALL" > /etc/sudoers.d/example-cnf
-
 # Create some support folders that will be needed during execution
 RUN mkdir -p /var/log/trex
 RUN chmod 750 /var/log/trex
-RUN chown example-cnf /var/log/trex
+RUN chown example-cnf:example-cnf /var/log/trex
 
 # Copy scripts
 COPY --chmod=550 scripts /usr/local/bin/

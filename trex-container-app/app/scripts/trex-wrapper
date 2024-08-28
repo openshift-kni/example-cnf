@@ -19,6 +19,10 @@ if [[ "${MODE}" == "direct" ]]; then
   RUN_APP=3
 fi
 
+LOG_DIR="/var/log/trex"
+[ -d $LOG_DIR ] || mkdir -p $LOG_DIR
+rm -rf /var/log/trex/*
+
 # wait for trex server to be ready
 count=120
 while [[ ${count} -gt 0 ]]; do
@@ -52,15 +56,15 @@ if [[ $RUN_APP == "1" ]]; then
     # leave the server running for 10s before starting application
     sleep 10
     echo_ts "Running TRex ..."
-    sudo /usr/local/bin/run-trex
+    /usr/local/bin/run-trex
 elif [[ $RUN_APP == "2" ]]; then
     sleep 10
     echo_ts "Running binary search"
-    sudo /usr/local/bin/run-binary-search
+    /usr/local/bin/run-binary-search
 elif [[ $RUN_APP == "3" ]]; then
     sleep 10
     echo_ts "Running TRex in direct mode (without LB)"
-    sudo /usr/local/bin/run-trex-direct
+    /usr/local/bin/run-trex-direct
 else
     echo_ts "Skipping TRex run, waiting ..."
     sleep infinity

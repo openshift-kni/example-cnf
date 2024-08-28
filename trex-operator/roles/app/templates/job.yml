@@ -24,9 +24,6 @@ spec:
       - name: trex-app
         image: "{{ image_app }}"
         imagePullPolicy: "{{ image_pull_policy }}"
-        securityContext:
-          capabilities:
-            add: ["AUDIT_WRITE"]
         volumeMounts:
         - name: varlog
           mountPath: /var/log
