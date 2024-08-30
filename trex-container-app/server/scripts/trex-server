@@ -18,6 +18,7 @@ cd $TREX_DIR
 n=0
 until [ "$n" -ge 5 ]
 do
+   cd /opt/trex/trex-core/scripts
    ./_t-rex-64 -i --no-hw-flow-stat -c $CORE_COUNT
    n=$((n+1))
    sleep 5

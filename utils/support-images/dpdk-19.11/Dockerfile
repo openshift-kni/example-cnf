@@ -7,7 +7,7 @@ ENV RTE_SDK=${DPDK_DIR}
 
 # Install prerequisite packages
 RUN dnf groupinstall -y "Development Tools" && \
-    dnf install --skip-broken -y wget numactl numactl-devel make libibverbs-devel logrotate rdma-core tcpdump && \
+    dnf install --skip-broken -y wget numactl numactl-devel make libibverbs-devel logrotate rdma-core tcpdump sudo && \
     dnf clean all
 
 # Download the DPDK libraries

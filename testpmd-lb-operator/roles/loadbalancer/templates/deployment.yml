@@ -57,7 +57,7 @@ spec:
         ports:
         - name: "http-probe"
           containerPort: 8095
-        command: ["testpmd-wrapper"]
+        command: ["/usr/local/bin/example-cnf/testpmd-wrapper"]
         args:
         - "--socket-mem {{ socket_memory }}"
         - "-n {{ memory_channels }}"
@@ -82,7 +82,7 @@ spec:
           privileged: true
 {% else %}
           capabilities:
-            add: ["IPC_LOCK", "NET_ADMIN"]
+            add: ["IPC_LOCK", "NET_ADMIN", "AUDIT_WRITE"]
 {% endif %}
         resources:
           limits:

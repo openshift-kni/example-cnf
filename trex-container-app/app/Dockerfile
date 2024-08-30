@@ -32,9 +32,24 @@ ENV PYTHONPATH="/opt/trex/trex-core/scripts/automation/trex_control_plane/intera
 ENV TREX_DIR="/opt/trex/trex-core/scripts"
 ENV TRAFFICGEN_DIR="/opt/trafficgen"
 
-# Copy scripts
-COPY scripts /usr/local/bin/
-COPY --chmod=550 --from=build /utils/webserver /usr/local/bin/
-COPY pyfiles /opt/pyfiles/
+# Create custom user to avoid using root account
+RUN useradd example-cnf
 
-ENTRYPOINT ["trex-wrapper"]
+# This is to be able to manage some files that belong to root account
+RUN usermod -a -G root example-cnf
+
+# Create some support folders that will be needed during execution
+RUN mkdir -p /var/log/trex
+RUN chmod 750 /var/log/trex
+RUN chown example-cnf:example-cnf /var/log/trex
+
+# Copy scripts
+COPY --chmod=550 scripts /usr/local/bin/
+COPY --chmod=550 --from=build /utils/webserver /usr/local/bin/webserver
+COPY --chmod=550 pyfiles /opt/pyfiles/
+
+# Move to the custom user
+USER example-cnf
+
+# Prepare entrypoint
+ENTRYPOINT ["/usr/local/bin/trex-wrapper"]

@@ -22,10 +22,32 @@ LABEL name="NFV Example Testpmd LB Application" \
 
 COPY licenses /licenses
 
+# Create custom user to avoid using root account
+RUN useradd example-cnf
+
+# This is to be able to manage some files that belong to root account
+RUN usermod -a -G root example-cnf
+
+# Allow example-cnf to use sudo permissions without asking for password
+RUN echo -e "example-cnf\tALL=(ALL)\tNOPASSWD: ALL" > /etc/sudoers.d/example-cnf
+
+# Create a folder managed by the custom user to place the scripts to launch
+RUN mkdir -p /usr/local/bin/example-cnf
+RUN chmod 750 /usr/local/bin/example-cnf
+RUN chown example-cnf /usr/local/bin/example-cnf
+
+# Create some support folders that will be needed during execution
+RUN mkdir -p /var/log/testpmd
+RUN chmod 750 /var/log/testpmd
+RUN chown example-cnf /var/log/testpmd
+
 # copy testpmd runtime cmdline file
-COPY testpmd-runtime-cmds.txt /root/testpmd-runtime-cmds.txt
+COPY --chmod=550 testpmd-runtime-cmds.txt /usr/local/bin/example-cnf/testpmd-runtime-cmds.txt
 
 # Copy scripts
-COPY scripts /usr/local/bin
-COPY --chmod=550 --from=build2 /utils/webserver /usr/local/bin/
-COPY --from=build /usr/local/bin/testpmd /usr/local/bin/testpmd
+COPY --chmod=550 scripts /usr/local/bin/example-cnf
+COPY --chmod=550 --from=build2 /utils/webserver /usr/local/bin/webserver
+COPY --chmod=550 --from=build /usr/local/bin/testpmd /usr/local/bin/example-cnf/testpmd
+
+# Move to the custom user
+USER example-cnf

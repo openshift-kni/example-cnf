@@ -60,6 +60,22 @@ WORKDIR /opt/trex/trex-core/scripts
 ENV TREX_DIR="/opt/trex/trex-core/scripts"
 ENV TRAFFICGEN_DIR="/opt/trafficgen"
 
+# Create custom user to avoid using root account
+RUN useradd example-cnf
+
+# This is to be able to manage some files that belong to root account
+RUN usermod -a -G root example-cnf
+
+# Allow example-cnf to use sudo permissions without asking for password
+RUN echo -e "example-cnf\tALL=(ALL)\tNOPASSWD: ALL" > /etc/sudoers.d/example-cnf
+
+# Make sure /etc/trex_cfg.yaml is present and with proper permissions
+RUN touch /etc/trex_cfg.yaml
+RUN chmod 664 /etc/trex_cfg.yaml
+
 # Copy scripts
-COPY scripts /usr/local/bin
-COPY --chmod=550 --from=build /utils/webserver /usr/local/bin/
+COPY --chmod=550 scripts /usr/local/bin
+COPY --chmod=550 --from=build /utils/webserver /usr/local/bin/webserver
+
+# Move to the custom user
+USER example-cnf
