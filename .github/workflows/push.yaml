@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -78,6 +78,6 @@ jobs:
           echo "## DCI components" >> ${GITHUB_STEP_SUMMARY}
           echo "" >> ${GITHUB_STEP_SUMMARY}
           echo "\`\`\`JSON" >> ${GITHUB_STEP_SUMMARY}
-          <<<'${{ steps.dci.outputs.components }}' jq . | grep -v team_id >> ${GITHUB_STEP_SUMMARY}
+          <<<'${{ steps.dci.outputs.components }}' jq '.[] | del(.component.jobs)' | grep -v team_id >> ${GITHUB_STEP_SUMMARY}
           echo "\`\`\`" >> ${GITHUB_STEP_SUMMARY}
           echo "" >> ${GITHUB_STEP_SUMMARY}
