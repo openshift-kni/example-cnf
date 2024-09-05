@@ -38,7 +38,7 @@ fi
 
 if [ ! -z ${TREX_PROFILE_NAME} ]; then
     if [ -f "/opt/trexprofile/content" ]; then
-        # ConfigMap created by nfv-example-cnf-deploy ansible scripts
+        # ConfigMap created by example_cnf_deploy Ansible role from redhatci.ocp collection
         ln -s /opt/trexprofile/content "${HOME}/${TREX_PROFILE_NAME}"
     elif [ -f "/opt/trexprofile/${TREX_PROFILE_NAME}" ]; then
         # ConfigMap created by oc/kubectl cli
