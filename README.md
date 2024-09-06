@@ -140,16 +140,16 @@ $ go build cmd/main.go
 Ansible based automation
 ------------------------
 
-You can use the Ansible playbooks and roles at <https://github.com/rh-nfv-int/nfv-example-cnf-deploy> to automate the use of the Example CNF.
+You can use the Ansible playbooks and roles at <https://github.com/redhatci/ansible-collection-redhatci-ocp/blob/main/roles/example_cnf_deploy/README.md> to automate the use of the Example CNF.
 
 Load balancer mode vs. direct mode
 ------------------------
 
-There are two different ways of deploying example-cnf, depending on the `enable_lb` flag (default to `true`):
+There are two different ways of deploying example-cnf, depending on the `ecd_enable_lb` flag (default to `true`):
 
-- Load balancer mode (`enable_lb: true`):
+- Load balancer mode (`ecd_enable_lb: true`):
     - Represents the behavior described above, with TestPMD LB acting as load balancer between TRex and the CNF Application.
-- Direct mode (`enable_lb: false`):
+- Direct mode (`ecd_enable_lb: false`):
     - The TestPMD LB instance is not used, then testpmd-lb-operator is not deployed.
     - In this case, there's a direct connection between TRex and CNF Application.
     - The CNF Application only uses one replica pod, instead of two.
@@ -170,47 +170,49 @@ SRIOV networks
 
 SRIOV networks are required for the setup. In our case, we are using a different SRIOV network per connection, using a different VLAN for each network.
 
-In our [example-cnf-config automation](https://github.com/dci-labs/example-cnf-config/tree/master), according to [these two variables](https://github.com/dci-labs/example-cnf-config/blob/master/testpmd/hooks/pre-run.yml#L3-L15), we are setting the following networks:
+In our [example-cnf-config automation](https://github.com/dci-labs/example-cnf-config/tree/master), in the [pre-run stage](https://github.com/dci-labs/example-cnf-config/blob/master/testpmd/hooks/pre-run.yml), we are setting the following networks:
 
 ```
-    cnf_app_networks:
+    ecd_cnf_app_networks:
       - name: intel-numa0-net1
         count: 1
       - name: intel-numa0-net2
         count: 1
-    packet_generator_networks:
+    ecd_packet_generator_networks:
       - name: intel-numa0-net3
         count: 1
       - name: intel-numa0-net4
         count: 1
 ```
 
-The `cnf_app_networks` represents the connection between TestPMD LB and CNF Application, and `packet_generator_networks` represents the connection between TRex and TestPMD LB. There are two links per connection, each link using a different SRIOV network.
+The `ecd_cnf_app_networks` represents the connection between TestPMD LB and CNF Application, and `ecd_packet_generator_networks` represents the connection between TRex and TestPMD LB. There are two links per connection, each link using a different SRIOV network.
 
 According to the configuration applied in example-cnf hooks, and also depending on the mode in which example-cnf is launched, the distribution of these two SRIOV networks may be different:
 
 **Load balancer mode:**
 
-According to [this code](https://github.com/rh-nfv-int/nfv-example-cnf-deploy/blob/master/roles/example-cnf-app/tasks/app.yaml#L60-L74):
+According to this code from the [example_cnf_deploy role](https://github.com/redhatci/ansible-collection-redhatci-ocp/blob/main/roles/example_cnf_deploy/README.md):
 
 ```
-- name: create packet gen network list for lb with hardcoded macs
-  set_fact:
-    pack_nw: "{{ pack_nw + [ item | combine({ 'mac': lb_gen_port_mac_list[idx:idx+item.count] }) ] }}"
-  loop: "{{ packet_generator_networks }}"
+- name: "Create packet gen network list for lb with hardcoded macs"
+  ansible.builtin.set_fact:
+    ecd_pack_nw: "{{ ecd_pack_nw + [ item | combine({'mac': ecd_lb_gen_port_mac_list[idx:idx+item.count]})] }}"
+  loop: "{{ ecd_packet_generator_networks }}"
   loop_control:
     index_var: idx
+  when: ecd_enable_lb|bool
 
-- name: create cnf app network list for lb with hardcoded macs
-  set_fact:
-    cnf_nw: "{{ cnf_nw + [ item | combine({ 'mac': lb_cnf_port_mac_list[idx:idx+item.count] }) ] }}"
-  loop: "{{ cnf_app_networks }}"
+- name: "Create cnf app network list for lb with hardcoded macs"
+  ansible.builtin.set_fact:
+    ecd_cnf_nw: "{{ ecd_cnf_nw + [ item | combine({'mac': ecd_lb_cnf_port_mac_list[idx:idx+item.count]})] }}"
+  loop: "{{ ecd_cnf_app_networks }}"
   loop_control:
     index_var: idx
+  when: ecd_enable_lb|bool
 ```
 
-- `pack_nw` corresponds to `packet_generator_networks` and uses `lb_gen_port_mac_list`, having two MAC addresses starting with `40:...`, and correspond to the interfaces that connect the TestPMD LB with TRex. It uses `intel-numa0-net3|4` networks.
-- `cnf_nw` corresponds to `cnf_app_networks` and uses `lb_cnf_port_mac_list`, having two MAC addresses starting with `60:...`, and correspond to the interfaces that connect the TestPMD Load Balancer with the CNF Application. It uses `intel-numa0-net1|2` networks.
+- `ecd_pack_nw` corresponds to `ecd_packet_generator_networks` and uses `ecd_lb_gen_port_mac_list`, having two MAC addresses starting with `40:...`, and correspond to the interfaces that connect the TestPMD LB with TRex. It uses `intel-numa0-net3|4` networks.
+- `ecd_cnf_nw` corresponds to `ecd_cnf_app_networks` and uses `ecd_lb_cnf_port_mac_list`, having two MAC addresses starting with `60:...`, and correspond to the interfaces that connect the TestPMD Load Balancer with the CNF Application. It uses `intel-numa0-net1|2` networks.
 
 Also, note that TRex uses static MAC addresses starting with `20:...`. The only MAC addresses that are created dynamically are the ones from CNF Application. To capture them, CNFAppMac CR is used, which saves the MAC and PCI addresses from the CNF Application pods and serve them to the other components of the architecture.
 
@@ -222,9 +224,9 @@ TRex -- (intel-numa0-net3|4) -- TestPMD LB -- (intel-numa0-net1|2) -- CNF Applic
 
 **Direct mode:**
 
-In this case, the network used by TRex varies, according to [this code](https://github.com/rh-nfv-int/nfv-example-cnf-deploy/blob/master/roles/example-cnf-app/tasks/trex/app.yaml#L5): `packet_gen_net: "{{ packet_generator_networks if enable_lb|bool else cnf_app_networks }}"`
+In this case, the network used by TRex varies, according to the [example_cnf_deploy role](https://github.com/redhatci/ansible-collection-redhatci-ocp/blob/main/roles/example_cnf_deploy/README.md): `ecd_packet_gen_net: "{{ ecd_packet_generator_networks if ecd_enable_lb | bool else ecd_cnf_app_networks }}"`
 
-This says that, if load balancer is not enabled, then TRex is connected to the `cnf_app_networks`, which is, in fact, `intel-numa0-net1|2`, so it doesn't use `intel-numa0-net3|4` in this case.
+This says that, if load balancer is not enabled, then TRex is connected to the `ecd_cnf_app_networks`, which is, in fact, `intel-numa0-net1|2`, so it doesn't use `intel-numa0-net3|4` in this case.
 
 Similarly to the load balancing case, TRex uses static MAC addresses starting with `20:...`, and the CNF Application uses random MAC addresses which are eventually provided, together with the PCI addresses, by the CNFAppMac CR.
 
