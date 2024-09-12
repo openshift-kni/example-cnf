@@ -6,7 +6,6 @@ image_server: "quay.io/rh-nfv-int/trex-container-server@sha256:190d69aef293d1719
 image_app: "quay.io/rh-nfv-int/trex-container-app@sha256:da8c5aae7f2f7459d9d7b842880040cfde0ce301a9edc83e88ae9f27dc448829" # v0.2.6
 image_pull_policy: IfNotPresent
 privileged: false
-command: ["trex-wrapper"]
 environments: {}
 network_resources: {}
 trex_server: true
