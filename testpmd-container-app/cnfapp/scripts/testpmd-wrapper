@@ -108,6 +108,15 @@ CMD="${CMD} 2>&1 | tee /var/log/testpmd/app.log"
 echo "${CMD}" > $RUN
 chmod +x $RUN
 
+RUN_INT="/usr/local/bin/example-cnf/testpmd-interactive"
+CMD_INT="/usr/local/bin/example-cnf/testpmd"
+CMD_INT="${CMD_INT} -l $LCORES --in-memory $PCI --socket-mem ${SOCKET_MEM} -n ${MEMORY_CHANNELS} --proc-type auto --file-prefix pg"
+CMD_INT="${CMD_INT} --"
+CMD_INT="${CMD_INT} --disable-rss --nb-cores=${FORWARDING_CORES} --rxq=${RXQ} --txq=${TXQ} --rxd=${RXD} --txd=${TXD}"
+CMD_INT="${CMD_INT} --i ${ETH_PEER} --forward-mode=mac --stats-period ${STATS_PERIOD}"
+echo "${CMD_INT}" > $RUN_INT
+chmod +x $RUN_INT
+
 function sig_term() {
     echo $(date +"%F %T,%3N") > /var/log/testpmd/sigterm-received.log
     # kill testpmd application
@@ -116,8 +125,9 @@ function sig_term() {
 }
 trap sig_term SIGTERM
 
-if [[ $RUN_APP == "1" ]]; then
-    sudo /usr/local/bin/example-cnf/run/testpmd-run
-else
-    sleep infinity
-fi
+# do not launch testpmd-run script, we just need its content to launch the same but in interactive mode
+#if [[ $RUN_APP == "1" ]]; then
+#    sudo /usr/local/bin/example-cnf/run/testpmd-run
+#else
+#    sleep infinity
+#fi

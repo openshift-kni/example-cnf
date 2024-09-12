@@ -46,9 +46,12 @@ RUN chown example-cnf /var/log/testpmd
 COPY --chmod=550 --from=build2 /utils/webserver /usr/local/bin/webserver
 COPY --chmod=550 --from=build /usr/local/bin/dpdk-testpmd /usr/local/bin/example-cnf/testpmd
 COPY --chmod=550 scripts/testpmd-wrapper /usr/local/bin/example-cnf/testpmd-wrapper
+COPY --chmod=550 scripts/infinite.sh /usr/local/bin/example-cnf/run/infinite.sh
 
 # Move to the custom user
 USER example-cnf
 
 # Prepare entrypoint
-ENTRYPOINT ["/usr/local/bin/example-cnf/testpmd-wrapper"]
+#ENTRYPOINT ["/usr/local/bin/example-cnf/testpmd-wrapper"]
+## Make the container to live forever without executing testpmd-wrapper, we'll run it manually
+ENTRYPOINT ["/usr/local/bin/example-cnf/run/infinite.sh"]
