@@ -63,6 +63,7 @@ spec:
           containerPort: 8095
         image: "{{ image_testpmd }}"
         imagePullPolicy: "{{ image_pull_policy }}"
+        command: ['tail', '-f', '/dev/null']
         securityContext:
           runAsNonRoot: true
           runAsUser: 56560
@@ -132,31 +133,6 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
-        lifecycle:
-          postStart:
-            exec:
-              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
-          preStop:
-            exec:
-              command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 8095
-          initialDelaySeconds: 15
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /readyz
-            port: 8095
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        startupProbe:
-          httpGet:
-            path: /startz
-            port: 8095
-          initialDelaySeconds: 30
-          periodSeconds: 10
         terminationMessagePolicy: FallbackToLogsOnError
       volumes:
       - name: hugepage
