@@ -58,7 +58,7 @@ CORES_STR=$LCORES
 IFS=',' read -ra CORES_ARR <<< "$CORES_STR"
 CORES_LEN=${#CORES_ARR[@]}
 if [[ $CORES_LEN -gt $TESTPMD_CPU_COUNT ]]; then
-    echo "ERROR: Acutal cores (${CORES_LEN}) is greater than configured cores (${TESTPMD_CPU_COUNT})"
+    echo "ERROR: Actual cores (${CORES_LEN}) is greater than configured cores (${TESTPMD_CPU_COUNT})"
     exit 1
 fi
 
