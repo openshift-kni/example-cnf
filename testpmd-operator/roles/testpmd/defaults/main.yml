@@ -15,7 +15,7 @@ image_testpmd: "quay.io/rh-nfv-int/testpmd-container-app-cnfapp@sha256:c0cbe35d7
 size: 1
 
 hugepage_1gb_count: 4Gi
-memory: 1000Mi
+memory: 4Gi
 cpu: 6
 forwarding_cores: 4
 
