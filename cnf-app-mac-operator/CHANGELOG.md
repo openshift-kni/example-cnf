@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.20] - 2024-10-22
+
+- Include olm.skipRange annotation
+
 ## [0.2.19] - 2024-08-05
 
 - Updated OperatorSDK to v1.36.0
