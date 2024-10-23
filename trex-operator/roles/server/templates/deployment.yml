@@ -58,6 +58,9 @@ spec:
                 - cnf-app
 {% endif %}
             topologyKey: kubernetes.io/hostname
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 56560
       serviceAccountName: trex-server-account
 {% if runtime_class_name is defined and runtime_class_name | length %}
       runtimeClassName: "{{ runtime_class_name }}"
@@ -79,6 +82,9 @@ spec:
         - name: "http-probe"
           containerPort: 8096
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 56560
+          #readOnlyRootFilesystem: true
 {% if privileged %}
           privileged: true
 {% else %}
@@ -151,6 +157,10 @@ spec:
       - name: trex-app
         image: "{{ image_app }}"
         imagePullPolicy: "{{ image_pull_policy }}"
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 56560
+          #readOnlyRootFilesystem: true
         resources:
           limits:
             memory: "756Mi"
