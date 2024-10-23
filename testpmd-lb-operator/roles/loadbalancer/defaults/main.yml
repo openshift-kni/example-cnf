@@ -11,7 +11,7 @@ image_testpmd: "quay.io/rh-nfv-int/testpmd-container-app-testpmd@sha256:eca74e7c
 image_listener: "quay.io/rh-nfv-int/testpmd-container-app-listener@sha256:050c5f7117bd6135af48cf742600bd30ab8448fe12fcab44960c1508c10327b1" # v0.2.3
 
 hugepage_1gb_count: 4Gi
-memory: 1000Mi
+memory: 4Gi
 cpu: 6
 forwarding_cores: 4
 
