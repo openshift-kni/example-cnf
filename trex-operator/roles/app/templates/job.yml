@@ -16,6 +16,9 @@ spec:
 {% endif %}
     spec:
       restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 56560
       serviceAccountName: trex-app-account
 {% if runtime_class_name is defined and runtime_class_name | length %}
       runtimeClassName: "{{ runtime_class_name }}"
@@ -24,6 +27,10 @@ spec:
       - name: trex-app
         image: "{{ image_app }}"
         imagePullPolicy: "{{ image_pull_policy }}"
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 56560
+          #readOnlyRootFilesystem: true
         volumeMounts:
         - name: varlog
           mountPath: /var/log

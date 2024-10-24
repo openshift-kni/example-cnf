@@ -45,6 +45,9 @@ spec:
                 - cnf-app
                 - pkt-gen
             topologyKey: kubernetes.io/hostname
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 56560
       serviceAccountName: loadbalancer-account
 {% if runtime_class_name is defined and runtime_class_name|length %}
       runtimeClassName: "{{ runtime_class_name }}"
@@ -78,6 +81,9 @@ spec:
         image: "{{ image_testpmd }}"
         imagePullPolicy: "{{ image_pull_policy }}"
         securityContext:
+          runAsNonRoot: true
+          runAsUser: 56560
+          #readOnlyRootFilesystem: true
 {% if privileged %}
           privileged: true
 {% else %}
@@ -157,6 +163,10 @@ spec:
           containerPort: 8096
         image: "{{ image_listener }}"
         imagePullPolicy: "{{ image_pull_policy }}"
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 56560
+          #readOnlyRootFilesystem: true
         resources:
           limits:
             memory: "512Mi"
