@@ -23,7 +23,7 @@ LABEL name="NFV Example CNF Application" \
 COPY licenses /licenses
 
 # Create custom user to avoid using root account
-RUN useradd example-cnf
+RUN useradd example-cnf -u 56560
 
 # This is to be able to manage some files that belong to root account
 RUN usermod -a -G root example-cnf
