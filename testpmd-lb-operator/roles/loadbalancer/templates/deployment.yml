@@ -83,7 +83,7 @@ spec:
         securityContext:
           runAsNonRoot: true
           runAsUser: 56560
-          #readOnlyRootFilesystem: true
+          readOnlyRootFilesystem: true
 {% if privileged %}
           privileged: true
 {% else %}
@@ -112,6 +112,12 @@ spec:
           mountPath: /var/log/testpmd
         - name: lib-dir
           mountPath: /var/lib/testpmd
+        - name: exec-dir
+          mountPath: /usr/local/bin/example-cnf/run
+        - name: dpdk-dir
+          mountPath: /var/run/dpdk
+        - name: tmp
+          mountPath: /tmp
         env:
         - name: NETWORK_NAME_LIST
           value: "{{ network_resources.keys()|list|join(',') }}"
@@ -166,7 +172,7 @@ spec:
         securityContext:
           runAsNonRoot: true
           runAsUser: 56560
-          #readOnlyRootFilesystem: true
+          readOnlyRootFilesystem: true
         resources:
           limits:
             memory: "512Mi"
@@ -179,6 +185,12 @@ spec:
           mountPath: /var/log/testpmd
         - name: lib-dir
           mountPath: /var/lib/testpmd
+        - name: exec-dir
+          mountPath: /usr/local/bin/example-cnf/run
+        - name: dpdk-dir
+          mountPath: /var/run/dpdk
+        - name: tmp
+          mountPath: /tmp
         env:
         - name: NETWORK_NAME_LIST
           value: "{{ network_resources.keys()|list|join(',') }}"
@@ -233,4 +245,10 @@ spec:
       - name: log-dir
         emptyDir: {}
       - name: lib-dir
+        emptyDir: {}
+      - name: exec-dir
+        emptyDir: {}
+      - name: dpdk-dir
+        emptyDir: {}
+      - name: tmp
         emptyDir: {}

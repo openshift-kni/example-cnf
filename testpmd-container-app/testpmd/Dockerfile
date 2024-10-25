@@ -35,6 +35,7 @@ RUN echo -e "example-cnf\tALL=(ALL)\tNOPASSWD: ALL" > /etc/sudoers.d/example-cnf
 RUN mkdir -p /usr/local/bin/example-cnf
 RUN chmod 750 /usr/local/bin/example-cnf
 RUN chown example-cnf /usr/local/bin/example-cnf
+RUN mkdir /usr/local/bin/example-cnf/run
 
 # Create some support folders that will be needed during execution
 RUN mkdir -p /var/log/testpmd

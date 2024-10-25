@@ -41,8 +41,8 @@ fi
 
 # Read the number of cores from the trex cfg
 # It is required as input via -c arg (for binary_search scripts of trafficgen)
-CORE_COUNT_CFG=$(grep ' c: ' /etc/trex_cfg.yaml | cut -d: -f2 | xargs)
-NUM_PORTS=$(grep ' port_limit: ' /etc/trex_cfg.yaml | cut -d: -f 2 | xargs)
+CORE_COUNT_CFG=$(grep ' c: ' /usr/local/bin/example-cnf/trex_cfg.yaml | cut -d: -f2 | xargs)
+NUM_PORTS=$(grep ' port_limit: ' /usr/local/bin/example-cnf/trex_cfg.yaml | cut -d: -f 2 | xargs)
 
 CORE_COUNT=${trex_core_count:=$CORE_COUNT_CFG}
 # TREX_CPU env will be set on the pod spec with number of required cores

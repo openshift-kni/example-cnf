@@ -19,7 +19,7 @@ n=0
 until [ "$n" -ge 5 ]
 do
    cd /opt/trex/trex-core/scripts
-   ./_t-rex-64 -i --no-hw-flow-stat -c $CORE_COUNT
+   ./_t-rex-64 --cfg /usr/local/bin/example-cnf/trex_cfg.yaml -i --no-hw-flow-stat -c $CORE_COUNT
    n=$((n+1))
    sleep 5
 done

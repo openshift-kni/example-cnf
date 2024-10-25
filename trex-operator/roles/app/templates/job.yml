@@ -30,10 +30,16 @@ spec:
         securityContext:
           runAsNonRoot: true
           runAsUser: 56560
-          #readOnlyRootFilesystem: true
+          readOnlyRootFilesystem: true
         volumeMounts:
         - name: varlog
           mountPath: /var/log
+        - name: log-dir
+          mountPath: /var/log/trex
+        - name: tmp-dir
+          mountPath: /tmp
+        - name: dpdk-dir
+          mountPath: /var/run/dpdk
 {% if trex_profile_config_map %}
         - name: profile
           mountPath: /opt/trexprofile
@@ -106,6 +112,12 @@ spec:
         terminationMessagePolicy: FallbackToLogsOnError
       volumes:
       - name: varlog
+        emptyDir: {}
+      - name: log-dir
+        emptyDir: {}
+      - name: tmp-dir
+        emptyDir: {}
+      - name: dpdk-dir
         emptyDir: {}
 {% if trex_profile_config_map %}
       - name: profile

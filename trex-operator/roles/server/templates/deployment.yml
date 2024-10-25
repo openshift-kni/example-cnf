@@ -84,7 +84,7 @@ spec:
         securityContext:
           runAsNonRoot: true
           runAsUser: 56560
-          #readOnlyRootFilesystem: true
+          readOnlyRootFilesystem: true
 {% if privileged %}
           privileged: true
 {% else %}
@@ -109,6 +109,10 @@ spec:
         volumeMounts:
         - name: hugepage
           mountPath: /dev/hugepages
+        - name: config-dir
+          mountPath: /usr/local/bin/example-cnf
+        - name: dpdk-dir
+          mountPath: /var/run/dpdk
         env:
         - name: NETWORK_NAME_LIST
           value: "{{ network_resources.keys()|list|join(',') }}"
@@ -160,7 +164,7 @@ spec:
         securityContext:
           runAsNonRoot: true
           runAsUser: 56560
-          #readOnlyRootFilesystem: true
+          readOnlyRootFilesystem: true
         resources:
           limits:
             memory: "756Mi"
@@ -216,3 +220,7 @@ spec:
       - name: hugepage
         emptyDir:
           medium: HugePages
+      - name: config-dir
+        emptyDir: {}
+      - name: dpdk-dir
+        emptyDir: {}
