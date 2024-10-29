@@ -69,9 +69,14 @@ RUN usermod -a -G root example-cnf
 # Allow example-cnf to use sudo permissions without asking for password
 RUN echo -e "example-cnf\tALL=(ALL)\tNOPASSWD: ALL" > /etc/sudoers.d/example-cnf
 
-# Make sure /etc/trex_cfg.yaml is present and with proper permissions
-RUN touch /etc/trex_cfg.yaml
-RUN chmod 664 /etc/trex_cfg.yaml
+# Create a folder managed by the custom user to place the config files to launch
+RUN mkdir -p /usr/local/bin/example-cnf
+RUN chmod 750 /usr/local/bin/example-cnf
+RUN chown example-cnf /usr/local/bin/example-cnf
+
+# Make sure trex_cfg.yaml is present in the proper folder and with proper permissions
+RUN touch /usr/local/bin/example-cnf/trex_cfg.yaml
+RUN chmod 664 /usr/local/bin/example-cnf/trex_cfg.yaml
 
 # Copy scripts
 COPY --chmod=550 scripts /usr/local/bin

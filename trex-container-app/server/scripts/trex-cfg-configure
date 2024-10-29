@@ -31,7 +31,7 @@ port_obj_l2_template = {
     "src_mac": ""
 }
 
-CFG_FILE = "/etc/trex_cfg.yaml"
+CFG_FILE = "/usr/local/bin/example-cnf/trex_cfg.yaml"
 
 
 def main():
