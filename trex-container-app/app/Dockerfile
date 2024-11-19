@@ -1,4 +1,4 @@
-FROM docker.io/library/golang:1.21 as build
+FROM docker.io/library/golang:1.23 as build
 
 WORKDIR /utils
 COPY utils/webserver.go .
