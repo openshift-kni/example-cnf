@@ -204,9 +204,18 @@ class STLS1(object):
     def signal_handler(self, sig, frame):
         log.info('You pressed Ctrl+C!')
         time.sleep(6)
-        self.force_exit = True
-        clog.force_exit = True
-        sys.exit(0)
+        try:
+            if self.duration == -1:
+                stats = self.client.get_stats()
+                warnings = self.client.get_warnings()
+                passed = trexstats.completed_stats(stats, warnings, self.port_a, self.port_b, self.profile, self.rate, self.duration)
+        except STLError as e:
+            passed = False
+            log.info(e)
+        finally:
+            self.force_exit = True
+            clog.force_exit = True
+            sys.exit(0)
 
 
 def main():
