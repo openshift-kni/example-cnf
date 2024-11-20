@@ -2,7 +2,7 @@
 FROM quay.io/rh-nfv-int/dpdk-19.11:v0.0.1 as build
 
 ## Image to build webserver
-FROM docker.io/library/golang:1.21 as build2
+FROM docker.io/library/golang:1.23 as build2
 
 WORKDIR /utils
 COPY utils/webserver.go .
