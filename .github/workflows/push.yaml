@@ -73,6 +73,15 @@ jobs:
           componentData: '{"url":"${{ env.QUAY_REGISTRY }}/rh-nfv-int/nfv-example-cnf-catalog"}'
           componentRelease: ga
 
+      - name: Result of DCI component creation in disconnected environment
+        run: |
+          echo "## DCI components" >> ${GITHUB_STEP_SUMMARY}
+          echo "" >> ${GITHUB_STEP_SUMMARY}
+          echo "\`\`\`JSON" >> ${GITHUB_STEP_SUMMARY}
+          <<<'${{ steps.dci_disconnected.outputs.components }}' jq '.[] | del(.component.jobs)' | grep -v team_id >> ${GITHUB_STEP_SUMMARY}
+          echo "\`\`\`" >> ${GITHUB_STEP_SUMMARY}
+          echo "" >> ${GITHUB_STEP_SUMMARY}
+
       - name: Create DCI components for connected environment
         id: dci_connected
         uses: dci-labs/dci-component@v1
@@ -85,11 +94,11 @@ jobs:
           componentData: '{"url":"${{ env.QUAY_REGISTRY }}/rh-nfv-int/nfv-example-cnf-catalog"}'
           componentRelease: ga
 
-      - name: Results
+      - name: Result of DCI component creation in connected environment
         run: |
           echo "## DCI components" >> ${GITHUB_STEP_SUMMARY}
           echo "" >> ${GITHUB_STEP_SUMMARY}
           echo "\`\`\`JSON" >> ${GITHUB_STEP_SUMMARY}
-          <<<'${{ steps.dci.outputs.components }}' jq '.[] | del(.component.jobs)' | grep -v team_id >> ${GITHUB_STEP_SUMMARY}
+          <<<'${{ steps.dci_connected.outputs.components }}' jq '.[] | del(.component.jobs)' | grep -v team_id >> ${GITHUB_STEP_SUMMARY}
           echo "\`\`\`" >> ${GITHUB_STEP_SUMMARY}
           echo "" >> ${GITHUB_STEP_SUMMARY}
