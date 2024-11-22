@@ -62,7 +62,7 @@ jobs:
 
     steps:
       - name: Create DCI components for disconnected environment
-        id: dci
+        id: dci_disconnected
         uses: dci-labs/dci-component@v1
         with:
           dciClientId: ${{ secrets.DCI_CLIENT_ID }}
@@ -74,7 +74,7 @@ jobs:
           componentRelease: ga
 
       - name: Create DCI components for connected environment
-        id: dci
+        id: dci_connected
         uses: dci-labs/dci-component@v1
         with:
           dciClientId: ${{ secrets.DCI_CLIENT_ID_CONN }}
