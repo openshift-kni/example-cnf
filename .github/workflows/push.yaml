@@ -61,8 +61,8 @@ jobs:
     needs: build_all
 
     steps:
-      - name: Create DCI components for disconnected environment
-        id: dci_disconnected
+      - name: Create DCI components
+        id: dci
         uses: dci-labs/dci-component@v1
         with:
           dciClientId: ${{ secrets.DCI_CLIENT_ID }}
@@ -73,32 +73,11 @@ jobs:
           componentData: '{"url":"${{ env.QUAY_REGISTRY }}/rh-nfv-int/nfv-example-cnf-catalog"}'
           componentRelease: ga
 
-      - name: Result of DCI component creation in disconnected environment
+      - name: Results
         run: |
           echo "## DCI components" >> ${GITHUB_STEP_SUMMARY}
           echo "" >> ${GITHUB_STEP_SUMMARY}
           echo "\`\`\`JSON" >> ${GITHUB_STEP_SUMMARY}
-          <<<'${{ steps.dci_disconnected.outputs.components }}' jq '.[] | del(.component.jobs)' | grep -v team_id >> ${GITHUB_STEP_SUMMARY}
-          echo "\`\`\`" >> ${GITHUB_STEP_SUMMARY}
-          echo "" >> ${GITHUB_STEP_SUMMARY}
-
-      - name: Create DCI components for connected environment
-        id: dci_connected
-        uses: dci-labs/dci-component@v1
-        with:
-          dciClientId: ${{ secrets.DCI_CLIENT_ID_CONN }}
-          dciApiSecret: ${{ secrets.DCI_API_SECRET_CONN }}
-          dciTopics: 'all-OCP'
-          componentName: nfv-example-cnf-index
-          componentVersion: v${{ needs.build_all.outputs.version }}
-          componentData: '{"url":"${{ env.QUAY_REGISTRY }}/rh-nfv-int/nfv-example-cnf-catalog"}'
-          componentRelease: ga
-
-      - name: Result of DCI component creation in connected environment
-        run: |
-          echo "## DCI components" >> ${GITHUB_STEP_SUMMARY}
-          echo "" >> ${GITHUB_STEP_SUMMARY}
-          echo "\`\`\`JSON" >> ${GITHUB_STEP_SUMMARY}
-          <<<'${{ steps.dci_connected.outputs.components }}' jq '.[] | del(.component.jobs)' | grep -v team_id >> ${GITHUB_STEP_SUMMARY}
+          <<<'${{ steps.dci.outputs.components }}' jq '.[] | del(.component.jobs)' | grep -v team_id >> ${GITHUB_STEP_SUMMARY}
           echo "\`\`\`" >> ${GITHUB_STEP_SUMMARY}
           echo "" >> ${GITHUB_STEP_SUMMARY}
