@@ -108,7 +108,7 @@ CMD="${CMD} 2>&1 | tee /var/log/testpmd/app.log"
 echo "${CMD}" > $RUN
 chmod +x $RUN
 
-RUN_INT="/usr/local/bin/example-cnf/testpmd-interactive"
+RUN_INT="/usr/local/bin/example-cnf/run/testpmd-interactive"
 CMD_INT="/usr/local/bin/example-cnf/testpmd"
 CMD_INT="${CMD_INT} -l $LCORES --in-memory $PCI --socket-mem ${SOCKET_MEM} -n ${MEMORY_CHANNELS} --proc-type auto --file-prefix pg"
 CMD_INT="${CMD_INT} --"
