@@ -71,6 +71,12 @@ for item in "${ETH_PEER_LIST[@]}"; do
 done
 
 SOCKET_MEM=${socket_mem:=1024}
+# We are always assuming that testpmd is allocated in numa0 node, but if using numa1, SOCKET_MEM has to be reordered to specificy
+# 0 memory for socket 0 and SOCKET_MEM memory for socket 1
+NUMA_NODE=$(numactl --show | grep nodebind |  awk '{print $2}')
+if [ $NUMA_NODE -ne 0 ]; then
+    SOCKET_MEM="0,${SOCKET_MEM}"
+fi
 MEMORY_CHANNELS=${memory_channels:=4}
 FORWARDING_CORES=${forwarding_cores:=2}
 RXQ=${rx_queues:=1}
