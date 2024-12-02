@@ -3,7 +3,7 @@
   gather_facts: no
   vars:
     networks:
-    - name: intel-numa0-net1
+    - name: example-cnf-net1
       count: 2
     cluster_name: ''
     operator_version: v0.2.4

@@ -13,5 +13,5 @@ spec:
   size: 1
   ethpeerMaclist: ["20:04:0f:f1:89:01","20:04:0f:f1:89:02"]
   networks:
-  - name: intel-numa0-net1
+  - name: example-cnf-net1
     count: 2

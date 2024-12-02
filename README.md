@@ -174,14 +174,14 @@ In our [example-cnf-config automation](https://github.com/dci-labs/example-cnf-c
 
 ```
     ecd_cnf_app_networks:
-      - name: intel-numa0-net1
+      - name: example-cnf-net1
         count: 1
-      - name: intel-numa0-net2
+      - name: example-cnf-net2
         count: 1
     ecd_packet_generator_networks:
-      - name: intel-numa0-net3
+      - name: example-cnf-net3
         count: 1
-      - name: intel-numa0-net4
+      - name: example-cnf-net4
         count: 1
 ```
 
@@ -211,29 +211,29 @@ According to this code from the [example_cnf_deploy role](https://github.com/red
   when: ecd_enable_lb|bool
 ```
 
-- `ecd_pack_nw` corresponds to `ecd_packet_generator_networks` and uses `ecd_lb_gen_port_mac_list`, having two MAC addresses starting with `40:...`, and correspond to the interfaces that connect the TestPMD LB with TRex. It uses `intel-numa0-net3|4` networks.
-- `ecd_cnf_nw` corresponds to `ecd_cnf_app_networks` and uses `ecd_lb_cnf_port_mac_list`, having two MAC addresses starting with `60:...`, and correspond to the interfaces that connect the TestPMD Load Balancer with the CNF Application. It uses `intel-numa0-net1|2` networks.
+- `ecd_pack_nw` corresponds to `ecd_packet_generator_networks` and uses `ecd_lb_gen_port_mac_list`, having two MAC addresses starting with `40:...`, and correspond to the interfaces that connect the TestPMD LB with TRex. It uses `example-cnf-net3|4` networks.
+- `ecd_cnf_nw` corresponds to `ecd_cnf_app_networks` and uses `ecd_lb_cnf_port_mac_list`, having two MAC addresses starting with `60:...`, and correspond to the interfaces that connect the TestPMD Load Balancer with the CNF Application. It uses `example-cnf-net1|2` networks.
 
 Also, note that TRex uses static MAC addresses starting with `20:...`. The only MAC addresses that are created dynamically are the ones from CNF Application. To capture them, CNFAppMac CR is used, which saves the MAC and PCI addresses from the CNF Application pods and serve them to the other components of the architecture.
 
 So, network schema is as follows (which was already depicted in the flow diagram):
 
 ```
-TRex -- (intel-numa0-net3|4) -- TestPMD LB -- (intel-numa0-net1|2) -- CNF Application
+TRex -- (example-cnf-net3|4) -- TestPMD LB -- (example-cnf-net1|2) -- CNF Application
 ```
 
 **Direct mode:**
 
 In this case, the network used by TRex varies, according to the [example_cnf_deploy role](https://github.com/redhatci/ansible-collection-redhatci-ocp/blob/main/roles/example_cnf_deploy/README.md): `ecd_packet_gen_net: "{{ ecd_packet_generator_networks if ecd_enable_lb | bool else ecd_cnf_app_networks }}"`
 
-This says that, if load balancer is not enabled, then TRex is connected to the `ecd_cnf_app_networks`, which is, in fact, `intel-numa0-net1|2`, so it doesn't use `intel-numa0-net3|4` in this case.
+This says that, if load balancer is not enabled, then TRex is connected to the `ecd_cnf_app_networks`, which is, in fact, `example-cnf-net1|2`, so it doesn't use `example-cnf-net3|4` in this case.
 
 Similarly to the load balancing case, TRex uses static MAC addresses starting with `20:...`, and the CNF Application uses random MAC addresses which are eventually provided, together with the PCI addresses, by the CNFAppMac CR.
 
 The network schema would be as follows:
 
 ```
-TRex -- (intel-numa0-net1|2) -- CNF Application
+TRex -- (example-cnf-net1|2) -- CNF Application
 ```
 
 Traffic Flow
