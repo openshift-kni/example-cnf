@@ -10,7 +10,6 @@ cat > "$1" <<EOF
 OPERATORS=(
    trex-operator:v${VERSIONS[trex-operator]}
    testpmd-operator:v${VERSIONS[testpmd-operator]}
-   testpmd-lb-operator:v${VERSIONS[testpmd-lb-operator]}
    cnf-app-mac-operator:v${VERSIONS[cnf-app-mac-operator]}
 )
 EOF

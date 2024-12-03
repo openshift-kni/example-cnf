@@ -46,9 +46,7 @@ spec:
 {% endif %}
         env:
         - name: MODE
-          value: "{{ 'lb' if enable_lb|default(false) else 'direct' }}"
-        - name: LB_MACS
-          value: "{{ lb_macs|join(',') }}"
+          value: "direct"
         - name: CR_NAME
           value: "{{ ansible_operator_meta.name }}"
         - name: NODE_NAME

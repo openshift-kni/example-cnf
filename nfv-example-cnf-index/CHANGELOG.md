@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.3.7] - 2024-12-04
+
+- Remove reference to testpmd-lb-operator
+
 ## [0.3.6] - 2024-08-05
 
 - Include latest updates on operators and containers. See CHANGELOG.md of each component for more information

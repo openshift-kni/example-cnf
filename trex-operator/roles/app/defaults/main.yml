@@ -6,8 +6,6 @@ image_app: "quay.io/rh-nfv-int/trex-container-app@sha256:da8c5aae7f2f7459d9d7b84
 image_pull_policy: IfNotPresent
 command: ["trex-wrapper"]
 environments: {}
-enable_lb: true
-lb_macs: []
 trex_profile_name: ''
 trex_profile_config_map: ''
 duration: None

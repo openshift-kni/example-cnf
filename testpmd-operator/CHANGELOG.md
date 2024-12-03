@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.20] - 2024-12-04
+
+- Remove reference to testpmd-lb-operator
+
 ## [0.2.19] - 2024-10-22
 
 - Include olm.skipRange annotation
