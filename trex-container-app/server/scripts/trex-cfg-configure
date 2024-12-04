@@ -82,9 +82,8 @@ def main():
         sys.exit(1)
 
     dst_mac = []
-    else:
-        dst_mac = get_dst_mac()
-        print("destination mac fetched")
+    dst_mac = get_dst_mac()
+    print("destination mac fetched")
 
     if not dst_mac:
         print("ERROR: Destination mac address is not available, exiting...")
