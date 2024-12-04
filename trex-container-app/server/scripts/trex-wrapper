@@ -28,16 +28,7 @@ if [[ $RUN_CONFIGURE != "1" ]]; then
 fi
 
 # Write TRex cfg file
-if [[ $MODE == "lb" ]]; then
-    if [ -z ${LB_MACS} ]; then
-        echo_ts "ERROR: LB macs is empty in lb mode, cannot start server"
-        sleep infinity
-        exit 1
-    fi
-    /usr/local/bin/trex-cfg-configure $CORES $LB_MACS
-else
-    /usr/local/bin/trex-cfg-configure $CORES
-fi
+/usr/local/bin/trex-cfg-configure $CORES
 
 # Read the number of cores from the trex cfg
 # It is required as input via -c arg (for binary_search scripts of trafficgen)

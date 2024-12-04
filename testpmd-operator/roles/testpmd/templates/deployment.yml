@@ -44,7 +44,7 @@ spec:
               - key: example-cnf-type
                 operator: In
                 values:
-                - lb-app
+                - pkt-gen
             topologyKey: kubernetes.io/hostname
       securityContext:
         runAsNonRoot: true

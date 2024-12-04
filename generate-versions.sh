@@ -10,7 +10,7 @@ fi
 VERSIONS="$1"
 EXTRA="$2"
 
-DIRS="testpmd-container-app trex-container-app cnf-app-mac-operator testpmd-lb-operator testpmd-operator trex-operator nfv-example-cnf-index"
+DIRS="testpmd-container-app trex-container-app cnf-app-mac-operator testpmd-operator trex-operator nfv-example-cnf-index"
 
 FILES="$(git diff --name-only -r origin/${GITHUB_BASE_REF:-main}:|grep -Fv /.git || :)"
 
@@ -25,7 +25,7 @@ for d in $DIRS; do
     # Force to build the operators if the corresponding app is built
     force=false
     case "$d" in
-        testpmd-lb-operator|testpmd-operator)
+        testpmd-operator)
             if [ "$TESTPMD_APP" == true ]; then
                 force=true
             fi

@@ -53,10 +53,7 @@ spec:
               - key: example-cnf-type
                 operator: In
                 values:
-                - lb-app
-{% if not enable_lb|bool %}
                 - cnf-app
-{% endif %}
             topologyKey: kubernetes.io/hostname
       securityContext:
         runAsNonRoot: true
@@ -119,9 +116,7 @@ spec:
         - name: TREX_CPU
           value: "{{ cpu }}"
         - name: MODE
-          value: "{{ 'lb' if enable_lb|bool else 'direct' }}"
-        - name: LB_MACS
-          value: "{{ lb_macs|join(',') }}"
+          value: "direct"
         - name: NODE_NAME
           valueFrom:
             fieldRef:
@@ -178,9 +173,7 @@ spec:
         - name: TREX_CPU
           value: "{{ cpu }}"
         - name: MODE
-          value: "{{ 'lb' if enable_lb|default(false) else 'direct' }}"
-        - name: LB_MACS
-          value: "{{ lb_macs|join(',') }}"
+          value: "direct"
         - name: NODE_NAME
           valueFrom:
             fieldRef:

@@ -5,7 +5,7 @@ Example CNF
 
 Example CNF is an OpenShift workload to exercice an SRIOV setup, such as the following:
 
-![Schema](documentation/schema.png)
+![Flow](documentation/network_setup.png)
 
 It is providing the following operators:
 
@@ -21,29 +21,18 @@ It is providing the following operators:
 
 ![Operator behavior](documentation/trex-operator.png)
 
-* testpmd-lb-operator
-    * It represents a modified TestPMD (Packet Manipulation Daemon) instance, called TestPMD LoadBalancer (LB), implementing a custom load balancing forwarding module, using two components:
-        * LoadBalancer CR, creating the pod that perform load balancing between its ports. Related pod is `loadbalancer-<x>` pod. This pod is composed by two containers: `loadbalancer`, which performs the load balancing forwarding, and `listener`, an auxiliary module that is listening to the CNFAppMac component created by the cnf-app-mac-operator to retrieve the MAC addresses of the TestPMD instances launched by the testpmd-operator (i.e. the CNF Application), then serving this information to the `loadbalancer` container.
-        * TestPMD LB Operator, ensuring CR reconciliation via controller-manager pod. Related pod is `testpmd-lb-operator-controller-manager-<x>` pod.
-    * Following information can be extracted from pod logs:
-        * To see the TestPMD LB statistics printed periodically for this module, you can rely on `loadbalancer-<x>` pod logs (which prints `loadbalancer` container logs).
-        * In `testpmd-lb-operator-controller-manager-<x>` pod, you can see the execution of the Ansible playbooks that ensures the reconciliation loop of the operator.
-    * The LoadBalancer is not currently replicated; only one instance is deployed. It's supposed that, up to now, it's not belonging to any update-upgrade process of the example-cnf, so that it has to be deployed in an isolated worker node, whereas the other components of this CNF (TRex and CNF Application) have to be deployed in a different worker node. Pod anti-affinity rules ensure this setup.
-
-![Operator behavior](documentation/testpmd-lb-operator.png)
-
 * testpmd-operator
     * Final application, also known as CNF Application, which is a standard TestPMD instance using the default MAC forwarding module. It uses two components:
-        * TestPMD CR, which creates replicated pods to implement the MAC forwarding module as final application. Related pods are `testpmd-app-<x>` pods.
+        * TestPMD CR, which creates a pod to implement the MAC forwarding module as final application. Related pod is `testpmd-app-<x>` pod (only one replica is used).
         * TestPMD Operator, ensuring CR reconciliation via controller-manager pod. Related pod is `testpmd-operator-controller-manager-<x>` pod.
     * Following information can be extracted from pod logs:
-        * To see the TestPMD statistics printed periodically for this module, you can rely on `testpmd-app-<x>` pod logs. Each log will offer you the statistics of each replica pod.
+        * To see the TestPMD statistics printed periodically for this module, you can rely on `testpmd-app-<x>` pod logs.
         * In `testpmd-operator-controller-manager-<x>` pod, you can see the execution of the Ansible playbooks that ensures the reconciliation loop of the operator.
 
 ![Operator behavior](documentation/testpmd-operator.png)
 
 * cnf-app-mac-operator
-    * Auxiliary operator just composed by one component, which is CNFAppMac Operator, a Golang-based operator in charge of ensuring reconciliation for CNFAppMac CR, which is a wrapper created for each `testpmd-app-<x>` and linked to them, and that are used to extract the network information of these pods (network, MAC and PCI addresses), to be offered to other components of the solution, such as the `listener` contaoner deployed by TestPMD LB.
+    * Auxiliary operator just composed by one component, which is CNFAppMac Operator, a Golang-based operator in charge of ensuring reconciliation for CNFAppMac CR, which is a wrapper created for the `testpmd-app-<x>` pod and linked to it, and that is used to extract the network information of the pods (network, MAC and PCI addresses), to be offered to other components of the solution.
 
 ![Operator behavior](documentation/cnf-app-mac-operator.png)
 
@@ -52,13 +41,13 @@ You can use them from the [Example CNF Catalog](https://quay.io/repository/rh-nf
 How operators are created
 ------------------------
 
-The four operators defined in this repository are built with [Operator SDK tool](https://sdk.operatorframework.io/docs/building-operators/).
+The three operators defined in this repository are built with [Operator SDK tool](https://sdk.operatorframework.io/docs/building-operators/).
 
 We can differentiate between these two cases:
 
 **Ansible-based operators:**
 
-This is the case of testpmd-operator, trex-operator and testpmd-lb-operator.
+This is the case of testpmd-operator and trex-operator.
 
 Base structure for each case is achieved with the following commands, then it's just a matter of accommodating the required code for each operator in the corresponding files and folders:
 
@@ -77,14 +66,6 @@ $ mkdir trex-operator; cd trex-operator
 $ operator-sdk init --domain openshift.io --plugins ansible
 $ operator-sdk create api --version v1 --generate-role --group examplecnf --kind TRexApp
 $ operator-sdk create api --version v1 --generate-role --group examplecnf --kind TRexConfig
-```
-
-- testpmd-lb-operator
-
-```
-$ mkdir testpmd-lb-operator; cd testpmd-lb-operator
-$ operator-sdk init --domain openshift.io --plugins ansible
-$ operator-sdk create api --version v1 --generate-role --group examplecnf --kind LoadBalancer
 ```
 
 **Go-based operators:**
@@ -142,28 +123,10 @@ Ansible based automation
 
 You can use the Ansible playbooks and roles at <https://github.com/redhatci/ansible-collection-redhatci-ocp/blob/main/roles/example_cnf_deploy/README.md> to automate the use of the Example CNF.
 
-Load balancer mode vs. direct mode
-------------------------
-
-There are two different ways of deploying example-cnf, depending on the `ecd_enable_lb` flag (default to `true`):
-
-- Load balancer mode (`ecd_enable_lb: true`):
-    - Represents the behavior described above, with TestPMD LB acting as load balancer between TRex and the CNF Application.
-- Direct mode (`ecd_enable_lb: false`):
-    - The TestPMD LB instance is not used, then testpmd-lb-operator is not deployed.
-    - In this case, there's a direct connection between TRex and CNF Application.
-    - The CNF Application only uses one replica pod, instead of two.
-
 Pod affinity rules
 ------------------------
 
-There are different, possible affinity rules for the deployed pods, depending whether testpmd-lb-operator is deployed (load balancer mode) or not (direct mode):
-
-- Load balancer mode:
-    - The `loadbalancer-<x>` pod is deployed in a different worker than `trexconfig-<x>` and `testpmd-app-<x>`.
-    - There are no constraints for the location of `trexconfig-<x>` and `testpmd-app-<x>` pods, so they may live in the same worker.
-- Direct mode:
-    - Since load balancer is not used, in this scenario, `trexconfig-<x>` and `testpmd-app-<x>` pods are placed in different worker nodes.
+There are some affinity rules for the deployed pods. In particular, `trexconfig-<x>` and `testpmd-app-<x>` pods are placed in different worker nodes.
 
 SRIOV networks
 ------------------------
@@ -173,62 +136,16 @@ SRIOV networks are required for the setup. In our case, we are using a different
 In our [example-cnf-config automation](https://github.com/dci-labs/example-cnf-config/tree/master), in the [pre-run stage](https://github.com/dci-labs/example-cnf-config/blob/master/testpmd/hooks/pre-run.yml), we are setting the following networks:
 
 ```
-    ecd_cnf_app_networks:
+    ecd_sriov_networks:
       - name: example-cnf-net1
         count: 1
       - name: example-cnf-net2
         count: 1
-    ecd_packet_generator_networks:
-      - name: example-cnf-net3
-        count: 1
-      - name: example-cnf-net4
-        count: 1
 ```
 
-The `ecd_cnf_app_networks` represents the connection between TestPMD LB and CNF Application, and `ecd_packet_generator_networks` represents the connection between TRex and TestPMD LB. There are two links per connection, each link using a different SRIOV network.
+The `ecd_sriov_networks` represents the connection between TRex and CNF Application. There are two links per connection, each link using a different SRIOV network.
 
-According to the configuration applied in example-cnf hooks, and also depending on the mode in which example-cnf is launched, the distribution of these two SRIOV networks may be different:
-
-**Load balancer mode:**
-
-According to this code from the [example_cnf_deploy role](https://github.com/redhatci/ansible-collection-redhatci-ocp/blob/main/roles/example_cnf_deploy/README.md):
-
-```
-- name: "Create packet gen network list for lb with hardcoded macs"
-  ansible.builtin.set_fact:
-    ecd_pack_nw: "{{ ecd_pack_nw + [ item | combine({'mac': ecd_lb_gen_port_mac_list[idx:idx+item.count]})] }}"
-  loop: "{{ ecd_packet_generator_networks }}"
-  loop_control:
-    index_var: idx
-  when: ecd_enable_lb|bool
-
-- name: "Create cnf app network list for lb with hardcoded macs"
-  ansible.builtin.set_fact:
-    ecd_cnf_nw: "{{ ecd_cnf_nw + [ item | combine({'mac': ecd_lb_cnf_port_mac_list[idx:idx+item.count]})] }}"
-  loop: "{{ ecd_cnf_app_networks }}"
-  loop_control:
-    index_var: idx
-  when: ecd_enable_lb|bool
-```
-
-- `ecd_pack_nw` corresponds to `ecd_packet_generator_networks` and uses `ecd_lb_gen_port_mac_list`, having two MAC addresses starting with `40:...`, and correspond to the interfaces that connect the TestPMD LB with TRex. It uses `example-cnf-net3|4` networks.
-- `ecd_cnf_nw` corresponds to `ecd_cnf_app_networks` and uses `ecd_lb_cnf_port_mac_list`, having two MAC addresses starting with `60:...`, and correspond to the interfaces that connect the TestPMD Load Balancer with the CNF Application. It uses `example-cnf-net1|2` networks.
-
-Also, note that TRex uses static MAC addresses starting with `20:...`. The only MAC addresses that are created dynamically are the ones from CNF Application. To capture them, CNFAppMac CR is used, which saves the MAC and PCI addresses from the CNF Application pods and serve them to the other components of the architecture.
-
-So, network schema is as follows (which was already depicted in the flow diagram):
-
-```
-TRex -- (example-cnf-net3|4) -- TestPMD LB -- (example-cnf-net1|2) -- CNF Application
-```
-
-**Direct mode:**
-
-In this case, the network used by TRex varies, according to the [example_cnf_deploy role](https://github.com/redhatci/ansible-collection-redhatci-ocp/blob/main/roles/example_cnf_deploy/README.md): `ecd_packet_gen_net: "{{ ecd_packet_generator_networks if ecd_enable_lb | bool else ecd_cnf_app_networks }}"`
-
-This says that, if load balancer is not enabled, then TRex is connected to the `ecd_cnf_app_networks`, which is, in fact, `example-cnf-net1|2`, so it doesn't use `example-cnf-net3|4` in this case.
-
-Similarly to the load balancing case, TRex uses static MAC addresses starting with `20:...`, and the CNF Application uses random MAC addresses which are eventually provided, together with the PCI addresses, by the CNFAppMac CR.
+TRex uses static MAC addresses starting with `20:...`, and the CNF Application uses static MAC addresses starting with `80:...`, and the addresses, together with the PCI addresses, are eventually gathered by the CNFAppMac CR.
 
 The network schema would be as follows:
 
@@ -238,38 +155,6 @@ TRex -- (example-cnf-net1|2) -- CNF Application
 
 Traffic Flow
 ------------------------
-
-**Load balancer mode:**
-
-Here, we will depict the traffic flow for the case of the load balancer mode, including the SRIOV setup already described above. Diagram above represents the data plane traffic.
-
-![Flow](documentation/lb_mode.png)
-
-Traffic flow is the following (just considering one replica pod from the CNF Application as target, but the same flow applies to all CNF Application replicas deployed in the scenario):
-
-- TRex (Traffic Generator) generates and sends traffic from Port 0 to TestPMD LB.
-
-- TestPMD LB, configured as a load balancer, receives incoming traffic on Ports 0 and 1.
-
-- TestPMD LB load balances the incoming traffic between its Ports 2 and 3.
-
-- TestPMD LB forwards the load-balanced traffic to the CNF Application.
-
-- The CNF Application receives incoming traffic from TestPMD LB on one of its ports.
-
-- The CNF Application processes the received traffic and passes it back to TRex for evaluation, using the TestPMD MAC forwarding mode.
-
-- TRex receives the processed traffic on Port 1 (previously forwarded by TestPMD LB).
-
-- TRex calculates statistics by comparing the incoming traffic on Port 1 (processed traffic) with the outgoing traffic on Port 0 (original traffic sent by TRex) and vice versa.
-
-This configuration simulates a traffic flow from TRex to TestPMD LB, then to the CNF Application, and finally back to TRex for evaluation. TestPMD LB serves as a load balancer to distribute traffic between its ports, and the CNF Application processes and loops back the traffic to TRex for analysis using the TestPMD MAC forwarding mode. TestPMD LB ensures zero traffic loss throughout the rolling update process.
-
-**Direct mode:**
-
-The direct mode case is a simplification of the load balancing mode. It's depicted in the following diagram, which also represents the data plane traffic:
-
-![Flow](documentation/direct_mode.png)
 
 Traffic flow is the following:
 
@@ -394,13 +279,11 @@ Under [utils](utils) folder, you can find some utilities included in example-cnf
 ```
 # build images
 $ cd utils/support-images
-$ podman build dpdk-19.11 -f dpdk-19.11/Dockerfile -t "quay.io/rh-nfv-int/dpdk-19.11:v0.0.1"
 $ podman build dpdk-23.11 -f dpdk-23.11/Dockerfile -t "quay.io/rh-nfv-int/dpdk-23.11:v0.0.1"
 $ podman build ubi8-base-testpmd -f ubi8-base-testpmd/Dockerfile -t "quay.io/rh-nfv-int/ubi8-base-testpmd:v0.0.1"
 $ podman build ubi8-base-trex -f ubi8-base-trex/Dockerfile -t "quay.io/rh-nfv-int/ubi8-base-trex:v0.0.1"
 
 # push images (to quay.io/rh-nfv-int)
-$ podman push quay.io/rh-nfv-int/dpdk-19.11:v0.0.1
 $ podman push quay.io/rh-nfv-int/dpdk-23.11:v0.0.1
 $ podman push quay.io/rh-nfv-int/ubi8-base-testpmd:v0.0.1
 $ podman push quay.io/rh-nfv-int/ubi8-base-trex:v0.0.1
