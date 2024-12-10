@@ -84,3 +84,8 @@ COPY --chmod=550 --from=build /utils/webserver /usr/local/bin/webserver
 
 # Move to the custom user
 USER example-cnf
+
+# Prepare entrypoint
+#ENTRYPOINT ["trex-wrapper"]
+## Make the container to live forever without executing testpmd-wrapper, we'll run it manually
+ENTRYPOINT ["infinite.sh"]
