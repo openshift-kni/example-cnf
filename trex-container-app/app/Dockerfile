@@ -8,7 +8,7 @@ RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
 FROM registry.access.redhat.com/ubi8/python-311:latest
 
 LABEL name="NFV Example TRexApp Application" \
-      maintainer="telcoci@redhat.com" \
+      maintainer="telcoci" \
       vendor="fredco" \
       version="v0.2.13" \
       release="v0.2.13" \

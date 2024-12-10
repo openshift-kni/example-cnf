@@ -13,7 +13,7 @@ RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
 FROM quay.io/rh-nfv-int/ubi8-base-testpmd:v0.0.1
 
 LABEL name="NFV Example CNF Application" \
-      maintainer="telcoci@redhat.com" \
+      maintainer="telcoci" \
       vendor="fredco" \
       version="v0.2.13" \
       release="v0.2.13" \
