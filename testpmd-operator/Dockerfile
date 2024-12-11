@@ -1,10 +1,10 @@
-FROM quay.io/operator-framework/ansible-operator:v1.35.0
+FROM quay.io/operator-framework/ansible-operator:v1.36.1
 
 LABEL name="NFV Example CNF Application Opertor" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.21" \
-      release="v0.2.21" \
+      version="v0.2.22" \
+      release="v0.2.22" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 

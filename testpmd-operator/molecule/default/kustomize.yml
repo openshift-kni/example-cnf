@@ -8,14 +8,14 @@
   changed_when: false
 
 - name: Set resources to {{ state }}
-  kubernetes.core.k8s:
+  k8s:
     definition: '{{ item }}'
     state: '{{ state }}'
     wait: no
   loop: '{{ resources.stdout | from_yaml_all | list }}'
 
 - name: Wait for resources to get to {{ state }}
-  kubernetes.core.k8s:
+  k8s:
     definition: '{{ item }}'
     state: '{{ state }}'
     wait: yes

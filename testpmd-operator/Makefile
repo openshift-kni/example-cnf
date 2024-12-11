@@ -3,11 +3,11 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION := 0.2.21
+VERSION := 0.2.22
 
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
-OPERATOR_SDK_VER            ?= 1.36.0
+OPERATOR_SDK_VER            ?= 1.38.0
 
 # Other custom variables
 SHELL                       := /bin/bash
@@ -20,9 +20,9 @@ DEFAULT_CHANNEL             ?= alpha
 CONTAINER_CLI               ?= podman
 CLUSTER_CLI                 ?= oc
 OPERATOR_NAME               := testpmd-operator
-KUSTOMIZE_VER               := 5.3.0
+KUSTOMIZE_VER               := 5.4.2
 OPM_VER                     := 1.23.0
-ANSIBLE_OPERATOR_PLUGIN_VER := 1.35.0
+ANSIBLE_OPERATOR_PLUGIN_VER := 1.36.1
 # TESTPMD_VER determines the DPDK version to use
 TESTPMD_VER                 ?= v$(shell bash -c '. ../versions.cfg; echo "$${VERSIONS[testpmd-container-app]}"')
 
@@ -270,7 +270,7 @@ ifeq (,$(shell which opm 2>/dev/null))
 	@{ \
 	set -e ;\
 	mkdir -p $(dir $(OPM)) ;\
-	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.23.0/$(OS)-$(ARCH)-opm ;\
+	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v$(OPM_VER)/$(OS)-$(ARCH)-opm ;\
 	chmod +x $(OPM) ;\
 	}
 else
