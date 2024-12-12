@@ -1,4 +1,6 @@
 # Build the manager binary
+# Original line from operator-sdk v1.38.0, but we'll use golang:1.23
+#FROM golang:1.22 AS builder
 FROM docker.io/library/golang:1.23 as builder
 ARG TARGETOS
 ARG TARGETARCH
@@ -29,8 +31,8 @@ FROM registry.access.redhat.com/ubi8/ubi:latest
 LABEL name="NFV Example CNF App MAC Operator" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.21" \
-      release="v0.2.21" \
+      version="v0.2.22" \
+      release="v0.2.22" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 

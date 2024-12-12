@@ -41,8 +41,8 @@ type CNFAppMacSpec struct {
 type CNFAppMacStatus struct {
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
 
 // CNFAppMac is the Schema for the cnfappmacs API
 type CNFAppMac struct {
@@ -53,7 +53,7 @@ type CNFAppMac struct {
 	Status CNFAppMacStatus `json:"status,omitempty"`
 }
 
-//+kubebuilder:object:root=true
+// +kubebuilder:object:root=true
 
 // CNFAppMacList contains a list of CNFAppMac
 type CNFAppMacList struct {
