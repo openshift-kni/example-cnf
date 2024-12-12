@@ -1,4 +1,0 @@
-## Append samples of your project ##
-resources:
-- examplecnf_v1_testpmd.yaml
-# +kubebuilder:scaffold:manifestskustomizesamples

@@ -1,5 +1,0 @@
-## Append samples of your project ##
-resources:
-- examplecnf_v1_trexapp.yaml
-- examplecnf_v1_trexconfig.yaml
-# +kubebuilder:scaffold:manifestskustomizesamples

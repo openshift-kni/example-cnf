@@ -1,7 +1,0 @@
----
-# Use the 'create api' subcommand to add watches to this file.
-- version: v1
-  group: examplecnf.openshift.io
-  kind: TestPMD
-  role: testpmd
-# +kubebuilder:scaffold:watch

@@ -1,9 +1,0 @@
-apiVersion: examplecnf.openshift.io/v1
-kind: TRexApp
-metadata:
-  labels:
-    app.kubernetes.io/name: trex-operator
-    app.kubernetes.io/managed-by: kustomize
-  name: trexapp-sample
-spec:
-  # TODO(user): Add fields here
