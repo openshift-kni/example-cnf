@@ -3,11 +3,11 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION ?= 0.2.23
+VERSION ?= 0.2.24
 
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
-OPERATOR_SDK_VER ?= 1.36.0
+OPERATOR_SDK_VER ?= 1.38.0
 
 # Other custom variables
 SHELL                       := /bin/bash
@@ -20,9 +20,9 @@ DEFAULT_CHANNEL             ?= alpha
 CONTAINER_CLI               ?= podman
 CLUSTER_CLI                 ?= oc
 OPERATOR_NAME               := trex-operator
-KUSTOMIZE_VER               := 5.3.0
+KUSTOMIZE_VER               := 5.4.2
 OPM_VER                     := 1.23.0
-ANSIBLE_OPERATOR_PLUGIN_VER := 1.35.0
+ANSIBLE_OPERATOR_PLUGIN_VER := 1.36.1
 TREX_VER                    ?= v$(shell bash -c '. ../versions.cfg; echo "$${VERSIONS[trex-container-app]}"')
 
 # CHANNELS define the bundle channels used in the bundle.
@@ -118,9 +118,9 @@ undeploy:
 # Ensure proper digests for trex-container-app and trex-container-server
 .PHONY: ensure_digests
 ensure_digests:
-	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/app/defaults/main.yml
-	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-server:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-server@.*/trex-container-server@$${DIGEST}\"   # $(TREX_VER)/" roles/server/defaults/main.yml
-	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/server/defaults/main.yml
+	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/trexapp/defaults/main.yml
+	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-server:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-server@.*/trex-container-server@$${DIGEST}\"   # $(TREX_VER)/" roles/trexconfig/defaults/main.yml
+	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/trexconfig/defaults/main.yml
 
 # Build the operator image
 .PHONY: operator-build

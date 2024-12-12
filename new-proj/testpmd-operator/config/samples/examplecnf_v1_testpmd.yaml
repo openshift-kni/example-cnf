@@ -1,0 +1,9 @@
+apiVersion: examplecnf.openshift.io/v1
+kind: TestPMD
+metadata:
+  labels:
+    app.kubernetes.io/name: testpmd-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: testpmd-sample
+spec:
+  # TODO(user): Add fields here

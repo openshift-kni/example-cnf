@@ -1,0 +1,9 @@
+apiVersion: examplecnf.openshift.io/v1
+kind: CNFAppMac
+metadata:
+  labels:
+    app.kubernetes.io/name: cnf-app-mac-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: cnfappmac-sample
+spec:
+  # TODO(user): Add fields here
