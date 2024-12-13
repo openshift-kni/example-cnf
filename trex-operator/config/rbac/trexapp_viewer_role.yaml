@@ -3,11 +3,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    app.kubernetes.io/name: clusterrole
-    app.kubernetes.io/instance: trexapp-viewer-role
-    app.kubernetes.io/component: rbac
-    app.kubernetes.io/created-by: trex-operator
-    app.kubernetes.io/part-of: trex-operator
+    app.kubernetes.io/name: trex-operator
     app.kubernetes.io/managed-by: kustomize
   name: trexapp-viewer-role
 rules:

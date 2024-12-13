@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.24] - 2024-12-12
+
+- Updated OperatorSDK to v1.38.0, kube-rbac-proxy is no longer included
+- Updated Kustomize to v5.4.2
+- Updated Ansible operator to v1.36.1
+
 ## [0.2.23] - 2024-12-11
 
 - Update container image labels

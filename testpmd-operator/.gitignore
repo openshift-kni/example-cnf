@@ -1,5 +1,20 @@
-_cache
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
 bin
+
+# editor and IDE paraphernalia
+.idea
+*.swp
+*.swo
+*~
+
+# others
+_cache
 *.patch
 *sync.sh
 build.sh
