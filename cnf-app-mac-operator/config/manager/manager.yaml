@@ -54,6 +54,8 @@ spec:
           containerPort: 8080
         - name: "http-probe"
           containerPort: 8081
+        - name: "https-metric"
+          containerPort: 8443
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

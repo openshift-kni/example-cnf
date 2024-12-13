@@ -58,6 +58,8 @@ spec:
           containerPort: 6789
         - name: "http-metric"
           containerPort: 8080
+        - name: "https-metric"
+          containerPort: 8443
         - name: "tcp-tr-int-two"
           containerPort: 8888
         env:
