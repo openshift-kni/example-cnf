@@ -8,7 +8,7 @@
 
   tasks:
     - name: Create Namespace
-      kubernetes.core.k8s:
+      k8s:
         api_version: v1
         kind: Namespace
         name: '{{ namespace }}'

@@ -2,11 +2,8 @@ apiVersion: examplecnf.openshift.io/v1
 kind: TRexApp
 metadata:
   labels:
-    app.kubernetes.io/name: trexapp
-    app.kubernetes.io/instance: trexapp-sample
-    app.kubernetes.io/part-of: trex-operator
+    app.kubernetes.io/name: trex-operator
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/created-by: trex-operator
   name: trexapp-sample
 spec:
   foo: bar

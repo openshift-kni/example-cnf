@@ -2,7 +2,7 @@ SHELL           := /bin/bash
 
 DIRS            := testpmd-container-app trex-container-app cnf-app-mac-operator testpmd-operator trex-operator nfv-example-cnf-index
 
-OPERATOR_SDK_VER:= 1.33.0
+OPERATOR_SDK_VER:= 1.38.0
 
 # Print the possible targets and a short description
 .PHONY: targets

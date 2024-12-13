@@ -3,11 +3,11 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION          := 0.2.21
+VERSION          := 0.2.22
 
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
-OPERATOR_SDK_VER ?= 1.36.0
+OPERATOR_SDK_VER ?= 1.38.0
 
 # Other custom variables
 SHELL            := /bin/bash
@@ -20,8 +20,8 @@ DEFAULT_CHANNEL  ?= alpha
 CONTAINER_CLI    ?= podman
 CLUSTER_CLI      ?= oc
 OPERATOR_NAME    := cnf-app-mac-operator
-CONTROLLER_VER   := v0.14.0
-KUSTOMIZE_VER    := v5.3.0
+CONTROLLER_VER   := v0.15.0
+KUSTOMIZE_VER    := v5.4.2
 OPM_VER          := 1.23.0
 OS               = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH             = $(shell uname -m | sed 's/x86_64/amd64/')
@@ -70,7 +70,7 @@ IMG ?= $(IMAGE_TAG_BASE):v$(TAG)
 REL_IMG ?= $(IMAGE_TAG_BASE):v$(VERSION)
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION = 1.29.0
+ENVTEST_K8S_VERSION = 1.30.0
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -141,7 +141,7 @@ vet: ## Run go vet against code.
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test $$(go list ./... | grep -v /e2e) -coverprofile cover.out
 
 # Utilize Kind or modify the e2e tests to load the image locally, enabling compatibility with other vendors.
 .PHONY: test-e2e  # Run the e2e tests against a Kind k8s instance that is spun up.
@@ -188,10 +188,10 @@ PLATFORMS ?= linux/arm64,linux/amd64,linux/s390x,linux/ppc64le
 docker-buildx: ## Build and push docker image for the manager for cross-platform support
 	# copy existing Dockerfile and insert --platform=${BUILDPLATFORM} into Dockerfile.cross, and preserve the original Dockerfile
 	sed -e '1 s/\(^FROM\)/FROM --platform=\$$\{BUILDPLATFORM\}/; t' -e ' 1,// s//FROM --platform=\$$\{BUILDPLATFORM\}/' Dockerfile > Dockerfile.cross
-	- $(CONTAINER_CLI) buildx create --name project-v3-builder
-	$(CONTAINER_CLI) buildx use project-v3-builder
+	- $(CONTAINER_CLI) buildx create --name cnf-app-mac-operator-builder
+	$(CONTAINER_CLI) buildx use cnf-app-mac-operator-builder
 	- $(CONTAINER_CLI) buildx build --push --platform=$(PLATFORMS) --tag ${IMG} -f Dockerfile.cross .
-	- $(CONTAINER_CLI) buildx rm project-v3-builder
+	- $(CONTAINER_CLI) buildx rm cnf-app-mac-operator-builder
 	rm Dockerfile.cross
 
 .PHONY: build-installer
@@ -231,14 +231,14 @@ $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
 
 ## Tool Binaries
-KUSTOMIZE ?= $(LOCALBIN)/kustomize-$(KUSTOMIZE_VER)
-CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen-$(CONTROLLER_VER)
-ENVTEST ?= $(LOCALBIN)/setup-envtest-$(ENVTEST_VERSION)
-GOLANGCI_LINT = $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
+KUSTOMIZE ?= $(LOCALBIN)/kustomize
+CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
+ENVTEST ?= $(LOCALBIN)/setup-envtest
+GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
 
 ## Tool Versions
-ENVTEST_VERSION ?= release-0.17
-GOLANGCI_LINT_VERSION ?= v1.57.2
+ENVTEST_VERSION ?= release-0.18
+GOLANGCI_LINT_VERSION ?= v1.59.1
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -261,17 +261,19 @@ $(GOLANGCI_LINT): $(LOCALBIN)
 	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/cmd/golangci-lint,${GOLANGCI_LINT_VERSION})
 
 # go-install-tool will 'go install' any package with custom target and name of binary, if it doesn't exist
-# $1 - target path with name of binary (ideally with version)
+# $1 - target path with name of binary
 # $2 - package url which can be installed
 # $3 - specific version of package
 define go-install-tool
-@[ -f $(1) ] || { \
+@[ -f "$(1)-$(3)" ] || { \
 set -e; \
 package=$(2)@$(3) ;\
 echo "Downloading $${package}" ;\
+rm -f $(1) || true ;\
 GOBIN=$(LOCALBIN) go install $${package} ;\
-mv "$$(echo "$(1)" | sed "s/-$(3)$$//")" $(1) ;\
-}
+mv $(1) $(1)-$(3) ;\
+} ;\
+ln -sf $(1)-$(3) $(1)
 endef
 
 .PHONY: operator-sdk

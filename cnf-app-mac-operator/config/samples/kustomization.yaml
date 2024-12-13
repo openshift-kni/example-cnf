@@ -1,4 +1,4 @@
 ## Append samples of your project ##
 resources:
 - examplecnf_v1_cnfappmac.yaml
-#+kubebuilder:scaffold:manifestskustomizesamples
+# +kubebuilder:scaffold:manifestskustomizesamples

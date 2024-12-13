@@ -4,4 +4,4 @@
 resources:
 - bases/examplecnf.openshift.io_trexapps.yaml
 - bases/examplecnf.openshift.io_trexconfigs.yaml
-#+kubebuilder:scaffold:crdkustomizeresource
+# +kubebuilder:scaffold:crdkustomizeresource

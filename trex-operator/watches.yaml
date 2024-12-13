@@ -3,9 +3,9 @@
 - version: v1
   group: examplecnf.openshift.io
   kind: TRexApp
-  role: app
+  role: trexapp
 - version: v1
   group: examplecnf.openshift.io
   kind: TRexConfig
-  role: server
-#+kubebuilder:scaffold:watch
+  role: trexconfig
+# +kubebuilder:scaffold:watch

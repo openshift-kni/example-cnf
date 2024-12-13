@@ -76,11 +76,11 @@ Base structure for this case is achieved with the following commands, then it's 
 
 - cnf-app-mac-operator
 
-For operator-sdk v1.36.0, you need to have installed the same Go version used in operator-sdk, which is at least Go 1.21+.
+For operator-sdk v1.38.0, you need to have installed the same Go version used in operator-sdk, which is at least Go 1.22.5+.
 
 ```
 $ operator-sdk version
-operator-sdk version: "v1.36.0", commit: "72167bf0fab99c2b533cf20f8d1c405616f15cf1", kubernetes version: "1.29.0", go version: "go1.21.12", GOOS: "linux", GOARCH: "amd64"
+operator-sdk version: "v1.38.0", commit: "0735b20c84e5c33cda4ed87daa3c21dcdc01bb79", kubernetes version: "1.30.0", go version: "go1.22.5", GOOS: "linux", GOARCH: "amd64"
 ```
 
 Create the project structure and the CNFAppMac API:
