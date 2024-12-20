@@ -67,7 +67,8 @@ spec:
         securityContext:
           runAsNonRoot: true
           runAsUser: 56560
-          readOnlyRootFilesystem: true
+          # comment this option to be able to have write permissions for the tests
+          #readOnlyRootFilesystem: true
 {% if privileged %}
           privileged: true
 {% else %}
