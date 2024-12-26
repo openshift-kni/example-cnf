@@ -8,6 +8,7 @@ set -ex
 echo "Running testpmd"
 
 RUN_APP=${run_app:=1}
+REDUCED_MODE=${reduced_mode:=0}
 
 LOG_DIR="/var/log/testpmd"
 [ -d $LOG_DIR ] || mkdir -p $LOG_DIR
@@ -77,13 +78,25 @@ NUMA_NODE=$(numactl --show | grep nodebind |  awk '{print $2}')
 if [ $NUMA_NODE -ne 0 ]; then
     SOCKET_MEM="0,${SOCKET_MEM}"
 fi
-MEMORY_CHANNELS=${memory_channels:=4}
+MEMORY_CHANNELS=${memory_channels:=6}
 FORWARDING_CORES=${forwarding_cores:=2}
 RXQ=${rx_queues:=1}
 TXQ=${tx_queues:=1}
 RXD=${rx_descriptors:=1024}
 TXD=${tx_descriptors:=1024}
 STATS_PERIOD=${stats_period:=1}
+
+# modify RXD and TXD (x2)
+# If reduced mode is selected:
+# - Manipulate the cores to use to just use the 2nd core with its sibling (note that, in interactive
+#   node, we should also select the 1st core without its sibling, to allocate three cores, but we don't
+#   use interactive mode in the automation, so this is omitted)
+# - Double RXD and TXD values
+if [[ $REDUCED_MODE != "0" ]]; then
+    LCORES="${CORES_ARR[1]}","${CORES_ARR[$((TESTPMD_CPU_COUNT/2+1))]}"
+    RXD=$((RXD*2))
+    TXD=$((TXD*2))
+fi
 
 RUN="/usr/local/bin/example-cnf/run/testpmd-run"
 CMD="/usr/local/bin/example-cnf/testpmd"
