@@ -88,14 +88,12 @@ STATS_PERIOD=${stats_period:=1}
 
 # modify RXD and TXD (x2)
 # If reduced mode is selected:
-# - Manipulate the cores to use to just use the 2nd core with its sibling (note that, in interactive
-#   node, we should also select the 1st core without its sibling, to allocate three cores, but we don't
-#   use interactive mode in the automation, so this is omitted)
+# - Manipulate the cores to use to just use the 1st core (for console) and 2nd core with its sibling
 # - Double RXD and TXD values
 if [[ $REDUCED_MODE != "0" ]]; then
     # Extract cores from numactl output, which provides all used cores, since LCORES may save them using an interval
     CORES_ARR=($(numactl --show | grep physcpubind | cut -f2- -d ' '))
-    LCORES="${CORES_ARR[1]}","${CORES_ARR[$((TESTPMD_CPU_COUNT/2+1))]}"
+    LCORES="${CORES_ARR[0]}","${CORES_ARR[1]}","${CORES_ARR[$((TESTPMD_CPU_COUNT/2+1))]}"
     RXD=$((RXD*2))
     TXD=$((TXD*2))
 fi
@@ -104,7 +102,7 @@ RUN="/usr/local/bin/example-cnf/run/testpmd-run"
 CMD="/usr/local/bin/example-cnf/testpmd"
 CMD="${CMD} -l $LCORES --in-memory $PCI --socket-mem ${SOCKET_MEM} -n ${MEMORY_CHANNELS} --proc-type auto --file-prefix pg"
 CMD="${CMD} --"
-CMD="${CMD} --disable-rss --nb-cores=${FORWARDING_CORES} --rxq=${RXQ} --txq=${TXQ} --rxd=${RXD} --txd=${TXD}"
+CMD="${CMD} --nb-cores=${FORWARDING_CORES} --rxq=${RXQ} --txq=${TXQ} --rxd=${RXD} --txd=${TXD}"
 CMD="${CMD} --auto-start ${ETH_PEER} --forward-mode=mac --stats-period ${STATS_PERIOD}"
 CMD="${CMD} 2>&1 | tee /var/log/testpmd/app.log"
 echo "${CMD}" > $RUN
