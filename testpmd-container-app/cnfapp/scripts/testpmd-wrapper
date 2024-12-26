@@ -93,6 +93,8 @@ STATS_PERIOD=${stats_period:=1}
 #   use interactive mode in the automation, so this is omitted)
 # - Double RXD and TXD values
 if [[ $REDUCED_MODE != "0" ]]; then
+    # Extract cores from numactl output, which provides all used cores, since LCORES may save them using an interval
+    CORES_ARR=($(numactl --show | grep physcpubind | cut -f2- -d ' '))
     LCORES="${CORES_ARR[1]}","${CORES_ARR[$((TESTPMD_CPU_COUNT/2+1))]}"
     RXD=$((RXD*2))
     TXD=$((TXD*2))
