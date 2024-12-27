@@ -218,6 +218,7 @@ def main():
     log.info("Starting burst...")
     log.info("Packet Size - %s" % packet_size)
     log.info("Packet Rate - %s" % packet_rate)
+    log.info("Job Duration - %s" % duration)
     if profile:
         log.info("TRex profile - %s" % profile)
     if duration == -1:
