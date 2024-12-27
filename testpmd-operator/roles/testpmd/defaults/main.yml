@@ -17,11 +17,11 @@ size: 1
 hugepage_1gb_count: 4Gi
 memory: 1000Mi
 cpu: 6
-forwarding_cores: 4
+forwarding_cores: 2
 
 forward_mode: mac
 
-memory_channels: 4
+memory_channels: 6
 socket_memory: 1024
 
 rx_queues: 1

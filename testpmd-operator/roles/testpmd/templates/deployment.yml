@@ -126,6 +126,8 @@ spec:
           value: "{{ rx_descriptors }}"
         - name: tx_descriptors
           value: "{{ tx_descriptors }}"
+        - name: reduced_mode
+          value: "{{ reduced_mode }}"
 {% for key, value in environments.items() %}
         - name: {{ key }}
           value: "{{ value }}"

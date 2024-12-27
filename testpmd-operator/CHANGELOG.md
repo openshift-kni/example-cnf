@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.23] - 2024-12-27
+
+- Enable reduced mode
+
 ## [0.2.22] - 2024-12-12
 
 - Updated OperatorSDK to v1.38.0, kube-rbac-proxy is no longer included
