@@ -141,9 +141,9 @@ def completed_stats(stats, warnings, port_a, port_b, profile, rate, duration):
     packets = stats[port_a]["opackets"] + stats[port_b]["opackets"]
     total_lost = lost * 100.0 / packets
 
-    log.info(f"\nPackets lost from {port_a} to {port_b}: {lost_a} packets, which is {percentage_lost_a}% packet loss")
-    log.info(f"Packets lost from {port_b} to {port_a}: {lost_b} packets, which is {percentage_lost_b}% packet loss")
-    log.info(f"Total packets lost: {lost} packets, which is {total_lost}% packet loss")
+    log.info(f"\nPackets lost from {port_a} to {port_b}: {lost_a} packets, which is {format(percentage_lost_a, '.10f')}% packet loss")
+    log.info(f"Packets lost from {port_b} to {port_a}: {lost_b} packets, which is {format(percentage_lost_b, '.10f')}% packet loss")
+    log.info(f"Total packets lost: {lost} packets, which is {format(total_lost, '.10f')}% packet loss")
 
     if warnings:
         log.info("\n\n*** test had warnings ****\n\n")
