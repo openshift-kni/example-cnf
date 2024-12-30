@@ -173,8 +173,16 @@ class STLS1(object):
             # start monitory thread to post stats
             self.start_stats_monitor()
 
-            # block until done
-            self.client.wait_on_traffic(ports=self.ports)
+            # block until done, having a timeout that expires after reaching the specified duration (if provided)
+            # with 1 second delay waiying after last packet is sent
+            if self.duration != -1:
+                try:
+                    self.client.wait_on_traffic(ports=self.ports, timeout=self.duration, rx_delay_ms=1000)
+                except TRexTimeoutError as e:
+                    log.info("Reached timeout, job will finish")
+                    log.info(e)
+            else:
+                self.client.wait_on_traffic(ports=self.ports)
 
             trexstats.force_exit = True
 
