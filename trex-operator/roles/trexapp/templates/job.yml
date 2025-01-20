@@ -77,8 +77,10 @@ spec:
         - name: PACKET_RATE
           value: "{{ packet_rate }}"
 {% endif %}
+{% if run_deployment is defined %}
         - name: run_deployment
           value: "{{ run_deployment }}"
+{% endif %}
 {% if run_deployment is defined and run_deployment == 1 %}
         lifecycle:
           postStart:
