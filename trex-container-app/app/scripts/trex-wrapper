@@ -10,13 +10,12 @@ echo_ts() {
   echo "$(date -u +"%Y-%m-%dT%H:%M:%S%z") $@"
 }
 
-RUN_APP=${run_app:=1}
+RUN_DEPLOYMENT=${run_deployment:=1}
 SERVER=${TREX_SERVER_URL:="0.0.0.0"}
 MODE=${MODE:="direct"}
 
 if [[ "${MODE}" == "direct" ]]; then
   echo_ts "MODE is ${MODE}"
-  RUN_APP=1
 fi
 
 LOG_DIR="/var/log/trex"
@@ -52,15 +51,11 @@ if [ ! -z ${TREX_PROFILE_NAME} ]; then
     fi
 fi
 
-if [[ $RUN_APP == "1" ]]; then
+if [[ $RUN_DEPLOYMENT == "1" ]]; then
     # leave the server running for 10s before starting application
     sleep 10
     echo_ts "Running TRex"
     /usr/local/bin/run-trex
-elif [[ $RUN_APP == "2" ]]; then
-    sleep 10
-    echo_ts "Running binary search"
-    /usr/local/bin/run-binary-search
 else
     echo_ts "Skipping TRex run, waiting ..."
     sleep infinity

@@ -7,7 +7,7 @@ set -ex
 
 echo "Running testpmd"
 
-RUN_APP=${run_app:=1}
+RUN_DEPLOYMENT=${run_deployment:=1}
 REDUCED_MODE=${reduced_mode:=0}
 
 LOG_DIR="/var/log/testpmd"
@@ -86,7 +86,6 @@ RXD=${rx_descriptors:=1024}
 TXD=${tx_descriptors:=1024}
 STATS_PERIOD=${stats_period:=1}
 
-# modify RXD and TXD (x2)
 # If reduced mode is selected:
 # - Manipulate the cores to use to just use the 1st core (for console) and 2nd core with its sibling
 # - Double RXD and TXD values
@@ -98,6 +97,7 @@ if [[ $REDUCED_MODE != "0" ]]; then
     TXD=$((TXD*2))
 fi
 
+# Build script to run testpmd in auto-start mode
 RUN="/usr/local/bin/example-cnf/run/testpmd-run"
 CMD="/usr/local/bin/example-cnf/testpmd"
 CMD="${CMD} -l $LCORES --in-memory $PCI --socket-mem ${SOCKET_MEM} -n ${MEMORY_CHANNELS} --proc-type auto --file-prefix pg"
@@ -108,6 +108,16 @@ CMD="${CMD} 2>&1 | tee /var/log/testpmd/app.log"
 echo "${CMD}" > $RUN
 chmod +x $RUN
 
+# Build script to run testpmd in interactive mode (requires manual intervention)
+RUN_INT="/usr/local/bin/example-cnf/run/testpmd-interactive"
+CMD_INT="/usr/local/bin/example-cnf/testpmd"
+CMD_INT="${CMD_INT} -l $LCORES --in-memory $PCI --socket-mem ${SOCKET_MEM} -n ${MEMORY_CHANNELS} --proc-type auto --file-prefix pg"
+CMD_INT="${CMD_INT} --"
+CMD_INT="${CMD_INT} --nb-cores=${FORWARDING_CORES} --rxq=${RXQ} --txq=${TXQ} --rxd=${RXD} --txd=${TXD}"
+CMD_INT="${CMD_INT} --i ${ETH_PEER} --forward-mode=mac"
+echo "${CMD_INT}" > $RUN_INT
+chmod +x $RUN_INT
+
 function sig_term() {
     echo $(date +"%F %T,%3N") > /var/log/testpmd/sigterm-received.log
     # kill testpmd application
@@ -116,7 +126,8 @@ function sig_term() {
 }
 trap sig_term SIGTERM
 
-if [[ $RUN_APP == "1" ]]; then
+if [[ $RUN_DEPLOYMENT == "1" ]]; then
+    # Run auto-start mode
     sudo /usr/local/bin/example-cnf/run/testpmd-run
 else
     sleep infinity

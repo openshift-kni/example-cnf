@@ -66,7 +66,9 @@ spec:
         securityContext:
           runAsNonRoot: true
           runAsUser: 56560
+{% if run_deployment is defined and run_deployment == 1 %}
           readOnlyRootFilesystem: true
+{% endif %}
 {% if privileged %}
           privileged: true
 {% else %}
@@ -128,10 +130,15 @@ spec:
           value: "{{ tx_descriptors }}"
         - name: reduced_mode
           value: "{{ reduced_mode }}"
+{% if run_deployment is defined %}
+        - name: run_deployment
+          value: "{{ run_deployment }}"
+{% endif %}
 {% for key, value in environments.items() %}
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+{% if run_deployment is defined and run_deployment == 1 %}
         lifecycle:
           postStart:
             exec:
@@ -157,6 +164,7 @@ spec:
             port: 8095
           initialDelaySeconds: 30
           periodSeconds: 10
+{% endif %}
         terminationMessagePolicy: FallbackToLogsOnError
       volumes:
       - name: hugepage
