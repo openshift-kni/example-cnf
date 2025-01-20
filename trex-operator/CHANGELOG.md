@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.25] - 2025-01-20
+
+- Allow to enable/disable the deployment of the test scripts from outside
+
 ## [0.2.24] - 2024-12-12
 
 - Updated OperatorSDK to v1.38.0, kube-rbac-proxy is no longer included

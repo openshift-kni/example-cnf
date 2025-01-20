@@ -81,7 +81,9 @@ spec:
         securityContext:
           runAsNonRoot: true
           runAsUser: 56560
+{% if run_deployment is defined and run_deployment == 1 %}
           readOnlyRootFilesystem: true
+{% endif %}
 {% if privileged %}
           privileged: true
 {% else %}
@@ -125,6 +127,11 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+{% if run_deployment is defined %}
+        - name: run_deployment
+          value: "{{ run_deployment }}"
+{% endif %}
+{% if run_deployment is defined and run_deployment == 1 %}
         lifecycle:
           postStart:
             exec:
@@ -150,6 +157,7 @@ spec:
             port: 8096
           initialDelaySeconds: 30
           periodSeconds: 10
+{% endif %}
         terminationMessagePolicy: FallbackToLogsOnError
 {% endif %}
 {% if trex_app|bool %}
@@ -159,7 +167,9 @@ spec:
         securityContext:
           runAsNonRoot: true
           runAsUser: 56560
+{% if run_deployment is defined and run_deployment == 1 %}
           readOnlyRootFilesystem: true
+{% endif %}
         resources:
           limits:
             memory: "756Mi"
@@ -182,6 +192,11 @@ spec:
         - name: {{ key }}
           value: "{{ value }}"
 {% endfor %}
+{% if run_deployment is defined %}
+        - name: run_deployment
+          value: "{{ run_deployment }}"
+{% endif %}
+{% if run_deployment is defined and run_deployment == 1 %}
         lifecycle:
           postStart:
             exec:
@@ -207,6 +222,7 @@ spec:
             port: 8095
           initialDelaySeconds: 30
           periodSeconds: 10
+{% endif %}
         terminationMessagePolicy: FallbackToLogsOnError
 {% endif %}
       volumes:

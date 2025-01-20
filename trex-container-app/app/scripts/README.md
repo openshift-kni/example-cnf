@@ -9,5 +9,3 @@ In order to choose a usecase, provide `run_app` with appropriate value in
 the container environment, while creating the POD.
 
 `run_app=1` - Run the app with default profile. Monitory for mac update CR.
-
-`run_app=2` - Run the app in binary search mode
