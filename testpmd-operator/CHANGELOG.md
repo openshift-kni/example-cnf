@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
-## [0.2.24] - 2024-01-20
+## [0.2.24] - 2025-01-20
 
 - Allow to enable/disable the deployment of the test scripts from outside
 
