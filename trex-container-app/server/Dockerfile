@@ -11,8 +11,8 @@ FROM quay.io/rh-nfv-int/ubi8-base-trex:v0.0.1
 LABEL name="NFV Example TRexServer Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.14" \
-      release="v0.2.14" \
+      version="v0.2.15" \
+      release="v0.2.15" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 
@@ -73,6 +73,7 @@ RUN echo -e "example-cnf\tALL=(ALL)\tNOPASSWD: ALL" > /etc/sudoers.d/example-cnf
 RUN mkdir -p /usr/local/bin/example-cnf
 RUN chmod 750 /usr/local/bin/example-cnf
 RUN chown example-cnf /usr/local/bin/example-cnf
+RUN mkdir /usr/local/bin/example-cnf/run
 
 # Make sure trex_cfg.yaml is present in the proper folder and with proper permissions
 RUN touch /usr/local/bin/example-cnf/trex_cfg.yaml

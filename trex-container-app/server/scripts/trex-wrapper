@@ -12,11 +12,10 @@ echo_ts() {
 
 # direct variables
 MODE=${MODE:="direct"}
-LB_MACS=${LB_MACS:=""}
 
 # environments
 RUN_CONFIGURE=${run_configure:=1}
-RUN_SERVER=${run_server:=1}
+RUN_DEPLOYMENT=${run_deployment:=1}
 RUN_DELAY=${run_delay:=1}
 # trex_core_count (trexCoreCount)
 
@@ -44,14 +43,18 @@ if [[ $((CORE_COUNT_CFG + 2)) != $TREX_CPU ]]; then
     exit 1
 fi
 
-SERVER="sudo -E /usr/local/bin/trex-server"
+RUN="/usr/local/bin/example-cnf/run/trex-server-run"
+CMD="/usr/local/bin/trex-server"
+CMD="${CMD} $CORE_COUNT"
+echo "${CMD}" > $RUN
+chmod +x $RUN
 
-if [[ $RUN_SERVER == "1" ]]; then
+if [[ $RUN_DEPLOYMENT == "1" ]]; then
     sleep $RUN_DELAY
     #echo_ts "Starting TRex daemon server ..."
     #./trex_daemon_server start
     echo_ts "Starting TRex server ..."
-    $SERVER $CORE_COUNT
+    sudo -E /usr/local/bin/example-cnf/run/trex-server-run
 else
     echo_ts "Skipping TRex server start, waiting ..."
     sleep infinity
