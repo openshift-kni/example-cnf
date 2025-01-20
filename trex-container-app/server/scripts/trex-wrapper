@@ -43,7 +43,7 @@ if [[ $((CORE_COUNT_CFG + 2)) != $TREX_CPU ]]; then
     exit 1
 fi
 
-RUN="/usr/local/bin/example-cnf/run/trex-server-run"
+RUN="/usr/local/bin/example-cnf/trex-server-run"
 CMD="/usr/local/bin/trex-server"
 CMD="${CMD} $CORE_COUNT"
 echo "${CMD}" > $RUN
@@ -54,7 +54,7 @@ if [[ $RUN_DEPLOYMENT == "1" ]]; then
     #echo_ts "Starting TRex daemon server ..."
     #./trex_daemon_server start
     echo_ts "Starting TRex server ..."
-    sudo -E /usr/local/bin/example-cnf/run/trex-server-run
+    sudo -E /usr/local/bin/example-cnf/trex-server-run
 else
     echo_ts "Skipping TRex server start, waiting ..."
     sleep infinity
