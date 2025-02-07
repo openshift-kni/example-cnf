@@ -1,9 +1,8 @@
-Example CNF
-==============
+# Example CNF
 
 [![PR Validation](https://github.com/openshift-kni/example-cnf/actions/workflows/push.yaml/badge.svg)](https://github.com/openshift-kni/example-cnf/actions/workflows/push.yaml)
 
-Example CNF is an OpenShift workload to exercice an SRIOV setup, such as the following:
+Example CNF is an OpenShift workload to exercice an SRIOV setup, based on [TestPMD](https://doc.dpdk.org/guides/testpmd_app_ug/intro.html) for traffic forwarding and [TRex](https://trex-tgn.cisco.com/) for traffic generation, such as the following:
 
 ![Flow](documentation/network_setup.png)
 
@@ -36,16 +35,25 @@ It is providing the following operators:
 
 ![Operator behavior](documentation/cnf-app-mac-operator.png)
 
-You can use them from the [Example CNF Catalog](https://quay.io/repository/rh-nfv-int/nfv-example-cnf-catalog?tab=tags).
+You can use them from the [Example CNF Catalog](https://quay.io/repository/rh-nfv-int/nfv-example-cnf-catalog?tab=tags). Image generation is automated with [Github workflows](.github/workflows) in this repo.
 
-How operators are created
-------------------------
+## Pre-requirements
 
-The three operators defined in this repository are built with [Operator SDK tool](https://sdk.operatorframework.io/docs/building-operators/).
+To run Example CNF, you need to fulfil the following infrastructure-related pre-requirements:
+
+- OpenShift cluster with +3 worker nodes.
+- SR-IOV network operator.
+- SriovNetworkNodePolicy and SriovNetwork CRDs.
+- Proper configuration in network devices to match the SR-IOV resources definition.
+- Performance Profile (Hugepages, CPU Isolation, etc.)
+
+## How operators are created
+
+The three operators defined in this repository are built with [Operator SDK tool](https://sdk.operatorframework.io/docs/building-operators/). [Here](https://youtu.be/imF9VGJ1Dd4) you can see how CRD-to-pod conversion works for this kind of operators.
 
 We can differentiate between these two cases:
 
-**Ansible-based operators:**
+### Ansible-based operators
 
 This is the case of testpmd-operator and trex-operator.
 
@@ -68,7 +76,7 @@ $ operator-sdk create api --version v1 --generate-role --group examplecnf --kind
 $ operator-sdk create api --version v1 --generate-role --group examplecnf --kind TRexConfig
 ```
 
-**Go-based operators:**
+### Go-based operators
 
 This is the case of cnf-app-mac-operator.
 
@@ -118,18 +126,11 @@ To conclude, build the main.go file to check it's working fine:
 $ go build cmd/main.go
 ```
 
-Ansible based automation
-------------------------
-
-You can use the Ansible playbooks and roles at <https://github.com/redhatci/ansible-collection-redhatci-ocp/blob/main/roles/example_cnf_deploy/README.md> to automate the use of the Example CNF.
-
-Pod affinity rules
-------------------------
+## Pod affinity rules
 
 There are some affinity rules for the deployed pods. In particular, `trexconfig-<x>` and `testpmd-app-<x>` pods are placed in different worker nodes.
 
-SRIOV networks
-------------------------
+## SRIOV networks
 
 SRIOV networks are required for the setup. In our case, we are using a different SRIOV network per connection, using a different VLAN for each network.
 
@@ -153,8 +154,7 @@ The network schema would be as follows:
 TRex -- (example-cnf-net1|2) -- CNF Application
 ```
 
-Traffic Flow
-------------------------
+## Traffic Flow
 
 Traffic flow is the following:
 
@@ -168,11 +168,13 @@ Traffic flow is the following:
 
 - TRex calculates statistics by comparing the incoming traffic on Port 1 (processed traffic) with the outgoing traffic on Port 0 (original traffic sent by TRex) and vice versa.
 
+## Testing
 
-Network troubleshooting
-------------------------
+Please refer to [the testing docs](documentation/testing.md) to check how to test Example CNF using [Distributed-CI (DCI)](https://docs.distributed-ci.io/).
 
-Apart from the logs offered by the resources deployed by example-cnf, the `ip` command can also offer some useful network information regarding the statistics of the network interfaces used in the tests.
+## Network troubleshooting
+
+Apart from the logs offered by the resources deployed by Example CNF, the `ip` command can also offer some useful network information regarding the statistics of the network interfaces used in the tests.
 
 For example, by accessing to the worker node where the resources are deployed, and checking the interface where the VFs are created, you can see information like this:
 
@@ -267,14 +269,13 @@ $ ip -s -d link show dev ens2f0
     altname enp55s0f0
 ```
 
-Utils
-------------------------
+## Utils
 
-Under [utils](utils) folder, you can find some utilities included in example-cnf to extend the functionalities offered by the tool.
+Under [utils](utils) folder, you can find some utilities included in Example CNF to extend the functionalities offered by the tool.
 
 - [webserver.go](utils/webserver.go): a Golang-based webserver to implement liveness, readiness and startup probes in the container images offered in [testpmd-container-app](testpmd-container-app) and [trex-container-app](trex-container-app) folders. The Makefiles offered in these directories take care of copying the webserver code from the utils directory to each image's directory.
 - [required-annotations.yaml](utils/required-annotations.yaml): annotations to be appended to the CSVs to pass Preflight's RequiredAnnotations tests. They are appended automatically thanks to the Makefile tasks from each operator.
-- [support-images](support_images): projects where you can find the Dockerfile required to build some of the images used as build images by the example-cnf images. These images can be found on quay.io/rh-nfv-int and they are publicly available, you only need credentials to access quay.io. The images can be built with the following commands (you need to run it in a RHEL host with a valid RHEL subscription to be able to download the packages installed in the images, and you need a valid quay.io credentials to push it to quay.io):
+- [support-images](support_images): projects where you can find the Dockerfile required to build some of the images used as build images by the Example CNF images. These images can be found on quay.io/rh-nfv-int and they are publicly available, you only need credentials to access quay.io. The images can be built with the following commands (you need to run it in a RHEL host with a valid RHEL subscription to be able to download the packages installed in the images, and you need a valid quay.io credentials to push it to quay.io):
 
 ```
 # build images
@@ -288,3 +289,7 @@ $ podman push quay.io/rh-nfv-int/dpdk-23.11:v0.0.1
 $ podman push quay.io/rh-nfv-int/ubi8-base-testpmd:v0.0.1
 $ podman push quay.io/rh-nfv-int/ubi8-base-trex:v0.0.1
 ```
+
+## Acknowledgements
+
+Please write to telcoci@redhat.com in case you need more information for using and testing Example CNF in the scenarios that have been proposed in this repository.
