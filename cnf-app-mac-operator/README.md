@@ -1,26 +1,63 @@
-CNF App MAC FETCH
-=================
+# cnf-app-mac-operator
 
-An operator helps in creating `CNFAppMac` CR for all the pods in a namespace
-which has VFs attached to it.
+![Operator behavior](../documentation/cnf-app-mac-operator.png)
 
-TODO:
-------------------------
-* Create CR only for a custom set of pods (based on label or name)
+Auxiliary operator just composed by one component, which is CNFAppMac Operator, a Golang-based operator in charge of ensuring reconciliation for CNFAppMac CR, which is a wrapper created for the `testpmd-app-<x>` pod and linked to it, and that is used to extract the network information of the pods (network, MAC and PCI addresses), to be offered to other components of the solution.
 
-License
-------------------------
+## How to build the operator
 
-Copyright 2024.
+Base structure for this case is achieved with the following commands, then it's just a matter of accommodating the required code for the operator in the corresponding files and folders:
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+For operator-sdk v1.38.0, you need to have installed the same Go version used in operator-sdk, which is at least Go 1.22.5+.
 
-    http://www.apache.org/licenses/LICENSE-2.0
+```
+$ operator-sdk version
+operator-sdk version: "v1.38.0", commit: "0735b20c84e5c33cda4ed87daa3c21dcdc01bb79", kubernetes version: "1.30.0", go version: "go1.22.5", GOOS: "linux", GOARCH: "amd64"
+```
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Create the project structure and the CNFAppMac API:
+
+```
+$ mkdir cnf-app-mac-operator; cd cnf-app-mac-operator
+$ operator-sdk init --domain openshift.io --repo github.com/openshift-kni/example-cnf/tree/main/cnf-app-mac-operator
+$ operator-sdk create api --version v1 --group examplecnf --kind CNFAppMac --controller --resource
+```
+
+At this point, remove RBAC resource creation in Makefile > manifests task. Then, review cmd/main.go and api/v1/cnfappmac_types.go, then run:
+
+```
+$ make generate
+$ make manifests 
+```
+
+Create webhook and certmanager:
+
+```
+$ operator-sdk create webhook --version v1 --group examplecnf --kind CNFAppMac --defaulting --programmatic-validation
+```
+
+Review the generated files properly, then:
+
+```
+$ make manifests
+```
+
+Comment webhook references in PROJECT and cmd/main.go files (older versions were not using this), review internal/controller/cnfappmac_controller.go and review the rest of files.
+
+To conclude, build the main.go file to check it's working fine:
+
+```
+$ go build cmd/main.go
+```
+
+## What to update if bumping operator version
+
+Apart from the modifications you have to do, you also need to update the operator version in these files:
+
+- [CHANGELOG.md](CHANGELOG.md).
+- [Makefile](Makefile).
+- [Dockerfile](Dockerfile).
+
+Also, make sure that the operator version is within the interval defined in [required-annotations.yaml](../utils/required-annotations.yaml) file for `olm.skipRange` annotation, else update that file to modify the current range.
+
+A classical change is the update of Operator SDK version used in the operator. Here's an [example](https://github.com/openshift-kni/example-cnf/pull/108) where this is done.

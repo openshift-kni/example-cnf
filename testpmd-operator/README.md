@@ -1,27 +1,35 @@
-testpmd-operator
-================
+# testpmd-operator
 
-Ansible based operator to deploy TestPMD application in OpenShift.
+![Operator behavior](../documentation/testpmd-operator.png)
 
-Container images for the TestPMD application is built using [testpmd-container-app](https://github.com/openshift-kni/example-cnf/testpmd-container-app). 
+Final application, also known as CNF Application, which is a standard TestPMD instance using the default MAC forwarding module. It uses two components:
 
-Preparation
-----------
-* Deploy a OpenShift cluster with Baremetal worker nodes
-* Deploy Performance Addon Operator and configure nodes with ``worker-cnf`` role
-* Deploy SR-IOV Network Operator
-* Create Peformance Profile
-* Create SR-IOV Network Policy and Network
+- TestPMD CR, which creates a pod to implement the MAC forwarding module as final application. Related pod is `testpmd-app-<x>` pod (only one replica is used).
+- TestPMD Operator, ensuring CR reconciliation via controller-manager pod. Related pod is `testpmd-operator-controller-manager-<x>` pod.
 
-TestPMD operator deployment
----------------------------
-Deploy the operator
+The following information can be extracted from pod logs:
+
+- To see the TestPMD statistics printed periodically for this module, you can rely on `testpmd-app-<x>` pod logs.
+- In `testpmd-operator-controller-manager-<x>` pod, you can see the execution of the Ansible playbooks that ensures the reconciliation loop of the operator.
+
+## How to build the operator
+
+Base structure is achieved with the following commands, then it's just a matter of accommodating the required code for the operator in the corresponding files and folders:
+
 ```
-cd testpmd-operator
-oc kustomize | oc -n example-cnf apply -f -
+$ mkdir testpmd-operator; cd testpmd-operator
+$ operator-sdk init --domain openshift.io --plugins ansible
+$ operator-sdk create api --version v1 --generate-role --group examplecnf --kind TestPMD
 ```
 
-Modify the CR as per the cluster and create it:
-```
-oc -n example-cnf apply -f deploy/crds/examplecnf.openshift.io_v1_testpmd_cr.yaml
-```
+## What to update if bumping operator version
+
+Apart from the modifications you have to do, you also need to update the operator version in these files:
+
+- [CHANGELOG.md](CHANGELOG.md).
+- [Makefile](Makefile).
+- [Dockerfile](Dockerfile).
+
+Also, make sure that the operator version is within the interval defined in [required-annotations.yaml](../utils/required-annotations.yaml) file for `olm.skipRange` annotation, else update that file to modify the current range.
+
+A classical change is the update of Operator SDK version used in the operator. Here's an [example](https://github.com/openshift-kni/example-cnf/pull/108) where this is done.
