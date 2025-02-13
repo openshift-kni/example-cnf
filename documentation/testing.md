@@ -174,9 +174,9 @@ We can see these pods:
 
 The three data-plane pods (`testpmd-app`, `trexconfig` and `job-trex-app`) execute different scripts to configure all the software pieces that involves the traffic exchange between TestPMD and TRex:
 
-- `testpmd-app`: it runs `/usr/local/bin/example-cnf/testpmd-wrapper`. [This script](../testpmd-container-app/cnfapp/scripts/testpmd-wrapper) retrieves context information to build the command to run `testpmd` command-line tool. In this baseline scenario, once finished, `testpmd` is invoked in auto-start mode, printing the statistics every minute.
-- `trexconfig`: it runs `/usr/local/bin/trex-wrapper`. [This script](../trex-container-app/server/scripts/trex-wrapper) takes also some context information to build a config file for TRex, then it launches `_t-rex-64` binary using the generated config file, and printing statistics regularly. This does not launch the traffic generation, since this is done with the TRexApp job.
-- `job-trex-app`: it runs `/usr/local/bin/trex-wrapper` (but a different one compared to `trexconfig`). [This script](../trex-container-app/app/scripts/trex-wrapper) triggers a custom Python script that builds the traffic profile, according to the TRex variables provided in the pipeline (duration of the job, packet size, data rate, etc.), and start sending the traffic. If defining a duration, a timeout will be enabled to stop the execution after the given duration, and then statistics will be printed and packet loss will be calculated. If packet loss is equal or less than 0, this means there's no packet loss, else, packet loss is present and the pod status will be different than Completed.
+- `testpmd-app`: check [cnfapp container image docs](../testpmd-container-app/cnfapp/README.md) for more details. In this baseline scenario, once finished, `testpmd` is invoked in auto-start mode, printing the statistics every minute.
+- `trexconfig`: check [TRex server container image docs](../trex-container-app/server/README.md) for more details.
+- `job-trex-app`: check [TRex app container image docs](../trex-container-app/app/README.md) for more details.
 
 ### What logs should I check?
 

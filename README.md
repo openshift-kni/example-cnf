@@ -6,36 +6,13 @@ Example CNF is an OpenShift workload to exercice an SRIOV setup, based on [TestP
 
 ![Flow](documentation/network_setup.png)
 
-It is providing the following operators:
+It provides the following operators:
 
-* trex-operator
-    * It provides TRex Traffic Generator, decomposed in three components:
-        * TRexConfig CR, pinning the config of the TRex server instance. Related pod is `trexconfig-<x>` pod.
-        * TRexApp CR, setting up the job that launches TRex execution to generate traffic towards the system under test. Related pod is `trex-app` pod.
-        * TRex Operator, ensuring CR reconciliation via controller-manager pod. Related pod is `trex-operator-controller-manager-<x>` pod.
-    * Following information can be extracted from pod logs:
-        * In `trexconfig-<x>` pod logs, you can see the trex statistics printed periodically.
-        * The summary of the test execution can be seen at the end of the `trex-app` job logs.
-        * In `trex-operator-controller-manager-<x>` pod, you can see the execution of the Ansible playbooks that ensures the reconciliation loop of the operator.
+- [trex-operator](trex-operator)
+- [testpmd-operator](testpmd-operator)
+- [cnf-app-mac-operator](cnf-app-mac-operator)
 
-![Operator behavior](documentation/trex-operator.png)
-
-* testpmd-operator
-    * Final application, also known as CNF Application, which is a standard TestPMD instance using the default MAC forwarding module. It uses two components:
-        * TestPMD CR, which creates a pod to implement the MAC forwarding module as final application. Related pod is `testpmd-app-<x>` pod (only one replica is used).
-        * TestPMD Operator, ensuring CR reconciliation via controller-manager pod. Related pod is `testpmd-operator-controller-manager-<x>` pod.
-    * Following information can be extracted from pod logs:
-        * To see the TestPMD statistics printed periodically for this module, you can rely on `testpmd-app-<x>` pod logs.
-        * In `testpmd-operator-controller-manager-<x>` pod, you can see the execution of the Ansible playbooks that ensures the reconciliation loop of the operator.
-
-![Operator behavior](documentation/testpmd-operator.png)
-
-* cnf-app-mac-operator
-    * Auxiliary operator just composed by one component, which is CNFAppMac Operator, a Golang-based operator in charge of ensuring reconciliation for CNFAppMac CR, which is a wrapper created for the `testpmd-app-<x>` pod and linked to it, and that is used to extract the network information of the pods (network, MAC and PCI addresses), to be offered to other components of the solution.
-
-![Operator behavior](documentation/cnf-app-mac-operator.png)
-
-You can use them from the [Example CNF Catalog](https://quay.io/repository/rh-nfv-int/nfv-example-cnf-catalog?tab=tags). Image generation is automated with [Github workflows](.github/workflows) in this repo.
+You can use them from the [Example CNF Catalog](https://quay.io/repository/rh-nfv-int/nfv-example-cnf-catalog?tab=tags). Image generation is automated with [Github workflows](.github/workflows) in this repo, using this [Makefile](Makefile).
 
 ## Pre-requirements
 
@@ -53,78 +30,8 @@ The three operators defined in this repository are built with [Operator SDK tool
 
 We can differentiate between these two cases:
 
-### Ansible-based operators
-
-This is the case of testpmd-operator and trex-operator.
-
-Base structure for each case is achieved with the following commands, then it's just a matter of accommodating the required code for each operator in the corresponding files and folders:
-
-- testpmd-operator
-
-```
-$ mkdir testpmd-operator; cd testpmd-operator
-$ operator-sdk init --domain openshift.io --plugins ansible
-$ operator-sdk create api --version v1 --generate-role --group examplecnf --kind TestPMD
-```
-
-- trex-operator
-
-```
-$ mkdir trex-operator; cd trex-operator
-$ operator-sdk init --domain openshift.io --plugins ansible
-$ operator-sdk create api --version v1 --generate-role --group examplecnf --kind TRexApp
-$ operator-sdk create api --version v1 --generate-role --group examplecnf --kind TRexConfig
-```
-
-### Go-based operators
-
-This is the case of cnf-app-mac-operator.
-
-Base structure for this case is achieved with the following commands, then it's just a matter of accommodating the required code for the operator in the corresponding files and folders:
-
-- cnf-app-mac-operator
-
-For operator-sdk v1.38.0, you need to have installed the same Go version used in operator-sdk, which is at least Go 1.22.5+.
-
-```
-$ operator-sdk version
-operator-sdk version: "v1.38.0", commit: "0735b20c84e5c33cda4ed87daa3c21dcdc01bb79", kubernetes version: "1.30.0", go version: "go1.22.5", GOOS: "linux", GOARCH: "amd64"
-```
-
-Create the project structure and the CNFAppMac API:
-
-```
-$ mkdir cnf-app-mac-operator; cd cnf-app-mac-operator
-$ operator-sdk init --domain openshift.io --repo github.com/openshift-kni/example-cnf/tree/main/cnf-app-mac-operator
-$ operator-sdk create api --version v1 --group examplecnf --kind CNFAppMac --controller --resource
-```
-
-At this point, remove RBAC resource creation in Makefile > manifests task. Then, review cmd/main.go and api/v1/cnfappmac_types.go, then run:
-
-```
-$ make generate
-$ make manifests 
-```
-
-Create webhook and certmanager:
-
-```
-$ operator-sdk create webhook --version v1 --group examplecnf --kind CNFAppMac --defaulting --programmatic-validation
-```
-
-Review the generated files properly, then:
-
-```
-$ make manifests
-```
-
-Comment webhook references in PROJECT and cmd/main.go files (older versions were not using this), review internal/controller/cnfappmac_controller.go and review the rest of files.
-
-To conclude, build the main.go file to check it's working fine:
-
-```
-$ go build cmd/main.go
-```
+- Ansible-based operators: this is the case of [testpmd-operator](testpmd-operator/README.md#how-to-build-the-operator) and [trex-operator](trex-operator/README.md#how-to-build-the-operator).
+- Go-based operators: this is the case of [cnf-app-mac-operator](cnf-app-mac-operator/README.md#how-to-build-the-operator).
 
 ## Pod affinity rules
 
@@ -272,23 +179,6 @@ $ ip -s -d link show dev ens2f0
 ## Utils
 
 Under [utils](utils) folder, you can find some utilities included in Example CNF to extend the functionalities offered by the tool.
-
-- [webserver.go](utils/webserver.go): a Golang-based webserver to implement liveness, readiness and startup probes in the container images offered in [testpmd-container-app](testpmd-container-app) and [trex-container-app](trex-container-app) folders. The Makefiles offered in these directories take care of copying the webserver code from the utils directory to each image's directory.
-- [required-annotations.yaml](utils/required-annotations.yaml): annotations to be appended to the CSVs to pass Preflight's RequiredAnnotations tests. They are appended automatically thanks to the Makefile tasks from each operator.
-- [support-images](support_images): projects where you can find the Dockerfile required to build some of the images used as build images by the Example CNF images. These images can be found on quay.io/rh-nfv-int and they are publicly available, you only need credentials to access quay.io. The images can be built with the following commands (you need to run it in a RHEL host with a valid RHEL subscription to be able to download the packages installed in the images, and you need a valid quay.io credentials to push it to quay.io):
-
-```
-# build images
-$ cd utils/support-images
-$ podman build dpdk-23.11 -f dpdk-23.11/Dockerfile -t "quay.io/rh-nfv-int/dpdk-23.11:v0.0.1"
-$ podman build ubi8-base-testpmd -f ubi8-base-testpmd/Dockerfile -t "quay.io/rh-nfv-int/ubi8-base-testpmd:v0.0.1"
-$ podman build ubi8-base-trex -f ubi8-base-trex/Dockerfile -t "quay.io/rh-nfv-int/ubi8-base-trex:v0.0.1"
-
-# push images (to quay.io/rh-nfv-int)
-$ podman push quay.io/rh-nfv-int/dpdk-23.11:v0.0.1
-$ podman push quay.io/rh-nfv-int/ubi8-base-testpmd:v0.0.1
-$ podman push quay.io/rh-nfv-int/ubi8-base-trex:v0.0.1
-```
 
 ## Acknowledgements
 
