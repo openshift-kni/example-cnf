@@ -1,3 +1,0 @@
-k8s.v1.cni.cncf.io/networks="[ { \"name\": \"vfdpdk1\", \"mac\": \"20:04:0f:f1:89:01\", \"namespace\": \"example-cnf\" },  { \"name\": \"vfdpdk2\", \"mac\": \"20:04:0f:f1:89:02\", \"namespace\": \"example-cnf\" }        ]"                           
-kubernetes.io/config.seen="2020-07-22T13:10:35.720154784Z"
-kubernetes.io/config.source="api"
