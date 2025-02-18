@@ -174,10 +174,10 @@ class STLS1(object):
             self.start_stats_monitor()
 
             # block until done, having a timeout that expires after reaching the specified duration (if provided)
-            # with 1 second delay waiying after last packet is sent
+            # with some delay waiting after last packet is sent, which is the 10% of the duration.
             if self.duration != -1:
                 try:
-                    self.client.wait_on_traffic(ports=self.ports, timeout=self.duration, rx_delay_ms=1000)
+                    self.client.wait_on_traffic(ports=self.ports, timeout=self.duration, rx_delay_ms=self.duration*1000/10)
                 except TRexTimeoutError as e:
                     log.info("Reached timeout, job will finish")
                     log.info(e)
