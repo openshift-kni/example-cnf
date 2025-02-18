@@ -96,10 +96,10 @@ spec:
         terminationMessagePolicy: FallbackToLogsOnError
         resources:
           limits:
-            cpu: 1
-            memory: 512Mi
+            cpu: 500m
+            memory: 768Mi
           requests:
             cpu: 10m
-            memory: 64Mi
+            memory: 256Mi
       serviceAccountName: controller-manager
       terminationGracePeriodSeconds: 10
