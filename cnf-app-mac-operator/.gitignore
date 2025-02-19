@@ -25,7 +25,3 @@ go.work
 *.swp
 *.swo
 *~
-
-*sync.sh
-build.sh
-bundle*
