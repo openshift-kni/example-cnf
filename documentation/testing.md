@@ -4,7 +4,9 @@ In this document, we will show you how to test Example CNF using [Distributed-CI
 
 For this to work, we will assume that we have an OCP cluster up and running that meets the [pre-requirements](../README.md#pre-requirements) to launch Example CNF, and that all DCI tools (`dci-openshift-agent`, `dci-openshift-app-agent` and `dci-pipeline`) are installed in a jumphost server which has access to the OCP cluster.
 
-You can use the Ansible playbooks and roles at <https://github.com/redhatci/ansible-collection-redhatci-ocp/blob/main/roles/example_cnf_deploy/README.md> to automate the use of the Example CNF.
+You can use the Ansible playbooks and roles from [example_cnf_deploy role](https://github.com/redhatci/ansible-collection-redhatci-ocp/blob/main/roles/example_cnf_deploy/README.md) to automate the use of the Example CNF.
+
+> All test cases referenced in this documentation are supposed to be launched from stable code. If you need to test a PR created on this project or related projects (e.g. ansible-collection-redhatci-ocp), you can use [`dci-pipeline-check`](https://docs.distributed-ci.io/dci-pipeline/#dci-pipeline-check) instead. For this to work, if the change(s) to address include(s) a PR from this repository, you need to wait until the Github action that builds the example-cnf images finishes, else the DCI job will not use the code that you are proposing on the PR.
 
 ## Pipeline configuration
 
@@ -141,7 +143,11 @@ $ DCI_QUEUE_RESOURCE=mycluster dci-pipeline-schedule example-cnf
 
 This is an example of a [job](https://www.distributed-ci.io/jobs/0ae26cc0-41b8-4f1b-86ce-1cbaf3a512b9/jobStates) launched with this pipeline.
 
-> This job launches more test cases, related to Red Hat certification, that are out of the scope of this documentation.
+> This job launches more test cases, related to Red Hat certification, that are out of the scope of this documentation. If you have defined the configuration to run these certification tests and you don't want to run them, you can skip them with the following Ansible extra vars (just append them at the end of your call to `dci-pipeline`):
+
+```
+example-cnf:ansible_extravars=check_workload_api:false example-cnf:ansible_extravars=do_certsuite:false example-cnf:ansible_extravars=certify_operators:false example-cnf:ansible_extravars=tests_to_verify:[]
+```
 
 ### Check the pods
 
@@ -312,6 +318,8 @@ Port statistics ====================================
   Tx-pps:            0          Tx-bps:            0
   ############################################################################
 ```
+
+All these logs are gathered in a file called `example-cnf-results.log`.
 
 ## Troubleshooting mode scenario
 
