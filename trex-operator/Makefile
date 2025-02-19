@@ -7,7 +7,7 @@ VERSION ?= 0.2.25
 
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
-OPERATOR_SDK_VER ?= 1.38.0
+OPERATOR_SDK_VER ?= 1.39.1
 
 # Other custom variables
 SHELL                       := /bin/bash
@@ -20,9 +20,9 @@ DEFAULT_CHANNEL             ?= alpha
 CONTAINER_CLI               ?= podman
 CLUSTER_CLI                 ?= oc
 OPERATOR_NAME               := trex-operator
-KUSTOMIZE_VER               := 5.4.2
+KUSTOMIZE_VER               := 5.4.3
 OPM_VER                     := 1.23.0
-ANSIBLE_OPERATOR_PLUGIN_VER := 1.36.1
+ANSIBLE_OPERATOR_PLUGIN_VER := 1.37.1
 TREX_VER                    ?= v$(shell bash -c '. ../versions.cfg; echo "$${VERSIONS[trex-container-app]}"')
 
 # CHANNELS define the bundle channels used in the bundle.
