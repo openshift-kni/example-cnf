@@ -1,4 +1,4 @@
-FROM quay.io/operator-framework/ansible-operator:v1.36.1
+FROM quay.io/operator-framework/ansible-operator:v1.37.1
 
 LABEL name="NFV Example CNF Application Opertor" \
       maintainer="telcoci" \
