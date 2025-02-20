@@ -1,6 +1,6 @@
 module github.com/openshift-kni/example-cnf/tree/main/cnf-app-mac-operator
 
-go 1.22.0
+go 1.24.0
 
 require (
 	github.com/onsi/ginkgo/v2 v2.19.0
@@ -12,7 +12,7 @@ require (
 )
 
 require (
-	github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.13.0 // indirect
+	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
