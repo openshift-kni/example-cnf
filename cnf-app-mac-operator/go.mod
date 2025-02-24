@@ -1,6 +1,6 @@
 module github.com/openshift-kni/example-cnf/tree/main/cnf-app-mac-operator
 
-go 1.22.0
+go 1.24.0
 
 require (
 	github.com/onsi/ginkgo/v2 v2.19.0
