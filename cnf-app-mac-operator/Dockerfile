@@ -37,7 +37,6 @@ LABEL name="NFV Example CNF App MAC Operator" \
       description="An example CNF for platform validation"
 
 COPY licenses /licenses
-RUN go mod tidy
 WORKDIR /
 COPY --from=builder /workspace/manager .
 USER 65532:65532
