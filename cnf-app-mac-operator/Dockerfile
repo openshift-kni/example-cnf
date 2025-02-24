@@ -1,6 +1,6 @@
 # Build the manager binary
 # (operator-sdk v1.38.0 uses golang:1.22 as builder, but we'll use docker.io/library/golang:1.23)
-FROM docker.io/library/golang:1.23 as builder
+FROM docker.io/library/golang:1.24 as builder
 ARG TARGETOS
 ARG TARGETARCH
 
