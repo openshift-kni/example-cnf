@@ -31,8 +31,8 @@ FROM registry.access.redhat.com/ubi8/ubi:latest
 LABEL name="NFV Example CNF App MAC Operator" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.22" \
-      release="v0.2.22" \
+      version="v0.2.23" \
+      release="v0.2.23" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 
@@ -43,3 +43,4 @@ COPY --from=builder /workspace/manager .
 USER 65532:65532
 
 ENTRYPOINT ["/manager"]
+RUN go mod tidy
