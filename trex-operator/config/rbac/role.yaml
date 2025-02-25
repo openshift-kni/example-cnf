@@ -71,6 +71,7 @@ rules:
     resources:
       - trexconfigs
       - trexconfigs/status
+      - trexconfigs/finalizers
     verbs:
       - create
       - delete
