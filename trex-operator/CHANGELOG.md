@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.26] - 2025-02-20
+
+- Updated OperatorSDK to v1.39.1
+- Updated Kustomize to v5.4.3
+- Updated Ansible operator to v1.37.1
+
 ## [0.2.25] - 2025-01-20
 
 - Allow to enable/disable the deployment of the test scripts from outside
