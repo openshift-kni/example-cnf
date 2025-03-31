@@ -1,6 +1,6 @@
 FROM registry.access.redhat.com/ubi8/ubi:latest
 
-ENV DPDK_VER=23.11
+ENV DPDK_VER=24.11
 ENV DPDK_DIR=/usr/src/dpdk-${DPDK_VER}
 
 # Install prerequisite packages

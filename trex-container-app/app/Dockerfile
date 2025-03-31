@@ -10,22 +10,22 @@ FROM registry.access.redhat.com/ubi8/python-311:latest
 LABEL name="NFV Example TRexApp Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.15" \
-      release="v0.2.15" \
+      version="v0.2.16" \
+      release="v0.2.16" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 
 COPY licenses /licenses
 
-ENV TREX_VER v2.85
+ENV TREX_VER v3.06
 ENV TREX_REPO https://github.com/cisco-system-traffic-generator/trex-core.git
-ENV TRAFFICGEN_REPO https://github.com/atheurer/trafficgen
+ENV TRAFFICGEN_REPO https://github.com/perftool-incubator/bench-trafficgen
 
 USER root
 
 RUN yum install -y nc && yum clean all
 RUN mkdir -p /opt/trex && cd /opt/trex && git clone --branch ${TREX_VER}  ${TREX_REPO}
-RUN cd /opt && git clone  ${TRAFFICGEN_REPO}
+RUN cd /opt && git clone ${TRAFFICGEN_REPO} && mv bench-trafficgen/trafficgen . && rm -rf bench-trafficgen
 RUN pip3 install pyyaml kubernetes
 
 ENV PYTHONPATH="/opt/trex/trex-core/scripts/automation/trex_control_plane/interactive"
