@@ -1,5 +1,5 @@
 ## Build image
-FROM quay.io/rh-nfv-int/dpdk-23.11:v0.0.1 as build
+FROM quay.io/rh-nfv-int/dpdk:v0.0.1 as build
 
 ## Image to build webserver
 FROM docker.io/library/golang:1.23 as build2
@@ -15,8 +15,8 @@ FROM quay.io/rh-nfv-int/ubi8-base-testpmd:v0.0.1
 LABEL name="NFV Example CNF Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.16" \
-      release="v0.2.16" \
+      version="v0.2.17" \
+      release="v0.2.17" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 

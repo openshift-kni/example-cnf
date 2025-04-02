@@ -9,12 +9,12 @@ Here, you can find some utilities included in Example CNF to extend the function
 ```
 # build images
 $ cd support-images
-$ podman build dpdk-23.11 -f dpdk-23.11/Dockerfile -t "quay.io/rh-nfv-int/dpdk-23.11:v0.0.1"
+$ podman build dpdk -f dpdk/Dockerfile -t "quay.io/rh-nfv-int/dpdk:v0.0.1"
 $ podman build ubi8-base-testpmd -f ubi8-base-testpmd/Dockerfile -t "quay.io/rh-nfv-int/ubi8-base-testpmd:v0.0.1"
 $ podman build ubi8-base-trex -f ubi8-base-trex/Dockerfile -t "quay.io/rh-nfv-int/ubi8-base-trex:v0.0.1"
 
 # push images (to quay.io/rh-nfv-int)
-$ podman push quay.io/rh-nfv-int/dpdk-23.11:v0.0.1
+$ podman push quay.io/rh-nfv-int/dpdk:v0.0.1
 $ podman push quay.io/rh-nfv-int/ubi8-base-testpmd:v0.0.1
 $ podman push quay.io/rh-nfv-int/ubi8-base-trex:v0.0.1
 ```

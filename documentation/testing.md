@@ -394,26 +394,21 @@ EAL: Selected IOVA mode 'VA'
 EAL: 8000 hugepages of size 2097152 reserved, but no mounted hugetlbfs found for that size
 EAL: VFIO support initialized
 EAL: Using IOMMU type 1 (Type 1)
-EAL: Probe PCI driver: net_iavf (8086:154c) device: 0000:86:02.7 (socket 1)
-EAL: Probe PCI driver: net_iavf (8086:154c) device: 0000:86:03.6 (socket 1)
-TELEMETRY: No legacy callbacks, legacy socket not created
 Interactive-mode selected
 Set mac packet forwarding mode
 testpmd: create a new mbuf pool <mb_pool_1>: n=163456, size=2176, socket=1
 testpmd: preferred mempool ops selected: ring_mp_mc
 Configuring Port 0 (socket 1)
-iavf_dev_init_vlan(): Failed to update vlan offload
-iavf_dev_configure(): configure VLAN failed: -95
-iavf_set_rx_function(): request RXDID[1] in Queue[0] is legacy, set rx_pkt_burst as legacy for all queues
-
+IAVF_DRIVER: iavf_set_rx_function(): request RXDID[1] in Queue[0] is legacy, set rx_p[70/144]
+ as legacy for all queues  
+ 
 Port 0: link state change event
 
 Port 0: link state change event
 Port 0: 80:04:0F:F1:89:01
 Configuring Port 1 (socket 1)
-iavf_dev_init_vlan(): Failed to update vlan offload
-iavf_dev_configure(): configure VLAN failed: -95
-iavf_set_rx_function(): request RXDID[1] in Queue[0] is legacy, set rx_pkt_burst as legacy for all queues
+IAVF_DRIVER: iavf_set_rx_function(): request RXDID[1] in Queue[0] is legacy, set rx_pkt_burst
+ as legacy for all queues
 
 Port 1: link state change event
 
@@ -657,7 +652,7 @@ Acquiring ports [0, 1]:                                      [SUCCESS]
 
 Server Info:
 
-Server version:   v2.85 @ STL
+Server version:   v3.06 @ STL
 Server mode:      Stateless
 Server CPU:       4 x Intel(R) Xeon(R) Gold 6248R CPU @ 3.00GHz
 Ports count:      2 x 10.0Gbps @ Unknown	
