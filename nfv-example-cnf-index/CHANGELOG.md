@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.3.8] - 2025-04-16
+
+- Include grout-operator
+
 ## [0.3.7] - 2024-12-04
 
 - Remove reference to testpmd-lb-operator

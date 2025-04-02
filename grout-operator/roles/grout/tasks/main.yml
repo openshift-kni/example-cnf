@@ -1,0 +1,76 @@
+---
+# tasks file for Grout
+- set_fact:
+    network_resources: {}
+    network_name_list: []
+
+- name: print network list
+  debug:
+    var: networks
+
+- name: print resource list
+  debug:
+    var: resources
+
+- name: Check if networks parameter is empty
+  fail:
+    msg: "networks or resources parameter is required"
+  when:
+    - networks|length == 0
+    - resources|length == 0
+
+- name: "Parse network"
+  include_tasks: network-parse.yaml
+  when: networks|default([])|length > 0
+  loop: "{{ networks }}"
+  loop_control:
+    loop_var: network_item
+
+- name: print network_resources after parsing networks
+  debug:
+    var: network_resources
+
+- name: print network_name_list after parsing networks
+  debug:
+    var: network_name_list
+
+- name: "Parse resources if defined and when sriov network is not defined"
+  set_fact:
+    network_resources: "{{ network_resources | combine({item.name: item.count}) }}"
+  loop: "{{ resources }}"
+  when:
+    - networks|default([])|length == 0
+    - resources|default([])|length > 0
+
+- name: print network resources map
+  debug:
+    var: network_resources
+
+- name: Create ServiceAccount for Grout resource
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'service_account.yml') }}"
+
+- name: Create Role for Grout resource
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'role.yml') }}"
+
+- name: Create RoleBinding for Grout resource
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'role_binding.yml') }}"
+
+- name: Create Grout deployment
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'deployment.yml') }}"
+
+# if replica = 1, recommended not to set maxUnavailable to 0 or 0% and minAvailable to 100% for upgrades
+# https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/design/adding-pod-disruption-budgets.md#limitations-on-pod-disruption-budgets
+# TODO (in a new patch): update PDB during upgrades to avoid issues during node draining, something like:
+# https://medium.com/@tamber/solution-avoid-kubernetes-openshift-node-drain-failure-due-to-active-poddisruptionbudget-df68efed2c4f
+- name: Create PodDisruptionBudget for TestPMD pod
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'pdb.yml') }}"

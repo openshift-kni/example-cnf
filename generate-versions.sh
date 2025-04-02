@@ -10,12 +10,13 @@ fi
 VERSIONS="$1"
 EXTRA="$2"
 
-DIRS="testpmd-container-app trex-container-app cnf-app-mac-operator testpmd-operator trex-operator nfv-example-cnf-index"
+DIRS="testpmd-container-app trex-container-app grout-container-app cnf-app-mac-operator testpmd-operator trex-operator grout-operator nfv-example-cnf-index"
 
 FILES="$(git diff --name-only -r origin/${GITHUB_BASE_REF:-main}:|grep -Fv /.git || :)"
 
 TESTPMD_APP=false
 TREX_APP=false
+GROUT_APP=false
 
 echo "declare -A VERSIONS" > "$VERSIONS"
 
@@ -35,6 +36,11 @@ for d in $DIRS; do
                 force=true
             fi
             ;;
+        grout-operator)
+            if [ "$GROUT_APP" == true ]; then
+                force=true
+            fi
+            ;;
     esac
     # Force nfv-example-cnf-index to be displayed if at least one
     # change to the subdirs has been detected. This will force the
@@ -48,6 +54,9 @@ for d in $DIRS; do
         fi
         if [ "$d" == trex-container-app ]; then
             TREX_APP=true
+        fi
+        if [ "$d" == grout-container-app ]; then
+            GROUT_APP=true
         fi
     else
         echo "VERSIONS[$d]=$vers" >> "$VERSIONS"

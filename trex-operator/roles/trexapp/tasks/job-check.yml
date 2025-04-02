@@ -23,6 +23,33 @@
 - name: trexapp job creation
   when: "active_jobs|int == 0"  
   block:
+
+    - name: initialize trex_ip_list var
+      set_fact:
+        trex_ip_list: ""
+
+    - name: construct trex_ip_list
+      set_fact:
+        trex_ip_list: "{{ trex_ip_list }}{{ item }},"
+      loop: "{{ trex_ips }}"
+
+    - name: print trex_ip_list
+      debug:
+        var: trex_ip_list
+
+    - name: initialize cnfapp_ip_list var
+      set_fact:
+        cnfapp_ip_list: ""
+
+    - name: construct cnfapp_ip_list
+      set_fact:
+        cnfapp_ip_list: "{{ cnfapp_ip_list }}{{ item }},"
+      loop: "{{ cnfapp_ips }}"
+
+    - name: print cnfapp_ip_list
+      debug:
+        var: cnfapp_ip_list
+
     - name: Create ServiceAccount for trexapp job resource
       kubernetes.core.k8s:
         state: present

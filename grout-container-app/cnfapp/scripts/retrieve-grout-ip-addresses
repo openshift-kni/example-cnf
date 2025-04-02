@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+
+import os
+import yaml
+import sys
+
+from kubernetes import client, config
+from kubernetes.client.rest import ApiException
+
+
+CFG_FILE = "/usr/local/bin/example-cnf/run/grout.init"
+
+def main():
+    # try to retrieve the source network information from file saving pod annotations
+    src_ip = []
+    network_annotation = get_src_network_annotation()
+    if network_annotation:
+        src_ip = get_src_ip(network_annotation)
+        if not src_ip:
+            print("ERROR: Source IP addresses are not available, exiting...")
+            sys.exit(1)
+    else:
+        print("ERROR: Source IP addresses are not available, exiting...")
+        sys.exit(1)
+
+    # Append IP addresses to the current content
+    with open(CFG_FILE, "a") as f:
+        f.write("\n")
+        for idx in range(len(src_ip)):
+            f.write("add ip address " + src_ip[idx] + " iface p" + str(idx) + "\n")
+
+def get_src_network_annotation():
+    # object to return
+    obj = []
+    podinfo = "/etc/podnetinfo/annotations"
+    if os.path.exists(podinfo):
+        print("get_src_network_annotation - annotations file found")
+        with open(podinfo) as f:
+            for line in f:
+                name, var = line.partition("=")[::2]
+                if name == "k8s.v1.cni.cncf.io/networks":
+                    obj = yaml.safe_load(yaml.safe_load(var))
+                    print("get_src_network_annotation - netinfo found")
+    return obj
+
+def get_src_ip(network_annotation):
+    # object to return
+    ips = []
+    for item in network_annotation:
+        print(item)
+        if 'ips' in item:
+            # assuming there's only one IP address per interface
+            ips.append(item['ips'][0])
+    print("get_src_ip - IPs found:", ','.join(ips))
+    return ips
+
+###########################
+
+if __name__ == "__main__":
+    main()

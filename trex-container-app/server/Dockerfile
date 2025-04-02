@@ -11,8 +11,8 @@ FROM quay.io/rh-nfv-int/ubi8-base-trex:v0.0.1
 LABEL name="NFV Example TRexServer Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.16" \
-      release="v0.2.16" \
+      version="v0.2.17" \
+      release="v0.2.17" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 

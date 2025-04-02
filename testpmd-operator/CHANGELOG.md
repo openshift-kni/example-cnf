@@ -1,9 +1,14 @@
 # Change Log
+
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
-## [0.2.23] - 2025-02-24
+## [0.2.26] - 2025-04-16
+
+- Include support of L3 configuration
+
+## [0.2.25] - 2025-02-24
 
 - Updated OperatorSDK to v1.39.1
 - Updated Kustomize to v5.4.3

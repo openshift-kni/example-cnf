@@ -31,8 +31,8 @@ FROM registry.access.redhat.com/ubi8/ubi:latest
 LABEL name="NFV Example CNF App MAC Operator" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.23" \
-      release="v0.2.23" \
+      version="v0.2.24" \
+      release="v0.2.24" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 

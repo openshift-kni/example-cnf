@@ -7,6 +7,8 @@ import sys
 sys.path.append(os.path.abspath("/opt/pyfiles/"))
 
 from trex.stl.api import *
+from trex.common.services.trex_service import Service
+from trex.common.services.trex_service_arp import ServiceARP
 
 import subprocess
 import signal
@@ -26,11 +28,15 @@ clog = CustomLogger("debug")
 
 
 class STLS1(object):
-    def __init__ (self, ports, size, rate, profile=None, duration=-1, verbose="debug"):
+    def __init__ (self, ports, size, rate, trex_ip_list, cnfapp_ip_list, arp_resolution,
+                  profile=None, duration=-1, verbose="debug"):
         self.server_url = os.environ.get("TREX_SERVER_URL", "localhost")
         self.client = STLClient(verbose_level=verbose, logger=clog, server=self.server_url)
         self.fsize = 64
         self.profile = profile
+        self.trex_ip_list = trex_ip_list
+        self.cnfapp_ip_list = cnfapp_ip_list
+        self.arp_resolution = arp_resolution
         self.pg_id = 0
         self.pkt_type = "ether"
         self.num_streams = 1
@@ -71,7 +77,8 @@ class STLS1(object):
         for idx in range(0, len(self.ports)):
             self.add_streams(self.ports[idx], macs[idx])
         log.info("staring ports")
-        self.client.start(ports=self.ports, mult=self.rate, duration=self.duration, core_mask=STLClient.CORE_MASK_PIN)
+        self.client.start(ports=self.ports, mult=self.rate, duration=self.duration,
+                          core_mask=STLClient.CORE_MASK_PIN)
         data = {}
         now = datetime.now()
         data['microtime'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
@@ -81,28 +88,33 @@ class STLS1(object):
         trexevent.create_event(data)
 
     def create_vm(self, direction=0):
-        ip_range = {'src': {'start': "18.0.0.1", 'end': "18.0.0.254"},
-                    'dst': {'start': "8.0.0.1",  'end': "8.0.0.254"}}
+        ip_port_0="18.0.0.1"
+        ip_port_1="8.0.0.1"
 
+        # use the IP address extracted from env var if provided
+        if len(self.trex_ip_list) > 0:
+            ip_port_0=self.trex_ip_list[0]
+            ip_port_1=self.trex_ip_list[1]
+
+        # Followed the philosophy of this example:
+        # https://github.com/cisco-system-traffic-generator/trex-core/blob/v3.06/scripts/stl/udp_1pkt_simple_bdir.py
         if (direction == 0):
-            src = ip_range['src']
-            dst = ip_range['dst']
+            src = ip_port_0
+            dst = ip_port_1
         else:
-            src = ip_range['dst']
-            dst = ip_range['src']
+            src = ip_port_1
+            dst = ip_port_0
 
         vm = [
             # src                                                            (4)
             STLVmFlowVar(name="src",
-                         min_value=src['start'],
-                         max_value=src['end'],
+                         value_list=[src],
                          size=4,op="inc"),
             STLVmWrFlowVar(fv_name="src",pkt_offset= "IP.src"),
 
             # dst
             STLVmFlowVar(name="dst",
-                         min_value=dst['start'],
-                         max_value=dst['end'],
+                         value_list=[dst],
                          size=4,op="inc"),
             STLVmWrFlowVar(fv_name="dst",pkt_offset= "IP.dst"),
 
@@ -122,7 +134,8 @@ class STLS1(object):
 
         streams = []
         for pg_id_add in range(0, self.num_streams):
-            streams.append(STLStream(packet = pkt, mode = STLTXCont(pps=1), flow_stats = STLFlowStats(pg_id = self.pg_id + pg_id_add)))
+            streams.append(STLStream(packet = pkt, mode = STLTXCont(pps=1),
+                                     flow_stats = STLFlowStats(pg_id = self.pg_id + pg_id_add)))
         return streams
 
     def add_streams(self, port, dest_mac):
@@ -144,6 +157,54 @@ class STLS1(object):
             for idx in range(0, len(self.ports)):
                 self.add_streams(self.ports[idx], None)
 
+    def run_arp_resolution(self, direction=0):
+        ip_port_0="18.0.0.1"
+        ip_port_1="8.0.0.1"
+        gw_port_0="18.0.0.2"
+        gw_port_1="8.0.0.2"
+
+        # use the IP address extracted from env var if provided
+        if len(self.trex_ip_list) > 0:
+            ip_port_0=self.trex_ip_list[0]
+            ip_port_1=self.trex_ip_list[1]
+
+        if len(self.cnfapp_ip_list) > 0:
+            gw_port_0=self.cnfapp_ip_list[0]
+            gw_port_1=self.cnfapp_ip_list[1]
+
+        # Followed the philosophy of this example:
+        # https://github.com/cisco-system-traffic-generator/trex-core/blob/v3.06/scripts/stl/udp_1pkt_simple_bdir.py
+        if (direction == 0):
+            src = ip_port_0
+            gw = gw_port_0
+        else:
+            src = ip_port_1
+            gw = gw_port_1
+
+        try:
+            # Firstly enable service mode so that ARP exchange can be done, else TRex will reject the packet
+            self.client.set_service_mode(ports=[direction], enabled=True)
+
+            # Create and send the ARP packet
+            ctx = self.client.create_service_ctx(port=direction)
+            resolv = ServiceARP(
+                ctx,
+                dst_ip=str(gw),
+                src_ip=str(src),
+                verbose_level=Service.INFO,
+            )
+            ctx.run(resolv)
+
+            # Confirm it worked
+            record = resolv.get_record()
+            if not record:
+                raise ValueError(f"gateway IP {gw} not resolved")
+            gw_mac = record.dst_mac
+            log.info("Retrieved MAC address - %s" % gw_mac)
+        finally:
+            # Disable service mode, so that it does not impact in performance during testing
+            self.client.set_service_mode(ports=[direction], enabled=False)
+
     def simple_burst(self):
         passed = True
         try:
@@ -152,6 +213,14 @@ class STLS1(object):
 
             # prepare our ports
             self.client.reset(ports = self.ports)
+
+            # exchange ARP packets so that both endpoints knows how to associate IP-MAC addresses
+            if self.arp_resolution == 1:
+                log.info("Starting ARP resolution")
+                for idx in range(0, len(self.ports)):
+                    self.run_arp_resolution(self.ports[idx])
+            else:
+                log.info("No ARP resolution will be run")
 
             self.init_streams()
 
@@ -177,7 +246,8 @@ class STLS1(object):
             # with some delay waiting after last packet is sent, which is the 10% of the duration.
             if self.duration != -1:
                 try:
-                    self.client.wait_on_traffic(ports=self.ports, timeout=self.duration, rx_delay_ms=self.duration*1000/10)
+                    self.client.wait_on_traffic(ports=self.ports, timeout=self.duration,
+                                                rx_delay_ms=self.duration*1000/10)
                 except TRexTimeoutError as e:
                     log.info("Reached timeout, job will finish")
                     log.info(e)
@@ -189,7 +259,8 @@ class STLS1(object):
             # read the stats after the test
             stats = self.client.get_stats()
             warnings = self.client.get_warnings()
-            passed = trexstats.completed_stats(stats, warnings, self.port_a, self.port_b, self.profile, self.rate, self.duration)
+            passed = trexstats.completed_stats(stats, warnings, self.port_a, self.port_b, self.profile,
+                                               self.rate, self.duration)
 
         except STLError as e:
             passed = False
@@ -221,6 +292,11 @@ def main():
     packet_rate = os.getenv("PACKET_RATE") or os.getenv("packet_rate") or "10pps"
     duration = os.getenv("DURATION") or os.getenv("duration") or -1
     profile = os.environ.get("TREX_PROFILE_NAME")
+    raw_trex_ip_list = os.environ.get("trex_ip_list")
+    raw_cnfapp_ip_list = os.environ.get("cnfapp_ip_list")
+    arp_resolution = int(os.getenv("arp_resolution")) or 0
+    trex_ip_list = []
+    cnfapp_ip_list = []
     if duration != -1:
         duration = int(duration)
     log.info("Starting burst...")
@@ -229,10 +305,27 @@ def main():
     log.info("Job Duration - %s" % duration)
     if profile:
         log.info("TRex profile - %s" % profile)
+    if raw_trex_ip_list:
+        processed_trex_ip_list = raw_trex_ip_list.split(',')
+        # if we provide IP addresses, then let's include them in the list, else it will be empty
+        if processed_trex_ip_list[0] != "":
+            for ip in processed_trex_ip_list:
+                # and remove network mask
+                trex_ip_list.append(ip.split('/')[0])
+        log.info("TRex IP list - %s" % trex_ip_list)
+    if raw_cnfapp_ip_list:
+        processed_cnfapp_ip_list = raw_cnfapp_ip_list.split(',')
+        # if we provide IP addresses, then let's include them in the list, else it will be empty
+        if processed_cnfapp_ip_list[0] != "":
+            for ip in processed_cnfapp_ip_list:
+                # and remove network mask
+                cnfapp_ip_list.append(ip.split('/')[0])
+        log.info("TRex IP list - %s" % cnfapp_ip_list)
     if duration == -1:
         log.info("Packets will be generated forever...")
     try:
-        obj = STLS1(ports = [0, 1], size=packet_size, rate=packet_rate, duration=duration, profile=profile)
+        obj = STLS1(ports = [0, 1], size=packet_size, rate=packet_rate, duration=duration, profile=profile,
+                    trex_ip_list=trex_ip_list, cnfapp_ip_list=cnfapp_ip_list, arp_resolution=arp_resolution)
         obj.simple_burst()
     except Exception as e:
         log.exception("failed to start burst: %s" % e)

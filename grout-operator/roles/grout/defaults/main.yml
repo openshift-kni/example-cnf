@@ -1,0 +1,26 @@
+---
+# defaults file for Grout
+# this image is not hardcoded - they are replaced by the grout-operator Makefile launched by the Github actions defined for this repo
+# https://github.com/openshift-kni/example-cnf/blob/main/grout-operator/Makefile - See "ensure_digests" task
+# TODO update with a valid SHA once merged
+image_grout: "quay.io/rh-nfv-int/grout-container-app-cnfapp@sha256:c0cbe35d7e97034b5f2243d12e84408864cb90ce3c3953328e4295e9efe48eef" # v0.2.0
+
+size: 1
+skip_annot: false
+
+# PCI devices to be used during execution should be obtained from these networks
+# Grout application entrypoint script should get PCI and then run Grout execution
+networks: []
+
+image_pull_policy: IfNotPresent
+privileged: false
+hugepage_1gb_count: 4Gi
+memory: 1000Mi
+cpu: 4
+
+network_resources: {}
+resources: []
+ethpeer_maclist: []
+environments: {}
+
+rx_queues: 2

@@ -1,0 +1,23 @@
+# permissions for end users to view grouts.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: grout-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: grout-viewer-role
+rules:
+- apiGroups:
+  - examplecnf.openshift.io
+  resources:
+  - grouts
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - examplecnf.openshift.io
+  resources:
+  - grouts/status
+  verbs:
+  - get

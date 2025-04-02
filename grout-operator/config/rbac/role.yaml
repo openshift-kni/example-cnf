@@ -1,0 +1,116 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+  ##
+  ## Base operator rules
+  ##
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+      - pods
+      - pods/exec
+      - pods/log
+      - configmaps
+      - lists
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+      - daemonsets
+      - replicasets
+      - statefulsets
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - policy
+    resources:
+      - poddisruptionbudgets
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  ##
+  ## Rules for examplecnf.openshift.io/v1, Kind: Grout
+  ##
+  - apiGroups:
+      - examplecnf.openshift.io
+    resources:
+      - grouts
+      - grouts/status
+      - grouts/finalizers
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - k8s.cni.cncf.io
+    resources:
+      - network-attachment-definitions
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - security.openshift.io
+    resources:
+      - securitycontextconstraints
+    resourceNames:
+      - privileged
+    verbs:
+      - use
+  ##
+  ## Rules to allow the creation of ServiceAccount, Role and RoleBinding
+  ## for the pods deployed by this operator
+  ##
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - "rbac.authorization.k8s.io"
+    resources:
+      - roles
+      - rolebindings
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+# +kubebuilder:scaffold:rules

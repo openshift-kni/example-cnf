@@ -8,7 +8,7 @@ privileged: false
 network_defintions: ""
 network_resources: {}
 environments: {}
-# these images are not hardcoded - they are replaced by the testpmd-operator Makefile launched by the Github actions defined for this repo
+# this image is not hardcoded - they are replaced by the testpmd-operator Makefile launched by the Github actions defined for this repo
 # https://github.com/openshift-kni/example-cnf/blob/main/testpmd-operator/Makefile - See "ensure_digests" task
 image_testpmd: "quay.io/rh-nfv-int/testpmd-container-app-cnfapp@sha256:c0cbe35d7e97034b5f2243d12e84408864cb90ce3c3953328e4295e9efe48eef" # v0.2.6
 
