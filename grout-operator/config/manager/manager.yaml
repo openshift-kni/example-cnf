@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    control-plane: controller-manager
+    app.kubernetes.io/name: grout-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller-manager
+  namespace: system
+  labels:
+    control-plane: controller-manager
+    app.kubernetes.io/name: grout-operator
+    app.kubernetes.io/managed-by: kustomize
+spec:
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+  replicas: 2
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+      labels:
+        control-plane: controller-manager
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/created-by
+                operator: In
+                values:
+                - grout-operator
+            topologyKey: kubernetes.io/hostname
+      securityContext:
+        runAsNonRoot: true
+      containers:
+      - args:
+        - --leader-elect
+        - --leader-election-id=grout-operator
+        - --health-probe-bind-address=:6789
+        image: controller:latest
+        imagePullPolicy: IfNotPresent
+        name: manager
+        ports:
+        - name: "tcp-tp-int-one"
+          containerPort: 5050
+        - name: "http-probe"
+          containerPort: 6789
+        - name: "http-metric"
+          containerPort: 8080
+        - name: "http-s-metric"
+          containerPort: 8443
+        - name: "tcp-tp-int-two"
+          containerPort: 8888
+        env:
+        - name: ANSIBLE_GATHERING
+          value: explicit
+        lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - "ALL"
+          runAsNonRoot: true
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 6789
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 6789
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        startupProbe:
+            httpGet:
+              path: /healthz
+              port: 6789
+            initialDelaySeconds: 5
+            periodSeconds: 10
+        terminationMessagePolicy: FallbackToLogsOnError
+        resources:
+          limits:
+            cpu: 1
+            memory: 512Mi
+          requests:
+            cpu: 10m
+            memory: 64Mi
+      serviceAccountName: controller-manager
+      terminationGracePeriodSeconds: 10

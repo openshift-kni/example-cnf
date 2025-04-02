@@ -51,6 +51,7 @@ type CNFAppMacReconciler struct {
 // Structures used for building CNFAppMac CR
 type Device struct {
 	Mac string `json:"mac,omitempty"`
+	Ip  string `json:"ip,omitempty"`
 	Pci string `json:"pci,omitempty"`
 }
 
@@ -63,6 +64,7 @@ type Resource struct {
 type NetInfo struct {
 	Name       string
 	Mac        string
+	Ip         string
 	PciAddress string
 }
 
@@ -80,6 +82,7 @@ type DeviceInfo struct {
 type NetStatus struct {
 	Name       string     `json:"name,omitempty"`
 	Mac        string     `json:"mac,omitempty"`
+	Ips        []string   `json:"ips,omitempty"`
 	DeviceInfo DeviceInfo `json:"device-info,omitempty"`
 }
 
@@ -183,14 +186,16 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		netStatusesStr = strings.ReplaceAll(netStatusesStr, "\n", "")
 		log.Info("network-status annotation for pod", "raw-net-status", netStatusesStr)
 
-		// Let's suppose, by default, that MACs are present in the network-status annotation
-		macUsedInNetStatus := true
+		// Let's suppose, by default, that MACs/IPs are present in the network-status annotation
+		netInfoUsedInNetStatus := true
 
-		// In OCP 4.12-13, network-status annotation does not include the "mac" attribute for PCI devices,
-		// even using mac capability. In that case, we'll have to extract the MAC address directly from the testpmd logs.
-		// For that case, the occurence of MAC_KEYWORK must be 0 (or 1 because it appears in ovn-kubernetes interface).
+		// In OCP 4.12-13, network-status annotation does not include the "mac"/"ip" attributes for PCI devices,
+		// even using mac/ip capabilities. In that case, we'll have to extract the MAC address directly from the testpmd logs.
+		// (we don't extract the IP address since it's not used by testpmd).
+		// For that case, the occurence of MAC_KEYWORD must be 0 (or 1 because it appears in ovn-kubernetes interface).
+		// Same happens for "ip" attribute, but since we may be using testpmd, we'll not check it.
 		if strings.Count(netStatusesStr, MAC_KEYWORD) <= 1 {
-			macUsedInNetStatus = false
+			netInfoUsedInNetStatus = false
 		}
 
 		var netStatuses []NetStatus
@@ -202,10 +207,12 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 		// Declare the var that will save the MAC addresses, in default order
 		var macAddresses []string
+		// Declare the var that will save the IP addresses (if provided), in default order
+		var ipAddresses []string
 
 		// Do a first iteration of the netStatuses list to fill in the list declared before
-		// MAC addresses are only retrieved if macUsedInNetStatus value is true
-		if macUsedInNetStatus {
+		// MAC addresses are only retrieved if netInfoUsedInNetStatus value is true
+		if netInfoUsedInNetStatus {
 			for _, netStatus := range netStatuses {
 
 				// Only take the network info if we have a PCI device with a PCI address
@@ -215,11 +222,15 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 					macAddresses = append(macAddresses, netStatus.Mac)
 					log.Info("Adding item to macAddresses", "item", netStatus.Mac)
+					if len(netStatus.Ips) > 0 && netStatus.Ips[0] != "" {
+						ipAddresses = append(ipAddresses, netStatus.Ips[0])
+						log.Info("Adding item to ipAddresses", "item", netStatus.Ips[0])
+					}
 				}
 			}
 		} else {
 
-			// If MACs cannot be extracted from annotations, then extract them from testpmd logs
+			// If MACs cannot be extracted from annotations, then extract them from testpmd logs (cannot be done for grout)
 			macStr, err := getContainerLogValue(podName, namespace)
 			if err != nil {
 				return ctrl.Result{}, err
@@ -247,14 +258,20 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 
 		log.Info("Final status of macAddresses list", "macAddresses", macAddresses)
+		log.Info("Final status of ipAddresses list", "ipAddresses", ipAddresses)
 
 		// Translate each NetStatus into NetInfo structure.
 		// We will follow the same order than the interfaces that appear listed in the annotations.
-		// MAC addresses will be filled according to the order of PCI interfaces that is expected by testpmd.
+		// MAC addresses will be filled according to the order of PCI interfaces that is expected by CNFApp.
 		// If network already exists, just append MAC and PCI address, else add a new element
 
-		// Item to start the iteration of the macAddresses list
+		// Item to start the iteration of the macAddresses list (the length of ipAddresses is the same)
 		macIdx := 0
+		iterateIpAddresses := false
+		// This will help us to determine if we have to iterate over the ipAddresses list or not
+		if len(macAddresses) == len(ipAddresses) {
+			iterateIpAddresses = true
+		}
 		for _, netStatus := range netStatuses {
 
 			// Only take the network info if we have a PCI device with a PCI address
@@ -263,14 +280,20 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 				len(netStatus.DeviceInfo.Pci.PciAddress) > 0 {
 
 				// MAC address is obtained from macAddresses list, according to the order in which
-				// testpmd is handling it.
+				// CNFApp is handling it.
 				macAddress := macAddresses[macIdx]
+				// Do the same for IP address if provided
+				ipAddress := ""
+				if iterateIpAddresses {
+					ipAddress = ipAddresses[macIdx]
+				}
 				macIdx++
 
 				// Extract the data we need
 				var netItem = NetInfo{
 					Name:       strings.Split(netStatus.Name, "/")[1],
 					Mac:        macAddress,
+					Ip:         ipAddress,
 					PciAddress: netStatus.DeviceInfo.Pci.PciAddress,
 				}
 				log.Info("Extracted NetInfo item", "net-item", netItem)
@@ -278,12 +301,13 @@ func (r *CNFAppMacReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 				// Create the new Device to be included
 				dev := Device{
 					Pci: netItem.PciAddress,
+					Ip:  netItem.Ip,
 					Mac: netItem.Mac,
 				}
 				log.Info("Device to add", "dev", dev)
 
 				// Check if Resource is already saved in resInterface
-				// If that's true, then append MAC and PCI address to it
+				// If that's true, then append MAC, IP and PCI address to it
 				netFound := false
 				for i := 0; i < len(resInterface) && !netFound; i++ {
 					resItem := resInterface[i]
@@ -377,6 +401,7 @@ func (r *CNFAppMacReconciler) removeCR(req ctrl.Request) {
 	}
 }
 
+// This can only be launched on testpmd, not in grout
 func getContainerLogValue(podName, namespace string) (string, error) {
 	cmd := []string{
 		"sh",
@@ -386,6 +411,7 @@ func getContainerLogValue(podName, namespace string) (string, error) {
 	return executeCmdOnContainer(cmd, podName, namespace)
 }
 
+// This can only be launched on testpmd, not in grout
 func executeCmdOnContainer(cmd []string, podName, namespace string) (string, error) {
 	config, err := config.GetConfig()
 	if err != nil {

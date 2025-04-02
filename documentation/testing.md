@@ -1,5 +1,7 @@
 # Testing Example CNF
 
+### TODO - update with grout
+
 In this document, we will show you how to test Example CNF using [Distributed-CI (DCI)](https://docs.distributed-ci.io/).
 
 For this to work, we will assume that we have an OCP cluster up and running that meets the [pre-requirements](../README.md#pre-requirements) to launch Example CNF, and that all DCI tools (`dci-openshift-agent`, `dci-openshift-app-agent` and `dci-pipeline`) are installed in a jumphost server which has access to the OCP cluster.

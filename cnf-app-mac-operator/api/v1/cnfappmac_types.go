@@ -22,6 +22,7 @@ import (
 
 type Device struct {
 	MAC string `json:"mac"`
+	IP  string `json:"ip,omitempty"`
 	PCI string `json:"pci"`
 }
 

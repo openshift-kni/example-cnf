@@ -12,9 +12,11 @@ $ cd support-images
 $ podman build dpdk -f dpdk/Dockerfile -t "quay.io/rh-nfv-int/dpdk:v0.0.1"
 $ podman build ubi8-base-testpmd -f ubi8-base-testpmd/Dockerfile -t "quay.io/rh-nfv-int/ubi8-base-testpmd:v0.0.1"
 $ podman build ubi8-base-trex -f ubi8-base-trex/Dockerfile -t "quay.io/rh-nfv-int/ubi8-base-trex:v0.0.1"
+$ podman build ubi9-base-grout -f ubi9-base-grout/Dockerfile -t "quay.io/rh-nfv-int/ubi9-base-grout:v0.0.1"
 
 # push images (to quay.io/rh-nfv-int)
 $ podman push quay.io/rh-nfv-int/dpdk:v0.0.1
 $ podman push quay.io/rh-nfv-int/ubi8-base-testpmd:v0.0.1
 $ podman push quay.io/rh-nfv-int/ubi8-base-trex:v0.0.1
+$ podman push quay.io/rh-nfv-int/ubi9-base-grout:v0.0.1
 ```

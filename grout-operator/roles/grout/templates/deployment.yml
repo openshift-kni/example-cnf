@@ -1,0 +1,165 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: "{{ ansible_operator_meta.name }}-app"
+  namespace: "{{ ansible_operator_meta.namespace }}"
+spec:
+  replicas: {{ size | int }}
+  selector:
+    matchLabels:
+      example-cnf-type: cnf-app
+      restart-on-reboot: "true"
+  template:
+    metadata:
+{% if not skip_annot|bool %}
+      annotations:
+{% if runtime_class_name is defined and runtime_class_name | length %}
+        irq-load-balancing.crio.io: "disable"
+        cpu-load-balancing.crio.io: "disable"
+{% endif %}
+        k8s.v1.cni.cncf.io/networks: '[
+{% for network in networks %}
+{% set outer_loop = loop %}
+{% for count in range(network.count) %}
+          {
+            "name": "{{ network.name }}",
+{% if network.mac|default([])|length == network.count %}
+            "mac": "{{ network.mac[loop.index - 1] }}",
+{% endif %}
+{% if network.ip|default([])|length == network.count and network.ip[loop.index - 1]|length > 0 %}
+            "ips": ["{{ network.ip[loop.index - 1] }}"],
+{% endif %}
+            "namespace": "{{ ansible_operator_meta.namespace }}"
+          }{% if loop.index < network.count or outer_loop.index < network_name_list|length %},{% endif %}
+{% endfor %}
+{% endfor %}
+        ]'
+{% endif %}
+      labels:
+        example-cnf-type: cnf-app
+        restart-on-reboot: "true"
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: example-cnf-type
+                operator: In
+                values:
+                - pkt-gen
+            topologyKey: kubernetes.io/hostname
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 56560
+      serviceAccountName: grout-account
+{% if runtime_class_name is defined and runtime_class_name | length %}
+      runtimeClassName: "{{ runtime_class_name }}"
+{% endif %}
+      containers:
+      - name: grout
+        ports:
+        - name: "http-probe"
+          containerPort: 8095
+        image: "{{ image_grout }}"
+        imagePullPolicy: "{{ image_pull_policy }}"
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 56560
+{% if run_deployment is defined and run_deployment == 1 %}
+          readOnlyRootFilesystem: true
+{% endif %}
+{% if privileged %}
+          privileged: true
+{% else %}
+          capabilities:
+            add: ["IPC_LOCK", "NET_ADMIN", "AUDIT_WRITE"]
+{% endif %}
+        resources:
+          limits:
+            hugepages-1Gi: {{ hugepage_1gb_count }}
+            memory: {{ memory }}
+            cpu: {{ cpu }}
+{% for key, value in network_resources.items() %}
+            {{ key }}: {{ value }}
+{% endfor %}
+          requests:
+            hugepages-1Gi: {{ hugepage_1gb_count }}
+            memory: {{ memory }}
+            cpu: {{ cpu }}
+{% for key, value in network_resources.items() %}
+            {{ key }}: {{ value }}
+{% endfor %}
+        volumeMounts:
+        - name: hugepage
+          mountPath: /dev/hugepages
+        - name: log-dir
+          mountPath: /var/log/grout
+        - name: exec-dir
+          mountPath: /usr/local/bin/example-cnf/run
+        - name: dpdk-dir
+          mountPath: /var/run/dpdk
+        - name: tmp
+          mountPath: /tmp
+        env:
+        - name: NETWORK_NAME_LIST
+          value: "{{ network_resources.keys()|list|join(',') }}"
+          # "openshift.io/example_cnf_res1,openshift.io/example_cnf_res2"
+        - name: GROUT_CPU_COUNT
+          value: "{{ cpu }}"
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: CR_NAME
+          value: "{{ ansible_operator_meta.name }}"
+        - name: rx_queues
+          value: "{{ rx_queues }}"
+{% if run_deployment is defined %}
+        - name: run_deployment
+          value: "{{ run_deployment }}"
+{% endif %}
+{% for key, value in environments.items() %}
+        - name: {{ key }}
+          value: "{{ value }}"
+{% endfor %}
+{% if run_deployment is defined and run_deployment == 1 %}
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8095
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8095
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /startz
+            port: 8095
+          initialDelaySeconds: 30
+          periodSeconds: 10
+{% endif %}
+        terminationMessagePolicy: FallbackToLogsOnError
+      volumes:
+      - name: hugepage
+        emptyDir:
+          medium: HugePages
+      - name: log-dir
+        emptyDir: {}
+      - name: exec-dir
+        emptyDir: {}
+      - name: dpdk-dir
+        emptyDir: {}
+      - name: tmp
+        emptyDir: {}
