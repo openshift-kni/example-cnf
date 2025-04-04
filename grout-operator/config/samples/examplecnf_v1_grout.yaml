@@ -1,0 +1,9 @@
+apiVersion: examplecnf.openshift.io/v1
+kind: Grout
+metadata:
+  labels:
+    app.kubernetes.io/name: grout-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: grout-sample
+spec:
+  # TODO(user): Add fields here

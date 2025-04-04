@@ -1,5 +1,7 @@
 # Example CNF
 
+### TODO - add grout-operator
+
 [![PR Validation](https://github.com/openshift-kni/example-cnf/actions/workflows/push.yaml/badge.svg)](https://github.com/openshift-kni/example-cnf/actions/workflows/push.yaml)
 
 Example CNF is an OpenShift workload to exercice an SRIOV setup, based on [TestPMD](https://doc.dpdk.org/guides/testpmd_app_ug/intro.html) for traffic forwarding and [TRex](https://trex-tgn.cisco.com/) for traffic generation, such as the following:

@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- examplecnf_v1_grout.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples
