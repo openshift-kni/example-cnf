@@ -2,7 +2,7 @@
 
 [![PR Validation](https://github.com/openshift-kni/example-cnf/actions/workflows/push.yaml/badge.svg)](https://github.com/openshift-kni/example-cnf/actions/workflows/push.yaml)
 
-Example CNF is an OpenShift workload to exercice an SRIOV setup, based on [TestPMD](https://doc.dpdk.org/guides/testpmd_app_ug/intro.html) for traffic forwarding and [TRex](https://trex-tgn.cisco.com/) for traffic generation, such as the following:
+Example CNF is an OpenShift workload to exercice an SRIOV setup, based on a [DPDK workload](https://www.dpdk.org/) for traffic forwarding, which could be either [TestPMD](https://doc.dpdk.org/guides/testpmd_app_ug/) or [Grout](https://github.com/DPDK/grout/) (default one), and [TRex](https://trex-tgn.cisco.com/) for traffic generation, such as the following:
 
 ![Flow](documentation/network_setup.png)
 
@@ -10,6 +10,7 @@ It provides the following operators:
 
 - [trex-operator](trex-operator)
 - [testpmd-operator](testpmd-operator)
+- [grout-operator](grout-operator)
 - [cnf-app-mac-operator](cnf-app-mac-operator)
 
 You can use them from the [Example CNF Catalog](https://quay.io/repository/rh-nfv-int/nfv-example-cnf-catalog?tab=tags). Image generation is automated with [Github workflows](.github/workflows) in this repo, using this [Makefile](Makefile).
@@ -18,7 +19,7 @@ You can use them from the [Example CNF Catalog](https://quay.io/repository/rh-nf
 
 To run Example CNF, you need to fulfil the following infrastructure-related pre-requirements:
 
-- OpenShift cluster with +3 worker nodes.
+- OpenShift cluster with 4.14 or higher, and with +3 worker nodes.
 - SR-IOV network operator.
 - SriovNetworkNodePolicy and SriovNetwork CRDs.
 - Proper configuration in network devices to match the SR-IOV resources definition.
@@ -26,16 +27,16 @@ To run Example CNF, you need to fulfil the following infrastructure-related pre-
 
 ## How operators are created
 
-The three operators defined in this repository are built with [Operator SDK tool](https://sdk.operatorframework.io/docs/building-operators/). [Here](https://youtu.be/imF9VGJ1Dd4) you can see how CRD-to-pod conversion works for this kind of operators.
+The four operators defined in this repository are built with [Operator SDK tool](https://sdk.operatorframework.io/docs/building-operators/). [Here](https://youtu.be/imF9VGJ1Dd4) you can see how CRD-to-pod conversion works for this kind of operators.
 
 We can differentiate between these two cases:
 
-- Ansible-based operators: this is the case of [testpmd-operator](testpmd-operator/README.md#how-to-build-the-operator) and [trex-operator](trex-operator/README.md#how-to-build-the-operator).
+- Ansible-based operators: this is the case of [testpmd-operator](testpmd-operator/README.md#how-to-build-the-operator), [grout-operator](grout-operator/README.md#how-to-build-the-operator) and [trex-operator](trex-operator/README.md#how-to-build-the-operator).
 - Go-based operators: this is the case of [cnf-app-mac-operator](cnf-app-mac-operator/README.md#how-to-build-the-operator).
 
 ## Pod affinity rules
 
-There are some affinity rules for the deployed pods. In particular, `trexconfig-<x>` and `testpmd-app-<x>` pods are placed in different worker nodes.
+There are some affinity rules for the deployed pods. In particular, `trexconfig-<x>` and `[testpmd|grout]-app-<x>` pods are placed in different worker nodes.
 
 ## SRIOV networks
 
@@ -61,19 +62,21 @@ The network schema would be as follows:
 TRex -- (example-cnf-net1|2) -- CNF Application
 ```
 
+You can also provide IP addresses if requiring L3 connectivity. This is mandatory for Grout, and optional for TestPMD, since TestPMD acts in MAC forwarding mode, so it will ignore all network headers above L2.
+
 ## Traffic Flow
 
 Traffic flow is the following:
 
-- TRex (Traffic Generator) generates and sends traffic from Port 0 to the CNF Application.
+- TRex (Traffic Generator) generates and sends traffic from Port 0/1 to the CNF Application.
 
-- The CNF Application receives incoming traffic from TRex on one of its ports.
+- The CNF Application receives incoming traffic from TRex on their ports.
 
-- The CNF Application processes the received traffic and passes it back to TRex for evaluation, using the TestPMD MAC forwarding mode.
+- The CNF Application processes the received traffic and forwards it back to TRex for evaluation through the opposite port (e.g. if receiving traffic from port 0, it will be forwarded to port 1, and vice versa).
 
-- TRex receives the processed traffic on Port 1.
+- TRex receives the processed traffic on the opposite port.
 
-- TRex calculates statistics by comparing the incoming traffic on Port 1 (processed traffic) with the outgoing traffic on Port 0 (original traffic sent by TRex) and vice versa.
+- TRex calculates statistics by comparing the incoming traffic on one port (processed traffic) with the outgoing traffic on the other port (original traffic sent by TRex) and vice versa.
 
 ## Testing
 

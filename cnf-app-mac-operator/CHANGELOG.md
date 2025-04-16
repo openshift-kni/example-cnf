@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.24] - 2025-04-16
+
+- Include support of L3 configuration
+
 ## [0.2.23] - 2025-02-20
 
 - Updated OperatorSDK to v1.39.1

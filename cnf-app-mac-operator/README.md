@@ -2,17 +2,19 @@
 
 ![Operator behavior](../documentation/cnf-app-mac-operator.png)
 
-Auxiliary operator just composed by one component, which is CNFAppMac Operator, a Golang-based operator in charge of ensuring reconciliation for CNFAppMac CR, which is a wrapper created for the `testpmd-app-<x>` pod and linked to it, and that is used to extract the network information of the pods (network, MAC and PCI addresses), to be offered to other components of the solution.
+Auxiliary operator just composed by one component, which is CNFAppMac Operator, a Golang-based operator in charge of ensuring reconciliation for CNFAppMac CR, which is a wrapper created for the CNFApp pod (either testpmd or grout) and linked to it, and that is used to extract the network information of the pods (network, MAC, IP and PCI addresses), to be offered to other components of the solution.
+
+The CR is created once the CNFApp pod is created. The reconciliation loop of the CNFAppMac CR, once created, keeps listening to the Kubernetes API till deploying a pod labelled as `cnf-app`.
 
 ## How to build the operator
 
 Base structure for this case is achieved with the following commands, then it's just a matter of accommodating the required code for the operator in the corresponding files and folders:
 
-For operator-sdk v1.38.0, you need to have installed the same Go version used in operator-sdk, which is at least Go 1.22.5+.
+For operator-sdk v1.39.1, you need to have installed the same Go version used in operator-sdk, which is at least Go 1.23.4+.
 
 ```
 $ operator-sdk version
-operator-sdk version: "v1.38.0", commit: "0735b20c84e5c33cda4ed87daa3c21dcdc01bb79", kubernetes version: "1.30.0", go version: "go1.22.5", GOOS: "linux", GOARCH: "amd64"
+operator-sdk version: "v1.39.1", commit: "b8a728e15447465a431343a664e9a27ff9db655e", kubernetes version: "1.31.0", go version: "go1.23.4", GOOS: "linux", GOARCH: "amd64"
 ```
 
 Create the project structure and the CNFAppMac API:

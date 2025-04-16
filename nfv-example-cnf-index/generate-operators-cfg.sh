@@ -11,6 +11,7 @@ OPERATORS=(
    trex-operator:v${VERSIONS[trex-operator]}
    testpmd-operator:v${VERSIONS[testpmd-operator]}
    cnf-app-mac-operator:v${VERSIONS[cnf-app-mac-operator]}
+   grout-operator:v${VERSIONS[grout-operator]}
 )
 EOF
 

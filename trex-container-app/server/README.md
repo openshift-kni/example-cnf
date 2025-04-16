@@ -4,7 +4,9 @@ Container image that allows you to configure TRex in a container and prepare it 
 
 ## What is it executed?
 
-This container runs `/usr/local/bin/trex-wrapper`. [This script](scripts/trex-wrapper) takes also some context information to build a config file for TRex, such as this one:
+This container runs `/usr/local/bin/trex-wrapper`. [This script](scripts/trex-wrapper) takes also some context information to build a config file for TRex.
+
+This is an example of TRex configuration file for L2 configuration:
 
 ```
 sh-4.4$ pwd
@@ -40,6 +42,36 @@ You can see it saves in the config file the following information, among others:
 - Number of sockets.
 - CPUs to be used.
 - Pair of destination-source MAC addresses for each port.
+
+And here, you have a TRex configuration file for L3 configuration, where it's added the IP address of both TRex and the endpoint for each port:
+
+```
+sh-4.4$ cat trex_cfg.yaml 
+- c: 4
+  interfaces:
+  - '37:02.6'
+  - '37:03.4'
+  platform:
+    dual_if:
+    - socket: 0
+      threads:
+      - 3
+      - 41
+      - 42
+      - 43
+    latency_thread_id: 2
+    master_thread_id: 1
+  port_info:
+  - default_gw: 192.168.16.60
+    dest_mac: 80:04:0f:f1:89:01
+    ip: 192.168.16.61
+    src_mac: 20:04:0f:f1:89:01
+  - default_gw: 192.168.16.100
+    dest_mac: 80:04:0f:f1:89:02
+    ip: 192.168.16.101
+    src_mac: 20:04:0f:f1:89:02
+  version: 2
+```
 
 Then, it builds a script file, placed in `/usr/local/bin/example-cnf/trex-server-run`, with the following content:
 

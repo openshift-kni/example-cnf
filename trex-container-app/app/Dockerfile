@@ -10,8 +10,8 @@ FROM registry.access.redhat.com/ubi8/python-311:latest
 LABEL name="NFV Example TRexApp Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.16" \
-      release="v0.2.16" \
+      version="v0.2.17" \
+      release="v0.2.17" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 

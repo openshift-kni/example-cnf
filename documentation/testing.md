@@ -29,7 +29,7 @@ $ cat example-cnf-pipeline.yml
       - debug
 
     # Including example-cnf hooks
-    dci_config_dir: /usr/share/example-cnf-config/testpmd
+    dci_config_dir: /usr/share/example-cnf-config/cnfapp
     dci_gits_to_components:
       - /usr/share/example-cnf-config
 
@@ -39,10 +39,15 @@ $ cat example-cnf-pipeline.yml
 
     # Point to SRIOV config
     example_cnf_sriov_file: /usr/share/mycluster-sriov-config.yml
+    # Point to network config file
+    example_cnf_network_config_file: /usr/share/mycluster-net-config.yml
+
+    # use grout/testpmd
+    example_cnf_cnfapp_name: grout
 
     # Tune example-cnf execution
     ## Allow testpmd in reduced mode
-    ecd_testpmd_reduced_mode: 1
+    #ecd_testpmd_reduced_mode: 1 ## to be only used if deploying testpmd
     ## Tune TRexApp parameters
     ecd_trex_duration: 120
     ecd_trex_packet_rate: 2mpps
@@ -61,10 +66,9 @@ $ cat example-cnf-pipeline.yml
 From this pipeline, we can extract the following information:
 
 - Example CNF is launched on top of a running OpenShift cluster, using `dci-openshift-app-agent` as main Ansible automation.
-- Example CNF hooks are downladed in the jumphost from [example-cnf-config](https://github.com/dci-labs/example-cnf-config/tree/master/testpmd) repository, under `/usr/share` folder.
+- Example CNF hooks are downladed in the jumphost from [example-cnf-config](https://github.com/dci-labs/example-cnf-config/tree/master/cnfapp) repository, under `/usr/share` folder.
 - The deployment is not removed when the DCI job finishes.
-- SRIOV config is provided in a YAML file like this one (previously, you would have needed to configure your network to match that configuration in your cluster, so that the worker node's interfaces have the given VLAN configured):
-- With nfv-example-cnf-index DCI component, we will refer to the software to be used to download Example CNF-related images from Quay.io. Here, we are using the latest version currently available, since we're not pinning the version to use. Here's an example of a [nfv-example-cnf-index DCI component](https://www.distributed-ci.io/topics/b8454f14-ff58-41ad-b31c-00f9e84eff3c/components/fb503d17-57da-4e54-9095-6d2bdd858f24). The `Data` field contains the URL to reach the registry where the images are defined, and the image version is the same that the one used in the component (for this example, v0.3.7-202501202232.2eb6d6d).
+- SRIOV config is provided in a YAML file like this one (previously, you would have needed to configure your network to match that configuration in your cluster, so that the worker node's interfaces have the given VLAN configured). This is an example for a L2 configuration (only followed by TestPMD):
 
 ```
 $ cat mycluster-sriov-config.yml
@@ -118,9 +122,86 @@ sriov_network_configs:
       capabilities: '{"mac": true}'
 ```
 
+- If using L3 configuration (mainly for Grout), you need to include `ips` capability and `ipam` setup in the SRIOV config file, and also provide a network config file with the set of IP-MAC addresses of both TRex and CNFApp (this is optional for TestPMD, but mandatory for Grout):
+
+```
+$ cat mycluster-sriov-config.yml
+---
+sriov_network_configs:
+  - resource: example_cnf_res1
+    node_policy:
+      name: example-cnf-policy1
+      device_type: vfio-pci
+      is_rdma: false
+      mtu: 9000
+      nic_selector:
+        device_id: 158b
+        pf_names:
+          - ens7f0#0-7
+        vendor: "8086"
+      node_selector:
+        node-role.kubernetes.io/worker: ""
+      num_vfs: 16
+      priority: 99
+  - resource: example_cnf_res2
+    node_policy:
+      name: example-cnf-policy2
+      device_type: vfio-pci
+      is_rdma: false
+      mtu: 9000
+      nic_selector:
+        device_id: 158b
+        pf_names:
+          - ens7f0#8-15
+        vendor: "8086"
+      node_selector:
+        node-role.kubernetes.io/worker: ""
+      num_vfs: 16
+      priority: 99
+  - resource: example_cnf_res1
+    network:
+      name: example-cnf-net1
+      network_namespace: example-cnf
+      spoof_chk: "off"
+      trust: "on"
+      vlan: 3801
+      capabilities: '{"mac": true, "ips": true}'
+      ipam: '{"type": "static"}'
+  - resource: example_cnf_res2
+    network:
+      name: example-cnf-net2
+      network_namespace: example-cnf
+      spoof_chk: "off"
+      trust: "on"
+      vlan: 3802
+      capabilities: '{"mac": true, "ips": true}'
+      ipam: '{"type": "static"}'
+
+$ cat mycluster-net-config.yml
+---
+ecd_network_config:
+  cnfapp:
+    net1:
+      mac: 80:04:0f:f1:89:01
+      ip: 172.16.16.60/24
+    net2:
+      mac: 80:04:0f:f1:89:02
+      ip: 172.16.21.60/24
+  trex:
+    net1:
+      mac: 20:04:0f:f1:89:01
+      ip: 172.16.16.61/24
+    net2:
+      mac: 20:04:0f:f1:89:02
+      ip: 172.16.21.61/24
+```
+
+- With nfv-example-cnf-index DCI component, we will refer to the software to be used to download Example CNF-related images from Quay.io. Here, we are using the latest version currently available, since we're not pinning the version to use. Here's an example of a [nfv-example-cnf-index DCI component](https://www.distributed-ci.io/topics/b8454f14-ff58-41ad-b31c-00f9e84eff3c/components/fb503d17-57da-4e54-9095-6d2bdd858f24). The `Data` field contains the URL to reach the registry where the images are defined, and the image version is the same that the one used in the component (for this example, v0.3.7-202501202232.2eb6d6d).
+
 - Fine tune the parameters for the tests to be launched. We can configure here the following:
 
-  - `ecd_testpmd_reduced_mode`: default value is 0. If it's different than 0, it allows Example CNF to use the reduced mode in the [testpmd-wrapper](../testpmd-container-app/cnfapp/scripts/testpmd-wrapper) script, where only three cores are used on testpmd, and txd/rxd parameters are doubled.
+  - `example_cnf_cnfapp_name`: select between `grout` (default) and `testpmd`.
+  - (only used by TestPMD) `ecd_testpmd_reduced_mode`: default value is 0. If it's different than 0, it allows Example CNF to use the reduced mode in the [testpmd-wrapper](../testpmd-container-app/cnfapp/scripts/testpmd-wrapper) script, where only three cores are used on testpmd, and txd/rxd parameters are doubled.
   - `ecd_trex_duration`: default value is 120. It is the duration of the TRex run. If setting -1, TRex will run on continuous burst mode. If setting any value here, TRex job will be stopped once this time is reached. This may imply packet loss if using a high packet rate.
   - `ecd_trex_packet_rate`: default value is 10kpps. It is the packet rate used by TRex to send traffic, expressed in packets per second (pps). Units are defined in lower case, so 2mpps means 2 megapackets per second (2.000.000 packets/s).
   - `ecd_trex_packet_size`: devault value is 64. It is the size of the packets sent by TRex, in bytes. This value, combined with the packet rate, allows you to determine the throughput that is injected by TRex. For example, with 64 B and 2mpps, we would have around `64*8*2*10^6 = 1 Gbps`.
@@ -132,7 +213,7 @@ The baseline scenario corresponds to this workflow (other scenarios are modifica
 
 ![Workflow](workflow.png)
 
-This automatically deploys the operators and the pods that allows to test the traffic exchange between TRex and TestPMD. So, by just launching the proposed pipeline, this will be achieved automatically without any manual intervention. Consequently, once the pipeline execution finishes, you can only retrieve execution logs, since the tests have already been executed.
+This automatically deploys the operators and the pods that allows to test the traffic exchange between TRex and CNFApp. So, by just launching the proposed pipeline, this will be achieved automatically without any manual intervention. Consequently, once the pipeline execution finishes, you can only retrieve execution logs, since the tests have already been executed.
 
 You can run it with this command:
 
@@ -141,7 +222,7 @@ $ export KUBECONFIG=/path/to/mycluster/kubeconfig
 $ DCI_QUEUE_RESOURCE=mycluster dci-pipeline-schedule example-cnf
 ```
 
-This is an example of a [job](https://www.distributed-ci.io/jobs/0ae26cc0-41b8-4f1b-86ce-1cbaf3a512b9/jobStates) launched with this pipeline.
+This is an example of a [job](https://www.distributed-ci.io/jobs/0ae26cc0-41b8-4f1b-86ce-1cbaf3a512b9/jobStates) launched with this pipeline, using TestPMD. This [another one](https://www.distributed-ci.io/jobs/ad611c02-f158-461a-a1b9-0a899f2e2bae/jobStates?sort=date) is based on Grout.
 
 > This job launches more test cases, related to Red Hat certification, that are out of the scope of this documentation. If you have defined the configuration to run these certification tests and you don't want to run them, you can skip them with the following Ansible extra vars (just append them at the end of your call to `dci-pipeline`):
 
@@ -152,6 +233,8 @@ example-cnf:ansible_extravars=check_workload_api:false example-cnf:ansible_extra
 ### Check the pods
 
 We can check the pods that have been created after launching the pipeline:
+
+- When using TestPMD:
 
 ```
 $ oc get pods -n example-cnf
@@ -167,20 +250,38 @@ trex-operator-controller-manager-6cdd46d4cd-jms2t          1/1     Running     0
 trexconfig-5865745c74-qstk6                                1/1     Running     0          154m
 ```
 
+- When using Grout:
+
+```
+$ oc get pods -n example-cnf
+NAME                                                       READY   STATUS      RESTARTS   AGE
+cnf-app-mac-operator-controller-manager-74498bddcd-96v6q   1/1     Running     0          158m
+cnf-app-mac-operator-controller-manager-74498bddcd-s7tj2   1/1     Running     0          159m
+grout-app-66f65bf475-4897b                                 1/1     Running     0          119m
+grout-operator-controller-manager-6488b4c774-hctzp         1/1     Running     0          157m
+grout-operator-controller-manager-6488b4c774-zjhtw         1/1     Running     0          156m
+job-trex-app-fcs5j                                         0/1     Completed   0          152m
+trex-operator-controller-manager-6cdd46d4cd-g7mj6          1/1     Running     0          156m
+trex-operator-controller-manager-6cdd46d4cd-jms2t          1/1     Running     0          156m
+trexconfig-5865745c74-qstk6                                1/1     Running     0          154m
+```
+
 We can see these pods:
 
 - Controller manager pods (they're replicated for ensuring high availability) for each operator that is deployed in this scenario.
-- `testpmd-app` pod, which corresponds to TestPMD. This launches TestPMD tool, configure and start it automatically, printing statistics every second.
+- (when using TestPMD) `testpmd-app` pod, which corresponds to TestPMD. This launches TestPMD tool, configure and start it automatically, printing statistics every second.
+- (when using Grout) `grout-app` pod, which corresponds to Grout. This launches Grout tool, configure and start it automatically, printing statistics every second.
 - `trexconfig` pod, which corresponds to TRexServer. This configures TRex to start listening to incoming requests to send traffic to a given target. It also prints statistics regularly.
-- `job-trex-app` pod, which corresponds to TRexApp, and it's launched from a Job resource. This provides a data profile to TRex, which then starts sending traffic to the configured destination (i.e. TestPMD), and also prints statistics at the end of the execution, printing the packet loss.
+- `job-trex-app` pod, which corresponds to TRexApp, and it's launched from a Job resource. This provides a data profile to TRex, which then starts sending traffic to the configured destination (i.e. CNFApp), and also prints statistics at the end of the execution, printing the packet loss.
 
 > In the case of `testpmd-app` pod, the pod you will find after the pipeline execution does not correspond to the `testpmd-app` pod used for exchanging traffic with TRex. This is because, in the proposed hooks, the `testpmd-app` is deleted at the end of the tests to confirm that a new `testpmd-app` pod is created automatically.
 
 ### What is it executed on each data-plane pod?
 
-The three data-plane pods (`testpmd-app`, `trexconfig` and `job-trex-app`) execute different scripts to configure all the software pieces that involves the traffic exchange between TestPMD and TRex:
+The three data-plane pods (`testpmd|grout-app`, `trexconfig` and `job-trex-app`) execute different scripts to configure all the software pieces that involves the traffic exchange between CNFApp and TRex:
 
-- `testpmd-app`: check [cnfapp container image docs](../testpmd-container-app/cnfapp/README.md) for more details. In this baseline scenario, once finished, `testpmd` is invoked in auto-start mode, printing the statistics every minute.
+- (when using TestPMD) `testpmd-app`: check [cnfapp container image docs](../testpmd-container-app/cnfapp/README.md) for more details. In this baseline scenario, once finished, `testpmd` is invoked in auto-start mode, printing the statistics every second.
+- (when using Grout) `grout-app`: check [cnfapp container image docs](../grout-container-app/cnfapp/README.md) for more details. In this baseline scenario, once finished, `grout` prints statistics every second.
 - `trexconfig`: check [TRex server container image docs](../trex-container-app/server/README.md) for more details.
 - `job-trex-app`: check [TRex app container image docs](../trex-container-app/app/README.md) for more details.
 
@@ -244,7 +345,7 @@ From this output, you should check the following:
   - If having less packets than expected, it could be because of different reasons, for example:
     - They've not been sent because packet rate was really high and, maybe, your system got saturated at some point, so that the real data rate was reduced.
     - Timeout expired just at the moment where some packets were sent, Even though there's a time window to wait some more time for these packets, there could be some of them that are eventually lost.
-  - We could also have cases where we have more packets than expected, which will imply a negative packet loss (which is a passed case). This happens when TestPMD and/or TRex receive traffic that is not generated or consumed by these two entities, e.g. control packets generated by network devices in your setup that are reaching these pods and are increasing their counters.
+  - We could also have cases where we have more packets than expected, which will imply a negative packet loss (which is a passed case). This happens when CNFApp and/or TRex receive traffic that is not generated or consumed by these two entities, e.g. control packets generated by network devices in your setup that are reaching these pods and are increasing their counters.
 - In both ports, if `ipackets` and `opackets` figure is the same (like in this case), this means that there's no packet loss, as it can be confirmed at the end of the logs entries (0.00% packet loss -> Test has passed). Same happens for negative packet loss.
   - However, we will have packet loss if not receiving the same amount of packets that we're generating from TRex.
 
@@ -285,14 +386,16 @@ $ oc -n example-cnf logs deployment/trexconfig
 
 You can see there that the `opackets` and `ipackets` figures correspond to what it's printed in `job-trex-app` pod.
 
-Finally, for `testpmd-app` pod, as said before, since this is a new copy of the pod, you will not be able to see the logs of the test that has been executed by the automation, but, if using DCI, you can retrieve these logs from the [Files section](https://www.distributed-ci.io/jobs/0ae26cc0-41b8-4f1b-86ce-1cbaf3a512b9/files) of the DCI job.
+Finally, for the CNFApp pod, as said before, since this is a new copy of the pod, you will not be able to see the logs of the test that has been executed by the automation, but, if using DCI, you can retrieve these logs from the [Files section](https://www.distributed-ci.io/jobs/0ae26cc0-41b8-4f1b-86ce-1cbaf3a512b9/files) of the DCI job.
 
 From this source of information, you can find two main log files:
 
 - `example-cnf-pre-job-status.log`: it prints the status of all Example CNF components before starting the TRexApp job.
 - `example-cnf-post-job-status.log`: it prints the status of all Example CNF components just after finishing the TRexApp job.
 
-So, in the second log file, you can find the logs of the `testpmd-app` pod that was used for the tests. Last entry is like this, and you can see that the figures managed by TestPMD correspond to what was generated on TRex, confirming that the job was in a good shape:
+So, in the second log file, you can find the logs of the `testpmd|grout-app` pod that was used for the tests.
+
+- In the case of TestPMD, last entry is like this, and you can see that the figures managed by TestPMD correspond to what was generated on TRex, confirming that the job was in a good shape:
 
 ```
 Port statistics ====================================
@@ -319,13 +422,32 @@ Port statistics ====================================
   ############################################################################
 ```
 
-All these logs are gathered in a file called `example-cnf-results.log`.
+- For Grout, it's a bit more complex. If you check the counters of `ip|eth_input|output`, you'll see that we have the addition of the number of packets sent by each TRex NIC:
+
+```
+NODE                         CALLS    PACKETS  PKTS/CALL  CYCLES/CALL      CYCLES/PKT
+port_rx                 7315317248  479978942        0.1         73.2          1115.1
+control_input           7315317248          2        0.0         36.0  131603265027.0
+ip_input                  61060180  479978932        7.9        696.5            88.6
+eth_input                 61060188  479978942        7.9        524.4            66.7
+port_tx                   61060182  479978934        7.9        411.5            52.4
+ip_output                 61060180  479978932        7.9        339.7            43.2
+eth_output                61060182  479978934        7.9        234.2            29.8
+ip_forward                61060180  479978932        7.9        163.8            20.8
+arp_input_request               10         10        1.0    7639703.2       7639703.2
+control_output                   2          2        1.0       8694.0          8694.0
+arp_input_request_drop           8          8        1.0       1275.8          1275.8
+arp_input                       10         10        1.0        488.8           488.8
+arp_output_reply                 2          2        1.0       1331.0          1331.0
+```
+
+All these logs are gathered in a file called `example-cnf-results.log`. This also shows you the input data for the TRex job: number of packets per second, duration of the job and packet size.
 
 ## Troubleshooting mode scenario
 
-The baseline scenario is a good option to be able to launch Example CNF operators and deploy TRex automatically, being suitable for a CI system loop where the tests are executed N times and then we can extract [conclusions](https://www.distributed-ci.io/analytics/keyvalues?query=%28tags+in+%5Bdaily%5D%29+and+%28%28status%3Dsuccess%29+and+%28name%3Dexample-cnf%29%29&range=last90Days&after=2024-11-12&before=2025-02-10&graphs=%255B%257B%2522keys%2522%253A%255B%257B%2522key%2522%253A%2522packet_loss_total_perc%2522%252C%2522color%2522%253A%2522%2523a3a3a3%2522%252C%2522axis%2522%253A%2522left%2522%257D%255D%252C%2522graphType%2522%253A%2522line%2522%257D%255D) from all the results obtained. However, we cannot really interact with either TestPMD or TRex.
+The baseline scenario is a good option to be able to launch Example CNF operators and deploy TRex automatically, being suitable for a CI system loop where the tests are executed N times and then we can extract [conclusions](https://www.distributed-ci.io/analytics/keyvalues?query=%28tags+in+%5Bdaily%5D%29+and+%28%28status%3Dsuccess%29+and+%28name%3Dexample-cnf%29%29&range=last90Days&after=2024-11-12&before=2025-02-10&graphs=%255B%257B%2522keys%2522%253A%255B%257B%2522key%2522%253A%2522packet_loss_total_perc%2522%252C%2522color%2522%253A%2522%2523a3a3a3%2522%252C%2522axis%2522%253A%2522left%2522%257D%255D%252C%2522graphType%2522%253A%2522line%2522%257D%255D) from all the results obtained. However, we cannot really interact with either CNFApp or TRex.
 
-To achieve this goal, we can run Example CNF in troubleshooting mode by just providing some extra parameters to `dci-pipeline-schedule` call. In this way, all Example CNF operators will be created and all pods will keep up and running with all scripts prepared for being launched, but the automation will not take care of launching the test scripts and creating the TRex job, so that we can interact with both TestPMD and TRex to check on-line the behavior and results.
+To achieve this goal, we can run Example CNF in troubleshooting mode by just providing some extra parameters to `dci-pipeline-schedule` call. In this way, all Example CNF operators will be created and all pods will keep up and running with all scripts prepared for being launched, but the automation will not take care of launching the test scripts and creating the TRex job, so that we can interact with both CNFApp and TRex to check on-line the behavior and results.
 
 You can launch this scenario with the following call to `dci-pipeline-schedule`:
 
@@ -336,11 +458,13 @@ $ DCI_QUEUE_RESOURCE=mycluster dci-pipeline-schedule example-cnf example-cnf:ans
 
 The key parameter is `ecd_run_deployment`; if set to 0, it will enable this troubleshooting scenario.
 
-Here's a [DCI job example](https://www.distributed-ci.io/jobs/0f05c4bc-2b40-40ae-a988-03a88c61d6b0/jobStates?sort=date) with this troubleshooting mode execution.
+Here's a [DCI job example](https://www.distributed-ci.io/jobs/0f05c4bc-2b40-40ae-a988-03a88c61d6b0/jobStates?sort=date) with this troubleshooting mode execution for TestPMD, and [this another one](https://www.distributed-ci.io/jobs/81e00827-d455-4c94-a04f-a7b16d38355b/jobStates?sort=date) for Grout.
 
 ### Check the pods
 
 We can check the pods that have been created after launching the pipeline:
+
+- When using TestPMD:
 
 ```
 $ oc get pods -n example-cnf
@@ -355,26 +479,42 @@ trex-operator-controller-manager-6cdd46d4cd-jzp42          1/1     Running   0  
 trexconfig-589577d85-69m5x                                 1/1     Running   0          2m33s
 ```
 
+- When using Grout:
+
+```
+$ oc get pods -n example-cnf
+NAME                                                       READY   STATUS    RESTARTS   AGE
+cnf-app-mac-operator-controller-manager-74498bddcd-bdkjd   1/1     Running   0          5m22s
+cnf-app-mac-operator-controller-manager-74498bddcd-xw96w   1/1     Running   0          5m22s
+grout-app-b8f599d5f-hdhjt                                  1/1     Running   0          2m50s
+grout-operator-controller-manager-6488b4c774-b6cv7         1/1     Running   0          4m8s
+grout-operator-controller-manager-6488b4c774-g888r         1/1     Running   0          4m20s
+trex-operator-controller-manager-6cdd46d4cd-9fntz          1/1     Running   0          3m16s
+trex-operator-controller-manager-6cdd46d4cd-jzp42          1/1     Running   0          3m16s
+trexconfig-589577d85-69m5x                                 1/1     Running   0          2m33s
+```
+
 We can see we have the same pods that in the baseline scenario excepting `job-trex-app`, which has not been created. In this scenario, this needs to be created manually once you want to start the traffic generation.
 
 ### What is it executed on each data-plane pod?
 
-Basically, the scripts that are launched are the same than in the baseline scenario; however, since we're activating the troubleshooting mode, what's made by the entrypoint scripts of each pod is to generate the scripts that are eventually used, in the baseline scenario, to launch both TestPMD and TRex, but in this case, they're not launched in the automation. Instead of that, the pods go to sleep infinitely.
+Basically, the scripts that are launched are the same than in the baseline scenario; however, since we're activating the troubleshooting mode, what's made by the entrypoint scripts of each pod is to generate the scripts that are eventually used, in the baseline scenario, to launch both CNFApp and TRex, but in this case, they're not launched in the automation. Instead of that, the pods go to sleep infinitely.
 
 So, with this, you can access to the pods and check that the scripts to be used during troubleshooting have been created:
 
-- `testpmd-app`: two scripts are created: `/usr/local/bin/example-cnf/run/testpmd-run` (same script that in the baseline scenario), and `/usr/local/bin/example-cnf/run/testpmd-interactive` (which launches `testpmd` in interactive mode instead of using auto-start mode). We would use `testpmd-interactive` for troubleshooting mode, since we can use TestPMD in interactive mode, and we can control the start/stop of this tool, the retrieval of statistics, etc.
+- (when using TestPMD) `testpmd-app`: two scripts are created: `/usr/local/bin/example-cnf/run/testpmd-run` (same script that in the baseline scenario), and `/usr/local/bin/example-cnf/run/testpmd-interactive` (which launches `testpmd` in interactive mode instead of using auto-start mode). We would use `testpmd-interactive` for troubleshooting mode, since we can use TestPMD in interactive mode, and we can control the start/stop of this tool, the retrieval of statistics, etc.
+- (when using Grout) `grout-app`: the script to be used is in `/usr/local/bin/example-cnf/run/config-grout` (same script that in the baseline scenario).
 - `trexconfig`: the script to be used is in `/usr/local/bin/example-cnf/trex-server-run` (same script that in the baseline scenario).
 
 ### Start the traffic generation manually and check how it goes
 
 You have to follow these steps to be able to launch the same that you have seen in the baseline scenario. Good thing is that you will have the whole control of the process, so you can start, stop, retry, check, etc. whenever you want.
 
-You should need at least four terminal sessions to be able to interact with all resources fluently: 1) for TestPMD, 2) for TRexServer, 3) for printing live statistics from TRex using `tui`, and finally, 4) for launching TRexApp and check the logs of `job-trex-app`.
+You should need at least four terminal sessions to be able to interact with all resources fluently: 1) for CNFApp, 2) for TRexServer, 3) for printing live statistics from TRex using `tui`, and finally, 4) for launching TRexApp and check the logs of `job-trex-app`.
 
 You have to do the following:
 
-- In one session, start TestPMD in interactive mode:
+- (If using TestPMD) In one session, start TestPMD in interactive mode:
 
 ```
 # open a session in the testpmd-app pod
@@ -558,6 +698,63 @@ testpmd> start
 # (testpmd is started)
 ```
 
+- (If using Grout) In one session, start Grout by launching the provided config file:
+
+```
+# open a session in the grout-app pod
+$ oc rsh -n example-cnf deployment/grout-app
+
+# check the script that has been created by the automation
+sh-4.4$ cat /usr/local/bin/example-cnf/run/config-grout
+grcli -f /usr/local/bin/example-cnf/run/grout.init 2>&1 | tee /var/log/grout/app.log
+
+# check the config file to be applied
+sh-4.4$ cat /usr/local/bin/example-cnf/run/grout.init
+add interface port p0 devargs 0000:86:02.1 rxqs 2
+add interface port p1 devargs 0000:86:03.3 rxqs 2
+
+add ip address 172.16.16.60/24 iface p0
+add ip address 172.16.21.60/24 iface p1
+
+# run the script
+sh-4.4$ sudo /usr/local/bin/example-cnf/run/config-grout
+
+# clear statistics
+sh-4.4$ sudo grcli clear stats
+
+# print statistics
+sh-4.4$ sudo grcli show stats software
+NODE                            CALLS  PACKETS  PKTS/CALL  CYCLES/CALL     CYCLES/PKT
+port_rx                  109805489408     2104        0.0         49.2   2567088141.0
+control_input            109805489408       39        0.0         22.6  63637321574.4
+ndp_na_input                     1130     1130        1.0   10250215.9     10250215.9
+arp_input_reply                   573      573        1.0   10597720.0     10597720.0
+arp_input_request                  43       53        1.2   12147116.4      9855207.6
+eth_input                        2079     2104        1.0       1830.7         1808.9
+control_output                    320      320        1.0       9132.7         9132.7
+ndp_na_input_drop                1130     1130        1.0       1938.0         1938.0
+ip6_input                        1232     1232        1.0       1678.0         1678.0
+arp_input_reply_drop              283      283        1.0       2200.5         2200.5
+icmp6_input                      1232     1232        1.0        470.0          470.0
+arp_input                         616      626        1.0        675.6          664.8
+port_tx                           209      209        1.0       1714.8         1714.8
+ip6_input_local                  1232     1232        1.0        290.2          290.2
+ip_input                          194      194        1.0       1571.1         1571.1
+icmp6_input_unsupported           102      102        1.0       2354.5         2354.5
+ip_output                         196      194        1.0        792.7          800.9
+eth_output                        209      209        1.0        451.4          451.4
+icmp_output                        53       53        1.0       1466.5         1466.5
+arp_input_request_drop             37       47        1.3       2011.1         1583.2
+ip_forward                        141      141        1.0        398.3          398.3
+icmp_local_send                    22       22        1.0       2478.4         2478.4
+eth_input_unknown_vlan             38       52        1.4       1428.6         1044.0
+icmp_input                         53       53        1.0        996.2          996.2
+arp_output_request                  9        9        1.0       2596.2         2596.2
+ip_input_local                     53       53        1.0        392.8          392.8
+arp_output_reply                    6        6        1.0        680.0          680.0
+ip_hold                             2        2        1.0        275.0          275.0
+```
+
 - Configure TRex.
 
 ```
@@ -565,6 +762,7 @@ testpmd> start
 $ oc rsh -n example-cnf deployment/trexconfig
 
 # check the TRex config file to use, that was generated by trex-wrapper script:
+## this is for L2 configuration
 sh-4.4$ cat /usr/local/bin/example-cnf/trex_cfg.yaml 
 - c: 4
   interfaces:
@@ -584,6 +782,32 @@ sh-4.4$ cat /usr/local/bin/example-cnf/trex_cfg.yaml
   - dest_mac: 80:04:0f:f1:89:01
     src_mac: 20:04:0f:f1:89:01
   - dest_mac: 80:04:0f:f1:89:02
+    src_mac: 20:04:0f:f1:89:02
+  version: 2
+
+## this is for L3 configuration
+- c: 4
+  interfaces:
+  - '37:02.6'
+  - '37:03.4'
+  platform:
+    dual_if:
+    - socket: 0
+      threads:
+      - 3
+      - 41
+      - 42
+      - 43
+    latency_thread_id: 2
+    master_thread_id: 1
+  port_info:
+  - default_gw: 192.168.16.60
+    dest_mac: 80:04:0f:f1:89:01
+    ip: 192.168.16.61
+    src_mac: 20:04:0f:f1:89:01
+  - default_gw: 192.168.16.100
+    dest_mac: 80:04:0f:f1:89:02
+    ip: 192.168.16.101
     src_mac: 20:04:0f:f1:89:02
   version: 2
 
@@ -665,6 +889,8 @@ trex>
 
 # verify port status
 trex>portattr
+
+## this is for L2 configuration
 Port Status
 
      port       |          0           |          1           
@@ -696,6 +922,36 @@ RX Queueing     |         off          |         off
 Grat ARP        |         off          |         off          
 ------          |                      |                    
 
+## this is for L3 configuration
+     port       |          0           |          1           
+----------------+----------------------+---------------------
+driver          |       net_iavf       |       net_iavf       
+description     |       Unknown        |       Unknown        
+link status     |          UP          |          UP          
+link speed      |       25 Gb/s        |       25 Gb/s        
+port status     |         IDLE         |         IDLE         
+promiscuous     |         off          |         off          
+multicast       |         off          |         off          
+flow ctrl       |         N/A          |         N/A          
+vxlan fs        |          -           |          -           
+--              |                      |                      
+layer mode      |         IPv4         |         IPv4         
+src IPv4        |    192.168.16.61     |    192.168.16.101    
+IPv6            |         off          |         off          
+src MAC         |  20:04:0f:f1:89:01   |  20:04:0f:f1:89:02   
+---             |                      |                      
+Destination     |    192.168.16.60     |    192.168.16.100    
+ARP Resolution  |  80:04:0f:f1:89:01   |  80:04:0f:f1:89:02   
+----            |                      |                      
+VLAN            |          -           |          -           
+-----           |                      |                      
+PCI Address     |     0000:37:02.6     |     0000:37:03.4     
+NUMA Node       |          0           |          0           
+RX Filter Mode  |    hardware match    |    hardware match    
+RX Queueing     |         off          |         off          
+Grat ARP        |  every 120 seconds   |  every 120 seconds   
+------          |                      |                      
+
 # if we execute tui command, we can display live statistics
 
 trex> tui
@@ -710,6 +966,7 @@ tui>
 ```
 # in the trex prompt we have below tui statistics, start launching traffic
 # try with UDP packets, 64B size, launching 12mpps during 100 seconds
+## this is for L2 configuration
 trex>start -f stl/udp_1pkt_1mac.py -d 100 -m 12mpps                                                                 
 
 Removing all streams from port(s) [0._, 1._]:                [SUCCESS]                                              
@@ -729,9 +986,42 @@ Starting traffic on port(s) [0._, 1._]:                      [SUCCESS]
 # in this case, we can se packet loss (not all packets have been sent)
 # because we are exceeding the capacity of the link (10 Mbps), we are reaching
 # 99% CPU capacity on TRex pod
+
+## if using L3 configuration, you need to use a different script.
+## For example, taking into account the previous L3 configuration for TRex, if you
+## use this example:
+
+sh-4.4$ pwd
+/opt/trex/trex-core/scripts
+sh-4.4$ sudo vi stl/udp_1pkt_simple_bdir.py 
+
+## change this:
+
+        # create 1 stream
+        if direction==0:
+            src_ip="16.0.0.1"
+            dst_ip="48.0.0.1"
+        else:
+            src_ip="48.0.0.1"
+            dst_ip="16.0.0.1"
+
+
+## for this:
+
+        # create 1 stream
+        if direction==0:
+            src_ip="192.168.16.61"
+            dst_ip="192.168.16.101"
+        else:
+            src_ip="192.168.16.101"
+            dst_ip="192.168.16.61"
+
+## then start again trex-console, enable service mode, and launch the test
+$ trex>service
+$ trex(service)>start -f stl/udp_1pkt_simple_bdir.py -d 10 -m 100pps --force
 ```
 
-- Try now with a TRexApp job
+- Try now with a TRexApp job. This is an example for L2 configuration:
 
 ```
 # in a new terminal with access to the cluster, let's try with something easy
@@ -753,22 +1043,51 @@ spec:
 
   # this needs to match with a RuntimeClass already created in the cluster, if present
   runtime_class_name: performance-blueprint-profile
+```
 
+- And here's the case for L3 configuration, where we can add the following config:
+  - `trexIps` and `cnfappIps`, to specify the IP addresses to be used by TRex and the CNFApp. Remember this is mandatory for Grout, and optional for TRex. You have to include the two IP addresses for each component in an array, line in this example:
+
+```yaml
+  trexIps: ["172.16.16.61/24", "172.16.21.61/24"]
+  cnfappIps: ["172.16.16.60/24", "172.16.21.60/24"]
+```
+
+  - `arpResolution: 1`: this is for TRex to resolve IP-MAC association by sending an ARP request to each IP address of the CNFApp. This is required for Grout.
+
+```
+$ cat trexapp.yml
+apiVersion: examplecnf.openshift.io/v1
+kind: TRexApp
+metadata:
+  namespace: example-cnf
+  name: trex-app
+  annotations:
+    "ansible.sdk.operatorframework.io/verbosity": "4"
+    "ansible.sdk.operatorframework.io/reconcile-period": "1m"
+spec:
+  # TRex parameters
+  packetRate: 1pps
+  duration: 10
+  packetSize: 64
+
+  # this needs to match with a RuntimeClass already created in the cluster, if present
+  runtime_class_name: performance-blueprint-profile
+
+  # L3-related configuration
+  trexIps: ["172.16.16.61/24", "172.16.21.61/24"]
+  cnfappIps: ["172.16.16.60/24", "172.16.21.60/24"]
+  arpResolution: 1
+```
+
+- Apply the TRexApp:
+
+```
 $ oc apply -f trexapp.yml
 
 # then, a trex-app-job pod should be created and move to Running status:
-$ oc get pods -n example-cnf
-NAME                                                       READY   STATUS      RESTARTS   AGE
-cnf-app-mac-operator-controller-manager-74498bddcd-bdkjd   1/1     Running     0          67m
-cnf-app-mac-operator-controller-manager-74498bddcd-xw96w   1/1     Running     0          67m
+$ oc get pods -n example-cnf | grep job-trex-app
 job-trex-app-4jkn5                                         1/1     Running     0           5s
-testpmd-app-b8f599d5f-hdhjt                                1/1     Running     0          64m
-testpmd-operator-controller-manager-6488b4c774-b6cv7       1/1     Running     0          66m
-testpmd-operator-controller-manager-6488b4c774-g888r       1/1     Running     0          66m
-trex-operator-controller-manager-6cdd46d4cd-9fntz          1/1     Running     0          65m
-trex-operator-controller-manager-6cdd46d4cd-jzp42          1/1     Running     0          65m
-trexconfig-589577d85-69m5x                                 1/1     Running     0          64m
-
 
 # wait 10s, we're sending 1 packet per second, so we should only see 10 packets in the trex and testpmd counters.
 # eg. from testpmd stats output:
@@ -849,11 +1168,19 @@ $ oc delete trexapp trex-app -n example-cnf
 trexapp.examplecnf.openshift.io "trex-app" deleted
 ```
 
-- Also, close the TestPMD execution (quit command) and TRex execution with Ctrl-C, so that the statistics are restarted for the next run.
+- Also, close the CNFApp and TRex execution with Ctrl-D, so that the statistics are restarted for the next run.
+
+#### Can I run the TRex profile from TRexApp job manually?
+
+The answer is: yes! You can include the following to the `spec` section to run the TRex profile manually:
+
+- `runDeployment: 0`: instead of launching the TRex profile, the container will go to sleep infinitely. You can launch the TRex profile later on with the following instruction: `/usr/local/bin/run-trex` (extracted from the [trex-wrapper](../trex-container-app/app/scripts/trex-wrapper) script).
 
 ## Draining scenario
 
-We can use the troubleshooting mode to validate some interesting use cases, such as analyzing the impact of a node draining while TestPMD and TRex are exchanging traffic. This scenario is useful to understand how this workload would behave during cluster upgrades, where cluster nodes are cordoned and drained, thus ensuring fault tolerance in the workflow while nodes get reconciliation.
+We can use the troubleshooting mode to validate some interesting use cases, such as analyzing the impact of a node draining while CNFApp and TRex are exchanging traffic. This scenario is useful to understand how this workload would behave during cluster upgrades, where cluster nodes are cordoned and drained, thus ensuring fault tolerance in the workflow while nodes get reconciliation.
+
+> The only supported CNFApp for this use case is TestPMD.
 
 ### Manual testing
 
@@ -1189,7 +1516,11 @@ Here we have a [pipeline execution example from DCI](https://www.distributed-ci.
 
 ## Test Example CNF during upgrades
 
-Another scenario that can be validated is to really test Example CNF during a cluster upgrade. We can use the following pipelines for that:
+Another scenario that can be validated is to really test Example CNF during a cluster upgrade.
+
+> The only supported CNFApp for this use case is TestPMD.
+
+We can use the following pipelines for that:
 
 - This pipeline creates Example CNF on a cluster, and after finishing the baseline scenario, it creates a new TRexApp job with a given profile, where we leave enough duration to check, later on, what has been the result of the test, once upgrade finishes.
 
@@ -1210,7 +1541,7 @@ $ cat example-cnf-continuous-pipeline.yml
       - debug
 
     # Including example-cnf hooks
-    dci_config_dir: /usr/share/example-cnf-config/testpmd
+    dci_config_dir: /usr/share/example-cnf-config/cnfapp
     dci_gits_to_components:
       - /usr/share/example-cnf-config
 
@@ -1220,6 +1551,11 @@ $ cat example-cnf-continuous-pipeline.yml
 
     # Point to SRIOV config
     example_cnf_sriov_file: /usr/share/mycluster-sriov-config.yml
+    # Point to network config file
+    example_cnf_network_config_file: /usr/share/mycluster-net-config.yml
+
+    # use testpmd (grout cannot be used)
+    example_cnf_cnfapp_name: testpmd
 
     # Tune example-cnf execution
     ## Allow testpmd in reduced mode

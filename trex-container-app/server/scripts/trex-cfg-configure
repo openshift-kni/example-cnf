@@ -31,8 +31,14 @@ port_obj_l2_template = {
     "src_mac": ""
 }
 
-CFG_FILE = "/usr/local/bin/example-cnf/trex_cfg.yaml"
+port_obj_l3_template = {
+    "dest_mac": "",
+    "src_mac": "",
+    "default_gw": "",
+    "ip": ""
+}
 
+CFG_FILE = "/usr/local/bin/example-cnf/trex_cfg.yaml"
 
 def main():
     core_string = ''
@@ -73,15 +79,33 @@ def main():
         if not match:
             cfg[0]['platform']['dual_if'].append(sock)
 
-    src_mac = get_src_mac()
-    if not src_mac:
-        print("Source mac address is not available, checking with k8s API")
-        src_mac = get_mac_from_k8s_api()
-    if not src_mac:
-        print("ERROR: Source mac address is not available, exiting...")
-        sys.exit(1)
+    # retrieve source network information
+    src_mac = []
+    ## Could be empty because we don't use IP addresses for TestPMD
+    src_ip = []
 
+    # try to retrieve the source network information from file saving pod annotations
+    network_annotation = get_src_network_annotation()
+    if network_annotation:
+        src_mac = get_src_mac(network_annotation)
+        src_ip = get_src_ip(network_annotation)
+    else:
+        # if not working, then use k8s API
+        print("Network annotation is not available, checking net info with k8s API")
+        src_mac = get_net_resource_from_k8s_api('mac', 'example-cnf-type=pkt-gen')
+        # if we're not able to extract the source MAC address, then exiting
+        if not src_mac:
+            print("ERROR: Source MAC address is not available, exiting...")
+            sys.exit(1)
+        # we don't need to check IP address because it could be empty if using TestPMD
+        src_ip = get_net_resource_from_k8s_api('ips', 'example-cnf-type=pkt-gen')
+
+    # retrieve destination network information
     dst_mac = []
+    ## Could be empty because we don't use IP addresses for TestPMD
+    dst_ip = []
+
+    # directly use k8s API
     dst_mac = get_dst_mac()
     print("destination mac fetched")
 
@@ -99,8 +123,31 @@ def main():
             "different, exiting..." % (','.join(pci_list), ','.join(dst_mac)))
         sys.exit(1)
 
+    # we don't need to check IP address because it could be empty if using TestPMD
+    # but, if length is > 0, we need to check that its length is the same than MAC-related lists
+    dst_ip = get_dst_ip()
+
+    if dst_ip:
+        if len(dst_ip) != len(src_ip):
+            print("ERROR: Source (%s) and Destination (%s) IP list size is "
+                "different, exiting..." % (','.join(src_ip), ','.join(dst_ip)))
+            sys.exit(1)    
+
+        if len(dst_ip) != len(dst_mac):
+            print("ERROR: Dest IP (%s) and Dest MAC (%s) list size is "
+                "different, exiting..." % (','.join(dst_ip), ','.join(dst_mac)))
+            sys.exit(1)   
+
     for idx in range(len(pci_list)):
-        port_obj = port_obj_l2_template.copy()
+        port_obj = {}
+        # depending on whether IP addresses are present or not, we use a different template
+        if dst_ip:
+            port_obj = port_obj_l3_template.copy()
+            port_obj['default_gw'] = dst_ip[idx].split('/')[0]
+            port_obj['ip'] = src_ip[idx].split('/')[0]
+        else:
+            port_obj = port_obj_l2_template.copy()
+
         port_obj['src_mac'] = src_mac[idx]
         port_obj['dest_mac'] = dst_mac[idx]
         cfg[0]['port_info'].append(port_obj)
@@ -170,53 +217,46 @@ def get_pci():
     print("get_pci - All PCI addresses captured:", ','.join(pci_all))
     return pci_all
 
-def get_src_mac():
-    podinfo = "/etc/podnetinfo/annotations"
-    if not os.path.exists(podinfo):
-        return []
-    print("get_src_mac - podinfo found")
+def get_src_network_annotation():
+    # object to return
     obj = []
+    podinfo = "/etc/podnetinfo/annotations"
+    if os.path.exists(podinfo):
+        print("get_src_network_annotation - annotations file found")
+        with open(podinfo) as f:
+            for line in f:
+                name, var = line.partition("=")[::2]
+                if name == "k8s.v1.cni.cncf.io/networks":
+                    obj = yaml.safe_load(yaml.safe_load(var))
+                    print("get_src_network_annotation - netinfo found")
+    return obj
+
+def get_src_mac(network_annotation):
+    # object to return
     macs = []
-    with open(podinfo) as f:
-        for line in f:
-            name, var = line.partition("=")[::2]
-            if name == "k8s.v1.cni.cncf.io/networks":
-                obj = yaml.safe_load(yaml.safe_load(var))
-    for item in obj:
+    for item in network_annotation:
         print(item)
         if 'mac' in item:
             macs.append(item['mac'])
-        else:
-            print("TODO: Implement mac fetching DPDK application - workaround")
-            mac = [int('fe', 16), int('16', 16),
-                   int('3b', 16), random.getrandbits(8),
-                   random.getrandbits(8), random.getrandbits(8)]
-            macStr = ':'.join(["%02x" % x for x in mac])
-            macs.append(macStr)
     print("get_src_mac - MACs found:", ','.join(macs))
     return macs
 
+def get_src_ip(network_annotation):
+    # object to return
+    ips = []
+    for item in network_annotation:
+        print(item)
+        if 'ips' in item:
+            # assuming there's only one IP address per interface
+            ips.append(item['ips'][0])
+    print("get_src_ip - IPs found:", ','.join(ips))
+    return ips
+
 def get_dst_mac():
-    group = "examplecnf.openshift.io"
-    version = "v1"
-    namespace = "example-cnf"
-    plural = "cnfappmacs"
+    return get_net_resource_from_k8s_api('mac', 'example-cnf-type=cnf-app')
 
-    config.load_incluster_config()
-    custom_api = client.CustomObjectsApi()
-    try:
-        response = custom_api.list_namespaced_custom_object(group, version, namespace, plural)
-    except ApiException as e:
-        return []
-
-    macs = []
-    for item in response['items']:
-        print(item['spec'].get('node'))
-        for resource in item['spec']['resources']:
-            for dev in resource['devices']:
-                macs.append(dev['mac'])
-    print("get_dst_mac - Retrieved MAC addresses from testpmd-app:", ','.join(macs))
-    return macs
+def get_dst_ip():
+    return get_net_resource_from_k8s_api('ips', 'example-cnf-type=cnf-app')
 
 ###########################
 def get_vfio_pcis():
@@ -241,25 +281,30 @@ def get_cores(numa, count):
         val = f.read().split(',')[2:count+2]
         return ','.join(val)
 
-def get_mac_from_k8s_api():
-    macs = []
-    namespace = "example-cnf"
-    label = "example-cnf-type=pkt-gen"
+def get_net_resource_from_k8s_api(resource, pod_label):
+    resources = []
 
     config.load_incluster_config()
     v1 = client.CoreV1Api()
     try:
-        response = v1.list_namespaced_pod(namespace=namespace, label_selector=label)
+        response = v1.list_namespaced_pod(namespace="example-cnf", label_selector=pod_label)
         # there is only one pod that matches this label, so let's iterate the networks over it
         networks = json.loads(response.items[0].metadata.annotations['k8s.v1.cni.cncf.io/networks'])
 
         for network in networks:
-            # just extract the MAC address
-            print("get_mac_from_k8s_api - mac found", network["mac"])
-            macs.append(network["mac"])
+            print(network)
+            # extract the required resource. If it's an IP, we need to check an array
+            if resource == "ips":
+                if 'ips' in network:
+                    print("get_net_resource_from_k8s_api - IP found", network[resource][0])
+                    # assuming there's only one IP address per interface
+                    resources.append(network[resource][0])
+            else:
+                print("get_net_resource_from_k8s_api - MAC found", network[resource])
+                resources.append(network[resource])
 
-        print("get_mac_from_k8s_api - MACs found:", ','.join(macs))
-        return macs
+        print("get_net_resource_from_k8s_api - All", resource, "found:", ','.join(resources))
+        return resources
     except ApiException as e:
         print(e)
         return []

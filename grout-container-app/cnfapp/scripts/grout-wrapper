@@ -1,0 +1,107 @@
+#!/bin/bash
+
+set -ex
+
+# Start lifecycle webserver in background
+/usr/local/bin/webserver 8095 &
+
+echo "Welcome to grout-wrapper script!"
+
+RUN_DEPLOYMENT=${run_deployment:=1}
+
+LOG_DIR="/var/log/grout"
+[ -d $LOG_DIR ] || mkdir -p $LOG_DIR
+rm -rf $LOG_DIR/*
+GROUT_LOG_FILE="$LOG_DIR/app.log"
+touch $GROUT_LOG_FILE
+
+if [ -z ${NETWORK_NAME_LIST} ]; then
+    echo "ERROR: NETWORK_NAME_LIST is required."
+    exit 1
+fi
+
+# Create Grout config file, which will be built on this script.
+GROUT_CONF_FILE="/usr/local/bin/example-cnf/run/grout.init"
+touch $GROUT_CONF_FILE
+
+# Define interfaces to be used, with PCI address and Rx queue
+# CPU affinity is configured by default, we don't need to configure it here
+PORT_INDEX=0
+RXQ=${rx_queues:=1}
+
+IFS=',' read -r -a NETWORK_ARRAY <<< "$NETWORK_NAME_LIST"
+
+for item in "${NETWORK_ARRAY[@]}"; do
+    IFS='/' read -r -a RES_ARRAY <<< "$item"
+    NAME="PCIDEVICE_OPENSHIFT_IO_${RES_ARRAY[1]^^}"
+    if [ -z ${!NAME} ]; then
+        echo "Could not find ${NAME} with PCI address, exiting"
+        exit 1
+    fi
+    IFS=',' read -r -a PCI_ARRAY <<< "${!NAME}"
+    for pci_item in "${PCI_ARRAY[@]}"; do
+        echo "add interface port p${PORT_INDEX} devargs ${pci_item} rxqs ${RXQ}" >> $GROUT_CONF_FILE
+        PORT_INDEX=$((PORT_INDEX+1))
+    done
+done
+
+# Define IP configuration to use
+/usr/local/bin/example-cnf/retrieve-grout-ip-addresses
+
+# Print Grout config file
+echo "Content of Grout config file:"
+echo
+cat $GROUT_CONF_FILE
+
+# Start Grout on background
+## Since v0.9.1, no socket is required, it's created as an abstract socket, available as grout.sock
+## Leaving it here just in case it's needed in the future
+#GROUT_SOCKET_FILE="/usr/local/bin/example-cnf/run/grout.sock"
+echo "Starting Grout"
+#sudo grout -v -s $GROUT_SOCKET_FILE &
+sudo grout -v &
+
+# Wait a couple of seconds, so that we ensure Grout is running before starting configuring it
+sleep 5
+
+echo "Building Grout config script"
+# Build script to apply Grout configuration
+RUN="/usr/local/bin/example-cnf/run/config-grout"
+CMD="grcli -f $GROUT_CONF_FILE"
+CMD="${CMD} 2>&1 | tee $GROUT_LOG_FILE"
+echo "${CMD}" > $RUN
+chmod +x "$RUN"
+
+function sig_term() {
+    echo $(date +"%F %T,%3N") > /var/log/grout/sigterm-received.log
+    # kill grout application
+    kill -9 $(ps aux | grep -w stats-period | grep -v grep | awk '{print $2}')
+    exit
+}
+trap sig_term SIGTERM
+
+if [[ $RUN_DEPLOYMENT == "1" ]]; then
+
+    echo "Running Grout config script"
+
+    # Configure Grout
+    sudo /usr/local/bin/example-cnf/run/config-grout
+
+    # Clear statistics
+    sudo grcli clear stats
+
+    # Print statistics every $STAT_PERIOD seconds
+    set +ex
+    STATS_PERIOD=${stats_period:=1}
+    while true; do
+        echo "*******************************************" 2>&1 | tee -a $GROUT_LOG_FILE
+        date 2>&1 | tee -a $GROUT_LOG_FILE
+        echo "*******************************************" 2>&1 | tee -a $GROUT_LOG_FILE
+        sudo grcli show stats software 2>&1 | tee -a $GROUT_LOG_FILE
+        echo "" 2>&1 | tee -a $GROUT_LOG_FILE
+        sleep $STATS_PERIOD
+    done
+else
+    # Do not configure Grout and go to sleep. It will be configured manually
+    sleep infinity
+fi

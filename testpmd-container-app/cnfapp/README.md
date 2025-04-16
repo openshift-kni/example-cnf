@@ -20,7 +20,7 @@ They present some differences:
 - `testpmd-run`: runs `testpmd` in auto-start mode.
 
 ```
-sh-4.4$ cat testpmd-run 
+sh-4.4$ cat testpmd-run
 /usr/local/bin/example-cnf/testpmd -l 3,5,53 --in-memory  -a 0000:86:02.2  -a 0000:86:03.0  --socket-mem 0,1024 -n 6 --proc-type auto --file-prefix pg -- --nb-cores=2 --rxq=1 --txq=1 --rxd=2048 --txd=2048 --auto-start  --eth-peer 0,20:04:0f:f1:89:01 --eth-peer 1,20:04:0f:f1:89:02 --forward-mode=mac --stats-period 1 2>&1 | tee /var/log/testpmd/app.log
 ```
 
