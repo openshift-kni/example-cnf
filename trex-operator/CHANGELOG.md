@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.28] - 2025-04-22
+
+- Remove references to deprecated cnf-app-mac-operator, now checking pod network annotations instead
+
 ## [0.2.27] - 2025-04-16
 
 - Include support of L3 configuration

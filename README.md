@@ -11,7 +11,6 @@ It provides the following operators:
 - [trex-operator](trex-operator)
 - [testpmd-operator](testpmd-operator)
 - [grout-operator](grout-operator)
-- [cnf-app-mac-operator](cnf-app-mac-operator)
 
 You can use them from the [Example CNF Catalog](https://quay.io/repository/rh-nfv-int/nfv-example-cnf-catalog?tab=tags). Image generation is automated with [Github workflows](.github/workflows) in this repo, using this [Makefile](Makefile).
 
@@ -27,12 +26,9 @@ To run Example CNF, you need to fulfil the following infrastructure-related pre-
 
 ## How operators are created
 
-The four operators defined in this repository are built with [Operator SDK tool](https://sdk.operatorframework.io/docs/building-operators/). [Here](https://youtu.be/imF9VGJ1Dd4) you can see how CRD-to-pod conversion works for this kind of operators.
+The three operators defined in this repository are built with [Operator SDK tool](https://sdk.operatorframework.io/docs/building-operators/). [Here](https://youtu.be/imF9VGJ1Dd4) you can see how CRD-to-pod conversion works for this kind of operators.
 
-We can differentiate between these two cases:
-
-- Ansible-based operators: this is the case of [testpmd-operator](testpmd-operator/README.md#how-to-build-the-operator), [grout-operator](grout-operator/README.md#how-to-build-the-operator) and [trex-operator](trex-operator/README.md#how-to-build-the-operator).
-- Go-based operators: this is the case of [cnf-app-mac-operator](cnf-app-mac-operator/README.md#how-to-build-the-operator).
+All are Ansible-based operators. Here you can see how each operator is built: [testpmd-operator](testpmd-operator/README.md#how-to-build-the-operator), [grout-operator](grout-operator/README.md#how-to-build-the-operator) and [trex-operator](trex-operator/README.md#how-to-build-the-operator).
 
 ## Pod affinity rules
 
@@ -54,7 +50,7 @@ In our [example-cnf-config automation](https://github.com/dci-labs/example-cnf-c
 
 The `ecd_sriov_networks` represents the connection between TRex and CNF Application. There are two links per connection, each link using a different SRIOV network.
 
-TRex uses static MAC addresses starting with `20:...`, and the CNF Application uses static MAC addresses starting with `80:...`, and the addresses, together with the PCI addresses, are eventually gathered by the CNFAppMac CR.
+By default, TRex uses static MAC addresses starting with `20:...`, and the CNF Application uses static MAC addresses starting with `80:...`, and the addresses, together with the PCI addresses, are eventually gathered from the pod network annotations.
 
 The network schema would be as follows:
 

@@ -239,8 +239,6 @@ We can check the pods that have been created after launching the pipeline:
 ```
 $ oc get pods -n example-cnf
 NAME                                                       READY   STATUS      RESTARTS   AGE
-cnf-app-mac-operator-controller-manager-74498bddcd-96v6q   1/1     Running     0          158m
-cnf-app-mac-operator-controller-manager-74498bddcd-s7tj2   1/1     Running     0          159m
 job-trex-app-fcs5j                                         0/1     Completed   0          152m
 testpmd-app-66f65bf475-4897b                               1/1     Running     0          119m
 testpmd-operator-controller-manager-6488b4c774-hctzp       1/1     Running     0          157m
@@ -255,8 +253,6 @@ trexconfig-5865745c74-qstk6                                1/1     Running     0
 ```
 $ oc get pods -n example-cnf
 NAME                                                       READY   STATUS      RESTARTS   AGE
-cnf-app-mac-operator-controller-manager-74498bddcd-96v6q   1/1     Running     0          158m
-cnf-app-mac-operator-controller-manager-74498bddcd-s7tj2   1/1     Running     0          159m
 grout-app-66f65bf475-4897b                                 1/1     Running     0          119m
 grout-operator-controller-manager-6488b4c774-hctzp         1/1     Running     0          157m
 grout-operator-controller-manager-6488b4c774-zjhtw         1/1     Running     0          156m
@@ -469,8 +465,6 @@ We can check the pods that have been created after launching the pipeline:
 ```
 $ oc get pods -n example-cnf
 NAME                                                       READY   STATUS    RESTARTS   AGE
-cnf-app-mac-operator-controller-manager-74498bddcd-bdkjd   1/1     Running   0          5m22s
-cnf-app-mac-operator-controller-manager-74498bddcd-xw96w   1/1     Running   0          5m22s
 testpmd-app-b8f599d5f-hdhjt                                1/1     Running   0          2m50s
 testpmd-operator-controller-manager-6488b4c774-b6cv7       1/1     Running   0          4m8s
 testpmd-operator-controller-manager-6488b4c774-g888r       1/1     Running   0          4m20s
@@ -484,8 +478,6 @@ trexconfig-589577d85-69m5x                                 1/1     Running   0  
 ```
 $ oc get pods -n example-cnf
 NAME                                                       READY   STATUS    RESTARTS   AGE
-cnf-app-mac-operator-controller-manager-74498bddcd-bdkjd   1/1     Running   0          5m22s
-cnf-app-mac-operator-controller-manager-74498bddcd-xw96w   1/1     Running   0          5m22s
 grout-app-b8f599d5f-hdhjt                                  1/1     Running   0          2m50s
 grout-operator-controller-manager-6488b4c774-b6cv7         1/1     Running   0          4m8s
 grout-operator-controller-manager-6488b4c774-g888r         1/1     Running   0          4m20s
@@ -1192,8 +1184,6 @@ To test this scenario, we use the troubleshooting scenario as base, and then we 
 # in this case, TestPMD is running in worker-2 and TRex is running in worker-0
 $ oc get pods -o wide
 NAME                                                       READY   STATUS    RESTARTS   AGE    IP            NODE       NOMINATED NODE   READINESS GATES
-cnf-app-mac-operator-controller-manager-6f55449fcf-ngtm5   1/1     Running   0          3h4m   10.129.3.8    worker-1   <none>           <none>
-cnf-app-mac-operator-controller-manager-6f55449fcf-wqvzk   1/1     Running   0          3h3m   10.130.2.59   worker-3   <none>           <none>
 testpmd-app-846496dbd9-zp9wn                               1/1     Running   0          3h     10.128.2.54   worker-2   <none>           <none>
 testpmd-operator-controller-manager-587876bb54-67pjh       1/1     Running   0          3h2m   10.129.3.10   worker-1   <none>           <none>
 testpmd-operator-controller-manager-587876bb54-9btq2       1/1     Running   0          3h2m   10.130.2.61   worker-3   <none>           <none>
@@ -1231,8 +1221,6 @@ $ oc apply -f trexapp.yml
 # then, a trex-app-job pod should be created and move to Running status:
 $ oc get pods -n example-cnf
 NAME                                                       READY   STATUS    RESTARTS   AGE
-cnf-app-mac-operator-controller-manager-6f55449fcf-ngtm5   1/1     Running   0          3h25m
-cnf-app-mac-operator-controller-manager-6f55449fcf-wqvzk   1/1     Running   0          3h24m
 job-trex-app-wfd6f                                         0/1     Running   0          22s
 testpmd-app-846496dbd9-zp9wn                               1/1     Running   0          3h20m
 testpmd-operator-controller-manager-587876bb54-67pjh       1/1     Running   0          3h22m
@@ -1284,8 +1272,6 @@ node/worker-2 drained
 ## now we have it on worker-1
 $ oc get pods -o wide -n example-cnf
 NAME                                                       READY   STATUS    RESTARTS   AGE     IP            NODE       NOMINATED NODE   READINESS GATES
-cnf-app-mac-operator-controller-manager-6f55449fcf-ngtm5   1/1     Running   0          3h32m   10.129.3.8    worker-1   <none>           <none>
-cnf-app-mac-operator-controller-manager-6f55449fcf-wqvzk   1/1     Running   0          3h31m   10.130.2.59   worker-3   <none>           <none>
 job-trex-app-wfd6f                                         0/1     Running   0          7m26s   10.130.2.67   worker-3   <none>           <none>
 testpmd-app-846496dbd9-zslp7                               1/1     Running   0          6m38s   10.129.3.32   worker-1   <none>           <none>
 testpmd-operator-controller-manager-587876bb54-67pjh       1/1     Running   0          3h29m   10.129.3.10   worker-1   <none>           <none>
