@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.3.9] - 2025-04-22
+
+- Remove reference to cnf-app-mac-operator
+
 ## [0.3.8] - 2025-04-16
 
 - Include grout-operator

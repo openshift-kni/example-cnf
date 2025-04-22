@@ -10,7 +10,7 @@ fi
 VERSIONS="$1"
 EXTRA="$2"
 
-DIRS="testpmd-container-app trex-container-app grout-container-app cnf-app-mac-operator testpmd-operator trex-operator grout-operator nfv-example-cnf-index"
+DIRS="testpmd-container-app trex-container-app grout-container-app testpmd-operator trex-operator grout-operator nfv-example-cnf-index"
 
 FILES="$(git diff --name-only -r origin/${GITHUB_BASE_REF:-main}:|grep -Fv /.git || :)"
 

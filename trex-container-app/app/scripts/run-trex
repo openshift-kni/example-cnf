@@ -57,11 +57,6 @@ class STLS1(object):
         self.process = Thread(target=trexstats.watch, args=[self.client, self.ports])
         self.process.start()
 
-    def start_watch(self):
-        self.watch_mac = Thread(target=trexmac.watch_cr, args=[self.queue])
-        self.watch_mac.daemon = True
-        self.watch_mac.start()
-
     def update(self, obj):
         meta = obj['metadata']
         spec = obj['spec']
@@ -146,7 +141,7 @@ class STLS1(object):
 
     def init_streams(self):
         if self.mode == 'direct':
-            macs = trexmac.get_cnfappmac_cr_values()
+            macs = trexmac.get_dst_mac()
 
         if macs:
             log.info("destination macs available")
@@ -233,9 +228,6 @@ class STLS1(object):
 
             self.client.start(ports = self.ports, mult = self.rate,
                 duration = self.duration, core_mask = STLClient.CORE_MASK_PIN)
-
-            if self.mode == 'direct':
-                self.start_watch()
 
             trexstats.started(self.profile, self.rate, self.duration)
 

@@ -121,18 +121,6 @@ rules:
     verbs:
       - use
   - apiGroups:
-      - examplecnf.openshift.io
-    resources:
-      - cnfappmacs
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
       - k8s.cni.cncf.io
     resources:
       - network-attachment-definitions

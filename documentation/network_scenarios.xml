@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36" version="26.2.12" pages="3">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36" version="26.2.13" pages="4">
   <diagram name="Load balancing mode" id="Qr6HWebOqf74uP96-ps6">
     <mxGraphModel dx="1434" dy="786" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -608,6 +608,137 @@
           <mxGeometry x="190" y="555" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="vyfZQFQM0aiHp2LJZsWr-45" value="end" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="90" y="570" width="30" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="workflow -w/o cnf-app-mac-operator" id="mqVTLgT7KxcZyhUL8sZg">
+    <mxGraphModel dx="1428" dy="723" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-0" />
+        <mxCell id="lC0DK9by0Ada1jxBk84f-1" parent="lC0DK9by0Ada1jxBk84f-0" />
+        <mxCell id="lC0DK9by0Ada1jxBk84f-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="lC0DK9by0Ada1jxBk84f-1" source="lC0DK9by0Ada1jxBk84f-3" target="lC0DK9by0Ada1jxBk84f-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-3" value="start" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="lC0DK9by0Ada1jxBk84f-1">
+          <mxGeometry x="60" y="140" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="lC0DK9by0Ada1jxBk84f-1" source="lC0DK9by0Ada1jxBk84f-5" target="lC0DK9by0Ada1jxBk84f-9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-5" value="Create CatalogSource from catalog image" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="lC0DK9by0Ada1jxBk84f-1">
+          <mxGeometry x="125" y="125" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="lC0DK9by0Ada1jxBk84f-1" source="lC0DK9by0Ada1jxBk84f-9" target="lC0DK9by0Ada1jxBk84f-11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="lC0DK9by0Ada1jxBk84f-1" source="lC0DK9by0Ada1jxBk84f-9" target="lC0DK9by0Ada1jxBk84f-19">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="330" y="270" />
+              <mxPoint x="90" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-8" value="when finished" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="lC0DK9by0Ada1jxBk84f-7">
+          <mxGeometry x="0.0494" y="-1" relative="1" as="geometry">
+            <mxPoint y="11" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-9" value="for each operator" style="rhombus;whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="lC0DK9by0Ada1jxBk84f-1">
+          <mxGeometry x="290" y="115" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="lC0DK9by0Ada1jxBk84f-1" source="lC0DK9by0Ada1jxBk84f-11" target="lC0DK9by0Ada1jxBk84f-13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-11" value="Deploy OLM operator, creating:&lt;div&gt;- Namespace&lt;/div&gt;&lt;div&gt;- OperatorGrout&lt;/div&gt;&lt;div&gt;- Subscription&lt;/div&gt;" style="whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="lC0DK9by0Ada1jxBk84f-1">
+          <mxGeometry x="420" y="112.5" width="140" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="lC0DK9by0Ada1jxBk84f-1" source="lC0DK9by0Ada1jxBk84f-13" target="lC0DK9by0Ada1jxBk84f-16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-13" value="Get and approve InstallPlan" style="whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="lC0DK9by0Ada1jxBk84f-1">
+          <mxGeometry x="430" y="240" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="lC0DK9by0Ada1jxBk84f-1" source="lC0DK9by0Ada1jxBk84f-16" target="lC0DK9by0Ada1jxBk84f-9">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="665" y="80" />
+              <mxPoint x="330" y="80" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-15" value="operator installed, CRDs and CRs available" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="lC0DK9by0Ada1jxBk84f-14">
+          <mxGeometry x="-0.6727" y="-3" relative="1" as="geometry">
+            <mxPoint x="-168" y="-56" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-16" value="Wait for ClusterServiceVersion" style="whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="lC0DK9by0Ada1jxBk84f-1">
+          <mxGeometry x="600" y="235" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="lC0DK9by0Ada1jxBk84f-1" source="lC0DK9by0Ada1jxBk84f-19" target="lC0DK9by0Ada1jxBk84f-21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-19" value="Create TestPMD/Grout CR (aka CNFApp)" style="whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="lC0DK9by0Ada1jxBk84f-1">
+          <mxGeometry x="30" y="340" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="lC0DK9by0Ada1jxBk84f-1" source="lC0DK9by0Ada1jxBk84f-21" target="lC0DK9by0Ada1jxBk84f-27">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-21" value="CNFApp Pod is created" style="whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="lC0DK9by0Ada1jxBk84f-1">
+          <mxGeometry x="245" y="340" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="lC0DK9by0Ada1jxBk84f-1" source="lC0DK9by0Ada1jxBk84f-27" target="lC0DK9by0Ada1jxBk84f-29">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-27" value="Create TRexServer CR" style="whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="lC0DK9by0Ada1jxBk84f-1">
+          <mxGeometry x="480" y="340" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-28" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="lC0DK9by0Ada1jxBk84f-1" source="lC0DK9by0Ada1jxBk84f-29" target="lC0DK9by0Ada1jxBk84f-31">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-29" value="TRexConfig Pod is created" style="whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="lC0DK9by0Ada1jxBk84f-1">
+          <mxGeometry x="640" y="340" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-30" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="lC0DK9by0Ada1jxBk84f-1" source="lC0DK9by0Ada1jxBk84f-31" target="lC0DK9by0Ada1jxBk84f-33">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-31" value="Create TRexApp CR" style="whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="lC0DK9by0Ada1jxBk84f-1">
+          <mxGeometry x="640" y="450" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-32" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="lC0DK9by0Ada1jxBk84f-1" source="lC0DK9by0Ada1jxBk84f-33" target="lC0DK9by0Ada1jxBk84f-36">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-33" value="TRex Job is created" style="whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="lC0DK9by0Ada1jxBk84f-1">
+          <mxGeometry x="640" y="555" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-34" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="lC0DK9by0Ada1jxBk84f-1" source="lC0DK9by0Ada1jxBk84f-36" target="lC0DK9by0Ada1jxBk84f-40">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-35" value="TRex Job finishes" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="lC0DK9by0Ada1jxBk84f-34">
+          <mxGeometry x="0.05" y="-1" relative="1" as="geometry">
+            <mxPoint x="3" y="-14" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-36" value="Traffic is generated from TRex and forwarded by CNFApp&amp;nbsp;" style="whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="lC0DK9by0Ada1jxBk84f-1">
+          <mxGeometry x="430" y="555" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-37" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="lC0DK9by0Ada1jxBk84f-1" source="lC0DK9by0Ada1jxBk84f-36" target="lC0DK9by0Ada1jxBk84f-36">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-38" value="while TRex Job is running" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="lC0DK9by0Ada1jxBk84f-37">
+          <mxGeometry x="-0.5" y="3" relative="1" as="geometry">
+            <mxPoint x="25" y="-12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="lC0DK9by0Ada1jxBk84f-1" source="lC0DK9by0Ada1jxBk84f-40" target="lC0DK9by0Ada1jxBk84f-41">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-40" value="Gather statistics and calculate packet loss ratio" style="whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="lC0DK9by0Ada1jxBk84f-1">
+          <mxGeometry x="190" y="555" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lC0DK9by0Ada1jxBk84f-41" value="end" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="lC0DK9by0Ada1jxBk84f-1">
           <mxGeometry x="90" y="570" width="30" height="30" as="geometry" />
         </mxCell>
       </root>
