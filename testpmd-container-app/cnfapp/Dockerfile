@@ -2,9 +2,9 @@
 FROM quay.io/rh-nfv-int/dpdk:v0.0.1 as build
 
 ## Image to build webserver
-FROM docker.io/library/golang:1.23 as build2
+FROM registry.access.redhat.com/ubi9/go-toolset:1.23 as build2
 
-WORKDIR /utils
+WORKDIR /opt/app-root/src
 COPY utils/webserver.go .
 RUN go mod init webserver.go
 RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
@@ -43,7 +43,7 @@ RUN chmod 750 /var/log/testpmd
 RUN chown example-cnf /var/log/testpmd
 
 # Copy scripts
-COPY --chmod=550 --from=build2 /utils/webserver /usr/local/bin/webserver
+COPY --chmod=550 --from=build2 /opt/app-root/src/webserver /usr/local/bin/webserver
 COPY --chmod=550 --from=build /usr/local/bin/dpdk-testpmd /usr/local/bin/example-cnf/testpmd
 COPY --chmod=550 scripts/testpmd-wrapper /usr/local/bin/example-cnf/testpmd-wrapper
 
