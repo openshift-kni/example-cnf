@@ -4,6 +4,7 @@ FROM registry.access.redhat.com/ubi8/ubi:latest
 RUN dnf install -y \
     numactl \
     numactl-devel \
+    rdma-core \
     nfs-utils \
     perf \
     tcpdump \
