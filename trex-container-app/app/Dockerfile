@@ -1,6 +1,6 @@
-FROM docker.io/library/golang:1.23 as build
+FROM registry.access.redhat.com/ubi9/go-toolset:1.23 as build
 
-WORKDIR /utils
+WORKDIR /opt/app-root/src
 COPY utils/webserver.go .
 RUN go mod init webserver.go
 RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
@@ -45,7 +45,7 @@ RUN chown example-cnf:example-cnf /var/log/trex
 
 # Copy scripts
 COPY --chmod=550 scripts /usr/local/bin/
-COPY --chmod=550 --from=build /utils/webserver /usr/local/bin/webserver
+COPY --chmod=550 --from=build /opt/app-root/src/webserver /usr/local/bin/webserver
 COPY --chmod=550 pyfiles /opt/pyfiles/
 
 # Move to the custom user

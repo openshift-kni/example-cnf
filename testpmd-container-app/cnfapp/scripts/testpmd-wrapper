@@ -45,13 +45,17 @@ if [ -f /sys/fs/cgroup/cpuset/cpuset.cpus ]; then
 elif [ -f /sys/fs/cgroup/cpuset.cpus ]; then
     # Applied to latest OCP 4.16 nightlies starting from 4.16.0 ec.5
     LCORES=$(cat /sys/fs/cgroup/cpuset.cpus)
+elif [ -f /proc/1/status ]; then
+    # Applied when using a privileged pod, since /sys/fs/cgroup directory is overriden with host configuration
+    # Extract the list of CPUs from /proc/1/status file
+    LCORES=$(cat /proc/1/status | grep Cpus_allowed_list |  awk '{print $2}')
 else
-    echo "Could not find file to extract cores, existing.."
+    echo "Could not find file to extract cores, exiting..."
     exit 1
 fi
 
 if [ -z $LCORES ]; then
-    echo "Could not find cores, existing.."
+    echo "Could not find cores, exiting..."
     exit 1
 fi
 
