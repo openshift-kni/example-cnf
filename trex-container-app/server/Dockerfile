@@ -1,6 +1,6 @@
-FROM docker.io/library/golang:1.23 as build
+FROM registry.access.redhat.com/ubi9/go-toolset:1.23 as build
 
-WORKDIR /utils
+WORKDIR /opt/app-root/src
 COPY utils/webserver.go .
 RUN go mod init webserver.go
 RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
@@ -46,9 +46,10 @@ RUN dnf install -y \
     vim \
     && dnf clean all
 
+# Install TRex
 RUN mkdir -p /opt/trex && cd /opt/trex && git clone --branch ${TREX_VER} ${TREX_REPO}
 RUN cd /opt/trex/trex-core/linux_dpdk && \
-    ./b configure --no-mlx --no-bxnt --new-memory && \
+    ./b configure --no-bnxt --new-memory && \
     ./b build
 
 RUN cd /opt && git clone ${TRAFFICGEN_REPO} && mv bench-trafficgen/trafficgen . && rm -rf bench-trafficgen
@@ -79,7 +80,7 @@ RUN chmod 664 /usr/local/bin/example-cnf/trex_cfg.yaml
 
 # Copy scripts
 COPY --chmod=550 scripts /usr/local/bin
-COPY --chmod=550 --from=build /utils/webserver /usr/local/bin/webserver
+COPY --chmod=550 --from=build /opt/app-root/src/webserver /usr/local/bin/webserver
 
 # Move to the custom user
 USER example-cnf

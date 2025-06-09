@@ -60,6 +60,14 @@ TRex -- (example-cnf-net1|2) -- CNF Application
 
 You can also provide IP addresses if requiring L3 connectivity. This is mandatory for Grout, and optional for TestPMD, since TestPMD acts in MAC forwarding mode, so it will ignore all network headers above L2.
 
+### NIC support
+
+The deployment is fully compliant with Intel NICs.
+
+However, we found difficulties when trying to test Mellanox NICs with TRex pod. With the current setup, when launching TRex, it's not able to find the requested interfaces.
+
+According to TRex documentation, [OFED driver](https://trex-tgn.cisco.com/trex/doc/trex_appendix_mellanox.html) should be required. Its deployment in an OpenShift cluster is out of the scope of this project and has not been fully validated, so it's not guaranteed that Mellanox NICs can be used with the TRex pod. Only DPDK-related pods (Grout and TestPMD) can be deployed without any problem.
+
 ## Traffic Flow
 
 Traffic flow is the following:
