@@ -698,7 +698,7 @@ $ oc rsh -n example-cnf deployment/grout-app
 
 # check the script that has been created by the automation
 sh-4.4$ cat /usr/local/bin/example-cnf/run/config-grout
-grcli -f /usr/local/bin/example-cnf/run/grout.init 2>&1 | tee /var/log/grout/app.log
+grcli -f /usr/local/bin/example-cnf/run/grout.init -s /usr/local/bin/example-cnf/run/grout.sock 2>&1 | tee /var/log/grout/app.log
 
 # check the config file to be applied
 sh-4.4$ cat /usr/local/bin/example-cnf/run/grout.init
@@ -712,10 +712,10 @@ add ip address 172.16.21.60/24 iface p1
 sh-4.4$ sudo /usr/local/bin/example-cnf/run/config-grout
 
 # clear statistics
-sh-4.4$ sudo grcli clear stats
+sh-4.4$ sudo grcli -s /usr/local/bin/example-cnf/run/grout.sock clear stats
 
 # print statistics
-sh-4.4$ sudo grcli show stats software
+sh-4.4$ sudo grcli -s /usr/local/bin/example-cnf/run/grout.sock show stats software
 NODE                            CALLS  PACKETS  PKTS/CALL  CYCLES/CALL     CYCLES/PKT
 port_rx                  109805489408     2104        0.0         49.2   2567088141.0
 control_input            109805489408       39        0.0         22.6  63637321574.4

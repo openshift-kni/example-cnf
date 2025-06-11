@@ -8,9 +8,12 @@ RUN dnf install -y \
 RUN dnf install -y \
     libibverbs \
     logrotate \
-    python3 \
+    python39 \
+    python3-pip \
     numactl \
     rdma-core \
     tcpdump \
     sudo \
     && dnf clean all
+
+RUN pip3 install kubernetes

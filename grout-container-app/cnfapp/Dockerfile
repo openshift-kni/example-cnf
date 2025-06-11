@@ -19,15 +19,8 @@ LABEL name="NFV Example CNF Grout Application" \
 
 COPY licenses /licenses
 
-ENV GROUT_VER v0.9.1
+ENV GROUT_VER v0.10.2
 ENV GROUT_RPM https://github.com/DPDK/grout/releases/download/${GROUT_VER}/grout.x86_64.rpm
-
-# Install prerequisite packages
-RUN dnf install -y \
-    python39 \
-    python3-pip \
-    && dnf clean all
-RUN pip3 install kubernetes
 
 # check latest release from https://github.com/DPDK/grout/releases
 RUN dnf -y install ${GROUT_RPM}
