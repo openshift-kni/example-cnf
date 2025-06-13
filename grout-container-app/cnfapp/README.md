@@ -37,23 +37,25 @@ add ip address 172.16.16.60/24 iface p0
 add ip address 172.16.21.60/24 iface p1
 ```
 
-The file created by the automation to launch the Grout configuration is saved under `/usr/local/bin/example-cnf/run/config-grout`, and it has the following content:
+The file created by the automation to launch the Grout configuration is saved under `/usr/local/bin/example-cnf/run/grout.sock`, and it has the following content:
 
 ```
 sh-4.4$ cat config-grout
-grcli -f /usr/local/bin/example-cnf/run/grout.init 2>&1 | tee /var/log/grout/app.log
+grcli -f /usr/local/bin/example-cnf/run/grout.init -s /usr/local/bin/example-cnf/run/grout.sock 2>&1 | tee /var/log/grout/app.log
 ```
 
 To deploy that config, we use the `grcli` command. If using `-f` argument, we will run all the commands that are defined in the file. If just using `grcli`, we'll open a CLI session with Grout and we can start interacting with the service. And also, we can use `grcli` followed by a Grout command to perform a particular action.
+
+We use `-s` argument to refer to a specific location of the Grout socket API file.
 
 For example, we can print statistics in the following way:
 
 ```
 # clear statistics
-$ sudo grcli clear stats
+$ sudo grcli -s /usr/local/bin/example-cnf/run/grout.sock clear stats
 
 # print statistics
-$ sudo grcli show stats software
+$ sudo grcli -s /usr/local/bin/example-cnf/run/grout.sock show stats software
 NODE                            CALLS  PACKETS  PKTS/CALL  CYCLES/CALL     CYCLES/PKT
 port_rx                  109805489408     2104        0.0         49.2   2567088141.0
 control_input            109805489408       39        0.0         22.6  63637321574.4
@@ -92,7 +94,7 @@ Also, you can trace the traffic received by Grout with the following configurati
 
 ```
 # enter in grout CLI
-$ grcli
+$ grcli -s /usr/local/bin/example-cnf/run/grout.sock
 grout# set trace all
 
 # if you get the latest N traces of traffic managed by Grout, you

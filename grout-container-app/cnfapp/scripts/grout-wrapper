@@ -55,11 +55,13 @@ cat $GROUT_CONF_FILE
 
 # Start Grout on background
 ## Since v0.9.1, no socket is required, it's created as an abstract socket, available as grout.sock
-## Leaving it here just in case it's needed in the future
-#GROUT_SOCKET_FILE="/usr/local/bin/example-cnf/run/grout.sock"
+## However, on v0.10.2, there are permission issues because the socket is located on /run/grout.sock,
+## since we normally use a read-only filesystem, there are problems when creating it.
+## Switching to the usage of a custom grout.sock file instead, to better control it.
+GROUT_SOCKET_FILE="/usr/local/bin/example-cnf/run/grout.sock"
 echo "Starting Grout"
-#sudo grout -v -s $GROUT_SOCKET_FILE &
-sudo grout -v &
+sudo grout -v -s $GROUT_SOCKET_FILE &
+#sudo grout -v &
 
 # Wait a couple of seconds, so that we ensure Grout is running before starting configuring it
 sleep 5
@@ -67,7 +69,7 @@ sleep 5
 echo "Building Grout config script"
 # Build script to apply Grout configuration
 RUN="/usr/local/bin/example-cnf/run/config-grout"
-CMD="grcli -f $GROUT_CONF_FILE"
+CMD="grcli -f $GROUT_CONF_FILE -s $GROUT_SOCKET_FILE"
 CMD="${CMD} 2>&1 | tee $GROUT_LOG_FILE"
 echo "${CMD}" > $RUN
 chmod +x "$RUN"
@@ -88,7 +90,7 @@ if [[ $RUN_DEPLOYMENT == "1" ]]; then
     sudo /usr/local/bin/example-cnf/run/config-grout
 
     # Clear statistics
-    sudo grcli clear stats
+    sudo grcli -s $GROUT_SOCKET_FILE clear stats
 
     # Print statistics every $STAT_PERIOD seconds
     set +ex
@@ -97,7 +99,7 @@ if [[ $RUN_DEPLOYMENT == "1" ]]; then
         echo "*******************************************" 2>&1 | tee -a $GROUT_LOG_FILE
         date 2>&1 | tee -a $GROUT_LOG_FILE
         echo "*******************************************" 2>&1 | tee -a $GROUT_LOG_FILE
-        sudo grcli show stats software 2>&1 | tee -a $GROUT_LOG_FILE
+        sudo grcli -s $GROUT_SOCKET_FILE show stats software 2>&1 | tee -a $GROUT_LOG_FILE
         echo "" 2>&1 | tee -a $GROUT_LOG_FILE
         sleep $STATS_PERIOD
     done
