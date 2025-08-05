@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.29] - 2025-08-05
+
+- Updated OperatorSDK to v1.41.1
+- Updated Kustomize to v5.6.0
+- Updated Ansible operator to v1.39.0
+- Updated OPM to v1.55.0
+- Updated trex-container-app-app and trex-container-app-server versions with ubi9:go-toolset v1.24
+- Improved bundle and catalog build process in Makefile
+- Minor documentation and label updates
+
 ## [0.2.28] - 2025-04-22
 
 - Remove references to deprecated cnf-app-mac-operator, now checking pod network annotations instead

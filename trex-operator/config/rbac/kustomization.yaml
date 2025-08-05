@@ -22,7 +22,9 @@ resources:
 # default, aiding admins in cluster management. Those roles are
 # not used by the Project itself. You can comment the following lines
 # if you do not want those helpers be installed with your Project.
+- trexconfig_admin_role.yaml
 - trexconfig_editor_role.yaml
 - trexconfig_viewer_role.yaml
+- trexapp_admin_role.yaml
 - trexapp_editor_role.yaml
 - trexapp_viewer_role.yaml

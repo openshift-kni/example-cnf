@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:1.23 as build
+FROM registry.access.redhat.com/ubi9/go-toolset:1.24 as build
 
 WORKDIR /opt/app-root/src
 COPY utils/webserver.go .
@@ -10,8 +10,8 @@ FROM registry.access.redhat.com/ubi8/python-311:latest
 LABEL name="NFV Example TRexApp Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.18" \
-      release="v0.2.18" \
+      version="v0.2.19" \
+      release="v0.2.19" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 

@@ -2,7 +2,7 @@
 FROM quay.io/rh-nfv-int/dpdk:v0.0.1 as build
 
 ## Image to build webserver
-FROM registry.access.redhat.com/ubi9/go-toolset:1.23 as build2
+FROM registry.access.redhat.com/ubi9/go-toolset:1.24 as build2
 
 WORKDIR /opt/app-root/src
 COPY utils/webserver.go .
@@ -15,8 +15,8 @@ FROM quay.io/rh-nfv-int/ubi8-base-testpmd:v0.0.1
 LABEL name="NFV Example CNF Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.17" \
-      release="v0.2.17" \
+      version="v0.2.18" \
+      release="v0.2.18" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 
