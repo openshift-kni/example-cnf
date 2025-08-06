@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.27] - 2025-08-05
+
+- Updated OperatorSDK to v1.41.1
+- Updated Kustomize to v5.6.0
+- Updated Ansible operator to v1.39.0
+- Updated OPM to v1.55.0
+- Updated testpmd-container-app-cnfapp version with ubi9:go-toolset v1.24
+- Improved bundle and catalog build process in Makefile
+- Minor documentation and label updates
+
 ## [0.2.26] - 2025-04-16
 
 - Include support of L3 configuration

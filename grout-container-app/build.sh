@@ -2,7 +2,7 @@
 
 set -e
 
-TAG=${TAG:-"v0.2.0"}
+TAG=${TAG:-"v0.2.1"}
 
 CLI=${CLI:="podman"}
 ORG=${ORG:="rh-nfv-int"}

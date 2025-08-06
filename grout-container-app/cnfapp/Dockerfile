@@ -1,5 +1,5 @@
 ## Image to build webserver
-FROM registry.access.redhat.com/ubi9/go-toolset:1.23 as build
+FROM registry.access.redhat.com/ubi9/go-toolset:1.24 as build
 
 WORKDIR /opt/app-root/src
 COPY utils/webserver.go .
@@ -12,14 +12,14 @@ FROM quay.io/rh-nfv-int/ubi9-base-grout:v0.0.1
 LABEL name="NFV Example CNF Grout Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.0" \
-      release="v0.2.0" \
+      version="v0.2.1" \
+      release="v0.2.1" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 
 COPY licenses /licenses
 
-ENV GROUT_VER v0.10.2
+ENV GROUT_VER v0.11.0
 ENV GROUT_RPM https://github.com/DPDK/grout/releases/download/${GROUT_VER}/grout.x86_64.rpm
 
 # check latest release from https://github.com/DPDK/grout/releases
