@@ -15,8 +15,8 @@ FROM quay.io/rh-nfv-int/ubi8-base-testpmd:v0.0.1
 LABEL name="NFV Example CNF Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.18" \
-      release="v0.2.18" \
+      version="v0.2.19" \
+      release="v0.2.19" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 

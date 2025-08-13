@@ -7,80 +7,43 @@ import sys
 sys.path.append(os.path.abspath("/opt/pyfiles/"))
 
 from trex.stl.api import *
-from trex.common.services.trex_service import Service
 from trex.common.services.trex_service_arp import ServiceARP
+from trex.common.services.trex_service import Service
 
-import subprocess
 import signal
 import time
-import json
-import queue
 from threading import Thread
-from datetime import datetime
 
 # Internal python files - /opt/pyfiles/
 from logger import CustomLogger, log
 import trexmac
-import trexevent
 import trexstats
 
 clog = CustomLogger("debug")
-
 
 class STLS1(object):
     def __init__ (self, ports, size, rate, trex_ip_list, cnfapp_ip_list, arp_resolution,
                   profile=None, duration=-1, verbose="debug"):
         self.server_url = os.environ.get("TREX_SERVER_URL", "localhost")
         self.client = STLClient(verbose_level=verbose, logger=clog, server=self.server_url)
-        self.fsize = 64
+        self.fsize = int(size)
         self.profile = profile
         self.trex_ip_list = trex_ip_list
         self.cnfapp_ip_list = cnfapp_ip_list
         self.arp_resolution = arp_resolution
         self.pg_id = 0
-        self.pkt_type = "ether"
         self.num_streams = 1
-        self.force_exit = False
         self.ports = ports
         self.port_a = ports[0]
         self.port_b = ports[1]
-        self.size =size
         self.rate = rate
         self.duration = duration
-        self.queue = queue.Queue(maxsize=0)
         signal.signal(signal.SIGINT, self.signal_handler)
         self.stats_obj = trexstats.TRexAppStats(ports)
-        # only 'direct' mode currently
-        self.mode = os.getenv('MODE', 'direct')
 
     def start_stats_monitor(self):
         self.process = Thread(target=trexstats.watch, args=[self.client, self.ports])
         self.process.start()
-
-    def update(self, obj):
-        meta = obj['metadata']
-        spec = obj['spec']
-        log.info("Name(%s) Namespace(%s)" % (meta['name'], meta['namespace']))
-        macs = self.get_macs(spec)
-        if len(macs) < len(self.ports):
-            log.info("ERROR: macs len(%s) is less then ports len (%s)" % (len(macs), len(self.ports)))
-            return
-
-        log.info("reset ports")
-        self.client.reset(ports=self.ports)
-        log.info("create stream with new mac address")
-        for idx in range(0, len(self.ports)):
-            self.add_streams(self.ports[idx], macs[idx])
-        log.info("staring ports")
-        self.client.start(ports=self.ports, mult=self.rate, duration=self.duration,
-                          core_mask=STLClient.CORE_MASK_PIN)
-        data = {}
-        now = datetime.now()
-        data['microtime'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        data['time'] = now.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        data['msg'] = ("Packet stream is updated with mac: %s" % ','.join(macs))
-        data['reason'] = 'StreamUpdated'
-        trexevent.create_event(data)
 
     def create_vm(self, direction=0):
         ip_port_0="18.0.0.1"
@@ -123,7 +86,8 @@ class STLS1(object):
 
         ethr_base = Ether(dst=dest_mac) / IP() / UDP()
 
-        pad = max(0, size - len('ether')) * 'x'
+        base_len = len(bytes(ethr_base))
+        pad = max(0, size - base_len) * 'x'
         vm = self.create_vm(port)
         pkt = STLPktBuilder(pkt=ethr_base/pad, vm=vm)
 
@@ -140,8 +104,7 @@ class STLS1(object):
         self.client.add_streams(new_stream, [port])
 
     def init_streams(self):
-        if self.mode == 'direct':
-            macs = trexmac.get_dst_mac()
+        macs = trexmac.get_dst_mac()
 
         if macs:
             log.info("destination macs available")
@@ -260,7 +223,6 @@ class STLS1(object):
             log.info(e)
 
         finally:
-            self.force_exit = True
             self.client.disconnect()
 
         if passed:
@@ -273,13 +235,14 @@ class STLS1(object):
     def signal_handler(self, sig, frame):
         log.info('You pressed Ctrl+C!')
         time.sleep(6)
-        self.force_exit = True
         clog.force_exit = True
         sys.exit(0)
 
 
 def main():
-    # run the tests
+    log.info("Starting burst...")
+
+    # variable definitions
     packet_size = os.getenv("PACKET_SIZE") or os.getenv("packet_size") or 64
     packet_rate = os.getenv("PACKET_RATE") or os.getenv("packet_rate") or "10pps"
     duration = os.getenv("DURATION") or os.getenv("duration") or -1
@@ -289,14 +252,20 @@ def main():
     arp_resolution = int(os.getenv("arp_resolution")) or 0
     trex_ip_list = []
     cnfapp_ip_list = []
+
     if duration != -1:
         duration = int(duration)
-    log.info("Starting burst...")
+    else:
+        log.info("Packets will be generated forever...")
+
     log.info("Packet Size - %s" % packet_size)
     log.info("Packet Rate - %s" % packet_rate)
     log.info("Job Duration - %s" % duration)
+
     if profile:
         log.info("TRex profile - %s" % profile)
+
+    # Process the TRex IP lists
     if raw_trex_ip_list:
         processed_trex_ip_list = raw_trex_ip_list.split(',')
         # if we provide IP addresses, then let's include them in the list, else it will be empty
@@ -305,6 +274,8 @@ def main():
                 # and remove network mask
                 trex_ip_list.append(ip.split('/')[0])
         log.info("TRex IP list - %s" % trex_ip_list)
+
+    # Process the CNFApp IP lists
     if raw_cnfapp_ip_list:
         processed_cnfapp_ip_list = raw_cnfapp_ip_list.split(',')
         # if we provide IP addresses, then let's include them in the list, else it will be empty
@@ -312,9 +283,9 @@ def main():
             for ip in processed_cnfapp_ip_list:
                 # and remove network mask
                 cnfapp_ip_list.append(ip.split('/')[0])
-        log.info("TRex IP list - %s" % cnfapp_ip_list)
-    if duration == -1:
-        log.info("Packets will be generated forever...")
+        log.info("CNFApp IP list - %s" % cnfapp_ip_list)
+
+    # Start the burst
     try:
         obj = STLS1(ports = [0, 1], size=packet_size, rate=packet_rate, duration=duration, profile=profile,
                     trex_ip_list=trex_ip_list, cnfapp_ip_list=cnfapp_ip_list, arp_resolution=arp_resolution)

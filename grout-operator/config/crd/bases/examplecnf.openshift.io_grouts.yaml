@@ -32,6 +32,54 @@ spec:
           spec:
             description: Spec defines the desired state of Grout
             type: object
+            properties:
+              privileged:
+                description: Run the container in privileged mode
+                type: boolean
+              imagePullPolicy:
+                description: Image pull policy for the Grout container
+                type: string
+                enum:
+                - Always
+                - IfNotPresent
+                - Never
+              size:
+                description: Number of replicas for the Grout deployment
+                type: integer
+                minimum: 1
+              networks:
+                description: List of NetworkAttachmentDefinitions to attach to the pod
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      description: NetworkAttachmentDefinition name (namespace/name or name)
+                      type: string
+                    count:
+                      description: Number of interfaces to request from this network
+                      type: integer
+                      minimum: 1
+                      default: 1
+                    mac:
+                      description: Optional list of MAC addresses, one per interface
+                      type: array
+                      items:
+                        type: string
+                    ip:
+                      description: Optional list of IP addresses, one per interface
+                      type: array
+                      items:
+                        type: string
+              runDeployment:
+                description: Whether to run the deployment automation (0 to disable, 1 to enable)
+                type: integer
+                enum:
+                - 0
+                - 1
+              runtime_class_name:
+                description: Optional RuntimeClass to use for the pod
+                type: string
             x-kubernetes-preserve-unknown-fields: true
           status:
             description: Status defines the observed state of Grout

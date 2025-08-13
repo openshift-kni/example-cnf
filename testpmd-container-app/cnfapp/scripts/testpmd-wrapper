@@ -14,8 +14,6 @@ LOG_DIR="/var/log/testpmd"
 [ -d $LOG_DIR ] || mkdir -p $LOG_DIR
 rm -rf /var/log/testpmd/*
 
-MODE=${MODE:-"fwd"}
-
 if [ -z ${NETWORK_NAME_LIST} ]; then
     echo "ERROR: NETWORK_NAME_LIST is required."
     exit 1

@@ -1,6 +1,6 @@
 ---
 - name: Create the examplecnf.openshift.io/v1.Grout
-  k8s:
+  kubernetes.core.k8s:
     state: present
     namespace: '{{ namespace }}'
     definition: "{{ lookup('template', '/'.join([samples_dir, cr_file])) | from_yaml }}"
@@ -13,6 +13,6 @@
     cr_file: 'examplecnf_v1_grout.yaml'
 
 - name: Add assertions here
-  assert:
+  ansible.builtin.assert:
     that: false
     fail_msg: FIXME Add real assertions for your operator

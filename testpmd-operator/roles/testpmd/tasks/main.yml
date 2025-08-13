@@ -1,60 +1,60 @@
 ---
 # tasks file for TestPMD
-- set_fact:
+- ansible.builtin.set_fact:
     network_resources: {}
     network_name_list: []
 
 - name: Validate the CPUs and forwarding cores
-  fail:
+  ansible.builtin.fail:
     msg: "{{ forwarding_cores }} should be lesser than {{ cpu }}"
   when: forwarding_cores|int >= cpu|int
 
 - name: print network list
-  debug:
+  ansible.builtin.debug:
     var: networks
 
 - name: print resource list
-  debug:
+  ansible.builtin.debug:
     var: resources
 
 - name: Check if networks parameter is empty
-  fail:
+  ansible.builtin.fail:
     msg: "networks or resources parameter is required"
   when:
     - networks|length == 0
     - resources|length == 0
 
 - name: initialize eth_peer var
-  set_fact:
+  ansible.builtin.set_fact:
     eth_peer: ""
 - name: construct eth_peer
-  set_fact:
+  ansible.builtin.set_fact:
     eth_peer: "{{ eth_peer }}{{ idx|string }},{{ item }};"
   loop: "{{ ethpeer_maclist }}"
   loop_control:
     index_var: idx
 
 - name: print eth_peer
-  debug:
+  ansible.builtin.debug:
     var: eth_peer
 
 - name: "Parse network"
-  include_tasks: network-parse.yaml
+  ansible.builtin.include_tasks: network-parse.yaml
   when: networks|default([])|length > 0
   loop: "{{ networks }}"
   loop_control:
     loop_var: network_item
 
 - name: print network_resources after parsing networks
-  debug:
+  ansible.builtin.debug:
     var: network_resources
 
 - name: print network_name_list after parsing networks
-  debug:
+  ansible.builtin.debug:
     var: network_name_list
 
 - name: "Parse resources if defined and when sriov network is not defined"
-  set_fact:
+  ansible.builtin.set_fact:
     network_resources: "{{ network_resources | combine({item.name: item.count}) }}"
   loop: "{{ resources }}"
   when:
@@ -62,7 +62,7 @@
     - resources|default([])|length > 0
 
 - name: print network resources map
-  debug:
+  ansible.builtin.debug:
     var: network_resources
 
 - name: Create ServiceAccount for TestPMD resource

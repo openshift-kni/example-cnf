@@ -4,14 +4,10 @@ metadata:
   name: "{{ ansible_operator_meta.name }}"
   namespace: "{{ ansible_operator_meta.namespace }}"
 spec:
-  replicas: 1
+  replicas: {{ size | int }}
   selector:
     matchLabels:
-{% if trex_server|bool %}
       example-cnf-type: pkt-gen
-{% elif trex_app|bool %}
-      example-cnf-type: pkt-gen-app
-{% endif %}
       restart-on-reboot: "true"
   template:
     metadata:
@@ -41,11 +37,7 @@ spec:
           ]
 {% endif %}
       labels:
-{% if trex_server|bool %}
         example-cnf-type: pkt-gen
-{% elif trex_app|bool %}
-        example-cnf-type: pkt-gen-app
-{% endif %}
         restart-on-reboot: "true"
     spec:
       affinity:
@@ -69,11 +61,7 @@ spec:
       schedulerName: "{{ numa_aware_topology }}"
 {% endif %}
       containers:
-{% if trex_server|bool %}
       - name: trex-server
-        command: {{ command }}
-        image: "{{ image_server }}"
-        imagePullPolicy: "{{ image_pull_policy }}"
         ports:
         - name: "tcp-trex-one"
           containerPort: 4500
@@ -81,6 +69,8 @@ spec:
           containerPort: 4501
         - name: "http-probe"
           containerPort: 8096
+        image: "{{ image_server }}"
+        imagePullPolicy: "{{ image_pull_policy }}"
         securityContext:
           runAsNonRoot: true
           runAsUser: 56560
@@ -126,14 +116,14 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-{% for key, value in environments.items() %}
-        - name: {{ key }}
-          value: "{{ value }}"
-{% endfor %}
 {% if run_deployment is defined %}
         - name: run_deployment
           value: "{{ run_deployment }}"
 {% endif %}
+{% for key, value in environments.items() %}
+        - name: {{ key }}
+          value: "{{ value }}"
+{% endfor %}
 {% if run_deployment is defined and run_deployment == 1 %}
         lifecycle:
           postStart:
@@ -162,72 +152,6 @@ spec:
           periodSeconds: 10
 {% endif %}
         terminationMessagePolicy: FallbackToLogsOnError
-{% endif %}
-{% if trex_app|bool %}
-      - name: trex-app
-        image: "{{ image_app }}"
-        imagePullPolicy: "{{ image_pull_policy }}"
-        securityContext:
-          runAsNonRoot: true
-          runAsUser: 56560
-{% if run_deployment is defined and run_deployment == 1 %}
-          readOnlyRootFilesystem: true
-{% endif %}
-        resources:
-          limits:
-            memory: "756Mi"
-            cpu: 2
-          requests:
-            memory: "256Mi"
-            cpu: 50m
-        env:
-        - name: NETWORK_NAME_LIST
-          value: "{{ network_resources.keys()|list|join(',') }}"
-        - name: TREX_CPU
-          value: "{{ cpu }}"
-        - name: MODE
-          value: "direct"
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-{% for key, value in environments.items() %}
-        - name: {{ key }}
-          value: "{{ value }}"
-{% endfor %}
-{% if run_deployment is defined %}
-        - name: run_deployment
-          value: "{{ run_deployment }}"
-{% endif %}
-{% if run_deployment is defined and run_deployment == 1 %}
-        lifecycle:
-          postStart:
-            exec:
-              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
-          preStop:
-            exec:
-              command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 8095
-          initialDelaySeconds: 15
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /readyz
-            port: 8095
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        startupProbe:
-          httpGet:
-            path: /startz
-            port: 8095
-          initialDelaySeconds: 30
-          periodSeconds: 10
-{% endif %}
-        terminationMessagePolicy: FallbackToLogsOnError
-{% endif %}
       volumes:
       - name: hugepage
         emptyDir:

@@ -1,15 +1,30 @@
 ---
 # defaults file for TRexConfig
-# these images are not hardcoded - they are replaced by the trex-operator Makefile launched by the Github actions defined for this repo
+# this image is not hardcoded - it is replaced by the trex-operator Makefile launched by the Github actions defined for this repo
 # https://github.com/openshift-kni/example-cnf/blob/main/trex-operator/Makefile - See "ensure_digests" task
 image_server: "quay.io/rh-nfv-int/trex-container-server@sha256:190d69aef293d1719952969edcca8042d99e17b0d62d1a085cdd7b01cb5e1f1d" # v0.2.6
-image_app: "quay.io/rh-nfv-int/trex-container-app@sha256:da8c5aae7f2f7459d9d7b842880040cfde0ce301a9edc83e88ae9f27dc448829" # v0.2.6
-image_pull_policy: IfNotPresent
-privileged: false
-command: ["trex-wrapper"]
-environments: {}
-network_resources: {}
-trex_server: true
-trex_app: false
 
+# Number of replicas for the TRex server deployment.
+size: 1
+
+# Whether to skip annotation steps.
 skip_annot: false
+
+# List of network definitions to attach to the TRex server pod (SR-IOV/CNI).
+networks: []
+
+# Image pull policy for the TRex server container (Always, IfNotPresent, or Never).
+image_pull_policy: IfNotPresent
+# Whether to run the container in privileged mode.
+privileged: false
+# Amount of 1Gi hugepages to allocate.
+hugepage_1gb_count: 4Gi
+# Memory request for the TRex server container.
+memory: 1000Mi
+# CPU request for the TRex server container.
+cpu: 6
+
+# Internal variable for tracking network resource usage.
+network_resources: {}
+# Environment variables to set in the container (e.g., trexCoreCount).
+environments: {}

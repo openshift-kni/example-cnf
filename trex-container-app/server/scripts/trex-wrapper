@@ -10,21 +10,11 @@ echo_ts() {
   echo "$(date -u +"%Y-%m-%dT%H:%M:%S%z") $@"
 }
 
-# direct variables
-MODE=${MODE:="direct"}
-
 # environments
-RUN_CONFIGURE=${run_configure:=1}
 RUN_DEPLOYMENT=${run_deployment:=1}
 RUN_DELAY=${run_delay:=1}
-# trex_core_count (trexCoreCount)
 
 CORES=$(taskset -pc 1 | cut -d: -f2)
-
-if [[ $RUN_CONFIGURE != "1" ]]; then
-    echo_ts "Configure disabled for manual override, sleeping .."
-    sleep infinity
-fi
 
 # Write TRex cfg file
 /usr/local/bin/trex-cfg-configure $CORES
@@ -32,8 +22,6 @@ fi
 # Read the number of cores from the trex cfg
 # It is required as input via -c arg (for binary_search scripts of trafficgen)
 CORE_COUNT_CFG=$(grep ' c: ' /usr/local/bin/example-cnf/trex_cfg.yaml | cut -d: -f2 | xargs)
-NUM_PORTS=$(grep ' port_limit: ' /usr/local/bin/example-cnf/trex_cfg.yaml | cut -d: -f 2 | xargs)
-
 CORE_COUNT=${trex_core_count:=$CORE_COUNT_CFG}
 # TREX_CPU env will be set on the pod spec with number of required cores
 if [[ $((CORE_COUNT_CFG + 2)) != $TREX_CPU ]]; then

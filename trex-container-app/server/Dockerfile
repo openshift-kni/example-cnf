@@ -11,8 +11,8 @@ FROM quay.io/rh-nfv-int/ubi8-base-trex:v0.0.1
 LABEL name="NFV Example TRexServer Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.19" \
-      release="v0.2.19" \
+      version="v0.2.20" \
+      release="v0.2.20" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 
@@ -84,3 +84,6 @@ COPY --chmod=550 --from=build /opt/app-root/src/webserver /usr/local/bin/webserv
 
 # Move to the custom user
 USER example-cnf
+
+# Prepare entrypoint
+ENTRYPOINT ["/usr/local/bin/trex-wrapper"]

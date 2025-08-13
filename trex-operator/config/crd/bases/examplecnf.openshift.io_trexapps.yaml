@@ -32,6 +32,54 @@ spec:
           spec:
             description: Spec defines the desired state of TRexApp
             type: object
+            properties:
+              imagePullPolicy:
+                description: Image pull policy for the TRex app container
+                type: string
+                enum:
+                - Always
+                - IfNotPresent
+                - Never
+              runDeployment:
+                description: Whether to run the deployment automation (0 to disable, 1 to enable)
+                type: integer
+                enum:
+                - 0
+                - 1
+              runtime_class_name:
+                description: Optional RuntimeClass to use for the job pod
+                type: string
+              trexProfileConfigMap:
+                description: Optional ConfigMap name containing TRex profiles to mount
+                type: string
+              trexProfileName:
+                description: Optional TRex profile name to run
+                type: string
+              duration:
+                description: Optional job duration in seconds; -1 means continuous mode
+                type: integer
+              packetSize:
+                description: Optional packet size in bytes
+                type: integer
+              packetRate:
+                description: Optional packet rate (e.g., 10kpps)
+                type: string
+              trexIps:
+                description: List of TRex server IPs by interface
+                type: array
+                items:
+                  type: string
+              cnfappIps:
+                description: List of CNF app IPs by interface
+                type: array
+                items:
+                  type: string
+              arpResolution:
+                description: Whether to resolve ARP (1 to enable, 0 to disable)
+                type: integer
+                enum:
+                - 0
+                - 1
             x-kubernetes-preserve-unknown-fields: true
           status:
             description: Status defines the observed state of TRexApp

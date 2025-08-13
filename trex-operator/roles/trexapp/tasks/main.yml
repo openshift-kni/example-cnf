@@ -6,8 +6,8 @@
     api_version: examplecnf.openshift.io/v1
   register: trex_config
 - name: fail if trexconfig is not created
-  fail:
+  ansible.builtin.fail:
     msg: "wait for trexconfig resource"
   when: "trex_config.resources|length == 0"
-- include_tasks: job-check.yml
+- ansible.builtin.include_tasks: job-check.yml
   when: "trex_config.resources|length > 0"

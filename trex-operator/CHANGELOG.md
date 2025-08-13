@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.30] - 2025-08-13
+
+- No functional changes to operator logic.
+- Documentation improvements for CRD specification, TestPMD Ansible role and deployment details.
+- Some code cleanup.
+
 ## [0.2.29] - 2025-08-05
 
 - Updated OperatorSDK to v1.41.1

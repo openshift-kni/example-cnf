@@ -10,11 +10,11 @@
   register: jobs_running
 
 - name: set default active job fact
-  set_fact:
+  ansible.builtin.set_fact:
     active_jobs: 0
 
 - name: find active jobs
-  set_fact:
+  ansible.builtin.set_fact:
     active_jobs: "{{ active_jobs + 1 }}"
   loop: "{{ jobs_running.resources }}"
   when:
@@ -25,29 +25,29 @@
   block:
 
     - name: initialize trex_ip_list var
-      set_fact:
+      ansible.builtin.set_fact:
         trex_ip_list: ""
 
     - name: construct trex_ip_list
-      set_fact:
+      ansible.builtin.set_fact:
         trex_ip_list: "{{ trex_ip_list }}{{ item }},"
       loop: "{{ trex_ips }}"
 
     - name: print trex_ip_list
-      debug:
+      ansible.builtin.debug:
         var: trex_ip_list
 
     - name: initialize cnfapp_ip_list var
-      set_fact:
+      ansible.builtin.set_fact:
         cnfapp_ip_list: ""
 
     - name: construct cnfapp_ip_list
-      set_fact:
+      ansible.builtin.set_fact:
         cnfapp_ip_list: "{{ cnfapp_ip_list }}{{ item }},"
       loop: "{{ cnfapp_ips }}"
 
     - name: print cnfapp_ip_list
-      debug:
+      ansible.builtin.debug:
         var: cnfapp_ip_list
 
     - name: Create ServiceAccount for trexapp job resource
