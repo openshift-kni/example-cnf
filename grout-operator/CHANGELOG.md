@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.2] - 2025-08-13
+
+- No functional changes to operator logic.
+- Documentation improvements for CRD specification, Grout Ansible role and deployment details.
+
 ## [0.2.1] - 2025-08-05
 
 - Updated OperatorSDK to v1.41.1

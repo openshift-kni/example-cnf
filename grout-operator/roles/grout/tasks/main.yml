@@ -1,41 +1,41 @@
 ---
 # tasks file for Grout
-- set_fact:
+- ansible.builtin.set_fact:
     network_resources: {}
     network_name_list: []
 
 - name: print network list
-  debug:
+  ansible.builtin.debug:
     var: networks
 
 - name: print resource list
-  debug:
+  ansible.builtin.debug:
     var: resources
 
 - name: Check if networks parameter is empty
-  fail:
+  ansible.builtin.fail:
     msg: "networks or resources parameter is required"
   when:
     - networks|length == 0
     - resources|length == 0
 
 - name: "Parse network"
-  include_tasks: network-parse.yaml
+  ansible.builtin.include_tasks: network-parse.yaml
   when: networks|default([])|length > 0
   loop: "{{ networks }}"
   loop_control:
     loop_var: network_item
 
 - name: print network_resources after parsing networks
-  debug:
+  ansible.builtin.debug:
     var: network_resources
 
 - name: print network_name_list after parsing networks
-  debug:
+  ansible.builtin.debug:
     var: network_name_list
 
 - name: "Parse resources if defined and when sriov network is not defined"
-  set_fact:
+  ansible.builtin.set_fact:
     network_resources: "{{ network_resources | combine({item.name: item.count}) }}"
   loop: "{{ resources }}"
   when:
@@ -43,7 +43,7 @@
     - resources|default([])|length > 0
 
 - name: print network resources map
-  debug:
+  ansible.builtin.debug:
     var: network_resources
 
 - name: Create ServiceAccount for Grout resource

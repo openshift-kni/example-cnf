@@ -131,8 +131,10 @@ spec:
           value: "{{ rx_descriptors }}"
         - name: tx_descriptors
           value: "{{ tx_descriptors }}"
+{% if reduced_mode is defined %}
         - name: reduced_mode
           value: "{{ reduced_mode }}"
+{% endif %}
 {% if run_deployment is defined %}
         - name: run_deployment
           value: "{{ run_deployment }}"

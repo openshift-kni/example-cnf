@@ -1,38 +1,50 @@
 ---
 # defaults file for TestPMD
-registry: quay.io
-org: rh-nfv-int
-version: v0.2.0
-image_pull_policy: IfNotPresent
-privileged: false
-network_defintions: ""
-network_resources: {}
-environments: {}
 # this image is not hardcoded - they are replaced by the testpmd-operator Makefile launched by the Github actions defined for this repo
 # https://github.com/openshift-kni/example-cnf/blob/main/testpmd-operator/Makefile - See "ensure_digests" task
 image_testpmd: "quay.io/rh-nfv-int/testpmd-container-app-cnfapp@sha256:c0cbe35d7e97034b5f2243d12e84408864cb90ce3c3953328e4295e9efe48eef" # v0.2.6
 
+# Number of replicas for the TestPMD deployment.
 size: 1
 
-hugepage_1gb_count: 4Gi
-memory: 1000Mi
-cpu: 6
-forwarding_cores: 2
-
-forward_mode: mac
-
-memory_channels: 6
-socket_memory: 1024
-
-rx_queues: 1
-rx_descriptors: 1024
-tx_queues: 1
-tx_descriptors: 1024
+# Whether to skip annotation steps.
+skip_annot: false
 
 # pci devices for "-w" parameter should be obtained from this networks
 # testpmd application entrypoint script should get pci and then run testpmd
 networks: []
-resources: []
 
+# Image pull policy for the TestPMD container (Always, IfNotPresent, or Never).
+image_pull_policy: IfNotPresent
+# Whether to run the container in privileged mode.
+privileged: false
+# Amount of 1Gi hugepages to allocate.
+hugepage_1gb_count: 4Gi
+# Memory request for the TestPMD container.
+memory: 1000Mi
+# CPU request for the TestPMD container.
+cpu: 6
+
+# Internal variable for tracking network resource usage.
+network_resources: {}
+# List of additional resources to be used.
+resources: []
+# List of MAC addresses for peer interfaces.
 ethpeer_maclist: []
-skip_annot: false
+# Environment variables to set in the container.
+environments: {}
+
+# Number of cores dedicated to packet forwarding (must be less than total CPU count).
+forwarding_cores: 2
+# Number of memory channels used by DPDK.
+memory_channels: 6
+# Socket memory size in MB for DPDK.
+socket_memory: 1024
+# Number of RX queues.
+rx_queues: 1
+# Number of RX descriptors per queue.
+rx_descriptors: 1024
+# Number of TX queues.
+tx_queues: 1
+# Number of TX descriptors per queue.
+tx_descriptors: 1024

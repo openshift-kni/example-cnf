@@ -4,22 +4,32 @@
 # https://github.com/openshift-kni/example-cnf/blob/main/grout-operator/Makefile - See "ensure_digests" task
 image_grout: "quay.io/rh-nfv-int/grout-container-app-cnfapp@sha256:112bed772707280de16a64eb4fb3c3c0ec027fa030372dff05927d105bc822fd" # v0.2.0
 
+# Number of replicas for the Grout deployment.
 size: 1
+# Whether to skip annotation steps.
 skip_annot: false
 
 # PCI devices to be used during execution should be obtained from these networks
 # Grout application entrypoint script should get PCI and then run Grout execution
 networks: []
 
+# Image pull policy for the Grout container (Always, IfNotPresent, or Never).
 image_pull_policy: IfNotPresent
+# Whether to run the container in privileged mode.
 privileged: false
+# Amount of 1Gi hugepages to allocate.
 hugepage_1gb_count: 4Gi
+# Memory request for the Grout container.
 memory: 1000Mi
+# CPU request for the Grout container.
 cpu: 4
 
+# Internal variable for tracking network resource usage.
 network_resources: {}
+# List of additional resources to be used.
 resources: []
-ethpeer_maclist: []
+# Environment variables to set in the container.
 environments: {}
 
+# Number of RX queues.
 rx_queues: 2

@@ -12,11 +12,6 @@ echo_ts() {
 
 RUN_DEPLOYMENT=${run_deployment:=1}
 SERVER=${TREX_SERVER_URL:="0.0.0.0"}
-MODE=${MODE:="direct"}
-
-if [[ "${MODE}" == "direct" ]]; then
-  echo_ts "MODE is ${MODE}"
-fi
 
 LOG_DIR="/var/log/trex"
 [ -d $LOG_DIR ] || mkdir -p $LOG_DIR

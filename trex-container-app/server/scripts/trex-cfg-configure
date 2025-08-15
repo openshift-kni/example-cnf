@@ -3,7 +3,6 @@
 import os
 import yaml
 import sys
-import random
 import re
 import subprocess
 import json
@@ -50,11 +49,13 @@ def main():
 
     # Ports allocated to TRex
     pci_list = get_pci()
+    # TODO: probably this can be removed at some point
     if not pci_list:
         pci_list = get_vfio_pcis()
     cfg[0]['interfaces'].extend([pci.replace('0000:','') for pci in pci_list])
     #cfg[0]['port_limit'] = len(pci_list)
 
+    # TODO: probably this can be removed at some point
     if not core_string:
         numa = get_numa_node(pci_list)
         core_string = get_cores(numa, 6)
@@ -258,29 +259,6 @@ def get_dst_mac():
 def get_dst_ip():
     return get_net_resource_from_k8s_api('ips', 'example-cnf-type=cnf-app')
 
-###########################
-def get_vfio_pcis():
-    dev = []
-    dev_lines = subprocess.check_output(["lspci", "-Dvmmnnk"]).splitlines()
-    for dev_line in dev_lines:
-        line = dev_line.decode("utf8")
-        if 'Slot' in line:
-            slot = line.split(':', 1)[1].strip()
-        if 'vfio-pci' in line:
-            dev.append(slot)
-    return dev[:2]
-
-def get_numa_node(pci_list):
-    numa_path = "/sys/bus/pci/devices/" + pci_list[0] + "/numa_node"
-    with open(numa_path) as f:
-        return int(f.read())
-
-def get_cores(numa, count):
-    path = "/sys/bus/node/devices/node" + str(numa) + "/cpulist"
-    with open(path) as f:
-        val = f.read().split(',')[2:count+2]
-        return ','.join(val)
-
 def get_net_resource_from_k8s_api(resource, pod_label):
     resources = []
 
@@ -308,6 +286,29 @@ def get_net_resource_from_k8s_api(resource, pod_label):
     except ApiException as e:
         print(e)
         return []
+
+###########################
+def get_vfio_pcis():
+    dev = []
+    dev_lines = subprocess.check_output(["lspci", "-Dvmmnnk"]).splitlines()
+    for dev_line in dev_lines:
+        line = dev_line.decode("utf8")
+        if 'Slot' in line:
+            slot = line.split(':', 1)[1].strip()
+        if 'vfio-pci' in line:
+            dev.append(slot)
+    return dev[:2]
+
+def get_numa_node(pci_list):
+    numa_path = "/sys/bus/pci/devices/" + pci_list[0] + "/numa_node"
+    with open(numa_path) as f:
+        return int(f.read())
+
+def get_cores(numa, count):
+    path = "/sys/bus/node/devices/node" + str(numa) + "/cpulist"
+    with open(path) as f:
+        val = f.read().split(',')[2:count+2]
+        return ','.join(val)
 
 ###########################
 

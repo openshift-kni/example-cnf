@@ -55,12 +55,12 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-{% for key, value in environments.items() %}
-        - name: {{ key }}
-          value: "{{ value }}"
-{% endfor %}
         - name: TREX_SERVER_URL
           value: trex-server
+{% if run_deployment is defined %}
+        - name: run_deployment
+          value: "{{ run_deployment }}"
+{% endif %}
 {% if trex_profile_name %}
         - name: TREX_PROFILE_NAME
           value: "{{ trex_profile_name }}"
@@ -85,14 +85,14 @@ spec:
         - name: cnfapp_ip_list
           value: "{{ cnfapp_ip_list }}"
 {% endif %}
-{% if run_deployment is defined %}
-        - name: run_deployment
-          value: "{{ run_deployment }}"
-{% endif %}
 {% if arp_resolution is defined %}
         - name: arp_resolution
           value: "{{ arp_resolution }}"
 {% endif %}
+{% for key, value in environments.items() %}
+        - name: {{ key }}
+          value: "{{ value }}"
+{% endfor %}
 {% if run_deployment is defined and run_deployment == 1 %}
         lifecycle:
           postStart:
@@ -122,11 +122,11 @@ spec:
 {% endif %}
         resources:
           limits:
-            cpu: 4
-            memory: 1024Mi
+            cpu: "{{ cpu }}"
+            memory: "{{ memory }}"
           requests:
-            cpu: 4
-            memory: 1024Mi
+            cpu: "{{ cpu }}"
+            memory: "{{ memory }}"
         terminationMessagePolicy: FallbackToLogsOnError
       volumes:
       - name: varlog

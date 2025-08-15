@@ -1,4 +1,5 @@
 import logging
+import re
 
 from trex.common.trex_logger import Logger
 
