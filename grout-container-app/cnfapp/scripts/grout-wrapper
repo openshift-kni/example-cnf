@@ -40,7 +40,7 @@ for item in "${NETWORK_ARRAY[@]}"; do
     fi
     IFS=',' read -r -a PCI_ARRAY <<< "${!NAME}"
     for pci_item in "${PCI_ARRAY[@]}"; do
-        echo "add interface port p${PORT_INDEX} devargs ${pci_item} rxqs ${RXQ}" >> $GROUT_CONF_FILE
+        echo "interface add port p${PORT_INDEX} devargs ${pci_item} rxqs ${RXQ}" >> $GROUT_CONF_FILE
         PORT_INDEX=$((PORT_INDEX+1))
     done
 done
@@ -90,7 +90,7 @@ if [[ $RUN_DEPLOYMENT == "1" ]]; then
     sudo /usr/local/bin/example-cnf/run/config-grout
 
     # Clear statistics
-    sudo grcli -s $GROUT_SOCKET_FILE clear stats
+    sudo grcli -s $GROUT_SOCKET_FILE stats reset
 
     # Print statistics every $STAT_PERIOD seconds
     set +ex
@@ -99,7 +99,7 @@ if [[ $RUN_DEPLOYMENT == "1" ]]; then
         echo "*******************************************" 2>&1 | tee -a $GROUT_LOG_FILE
         date 2>&1 | tee -a $GROUT_LOG_FILE
         echo "*******************************************" 2>&1 | tee -a $GROUT_LOG_FILE
-        sudo grcli -s $GROUT_SOCKET_FILE show stats software 2>&1 | tee -a $GROUT_LOG_FILE
+        sudo grcli -s $GROUT_SOCKET_FILE stats show software 2>&1 | tee -a $GROUT_LOG_FILE
         echo "" 2>&1 | tee -a $GROUT_LOG_FILE
         sleep $STATS_PERIOD
     done

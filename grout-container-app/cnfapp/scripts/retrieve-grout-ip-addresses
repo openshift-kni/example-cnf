@@ -27,7 +27,7 @@ def main():
     with open(CFG_FILE, "a") as f:
         f.write("\n")
         for idx in range(len(src_ip)):
-            f.write("add ip address " + src_ip[idx] + " iface p" + str(idx) + "\n")
+            f.write("address add " + src_ip[idx] + " iface p" + str(idx) + "\n")
 
 def get_src_network_annotation():
     # object to return
