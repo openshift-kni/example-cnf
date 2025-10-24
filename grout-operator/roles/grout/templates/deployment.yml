@@ -39,6 +39,7 @@ spec:
         example-cnf-type: cnf-app
         restart-on-reboot: "true"
     spec:
+{% if deployment_type == "multi-node" %}
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -49,6 +50,7 @@ spec:
                 values:
                 - pkt-gen
             topologyKey: kubernetes.io/hostname
+{% endif %}
       securityContext:
         runAsNonRoot: true
         runAsUser: 56560

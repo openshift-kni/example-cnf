@@ -18,11 +18,13 @@ You can use them from the [Example CNF Catalog](https://quay.io/repository/rh-nf
 
 To run Example CNF, you need to fulfil the following infrastructure-related pre-requirements:
 
-- OpenShift cluster with 4.14 or higher, and with +3 worker nodes.
+- OpenShift cluster with 4.14 or higher.
 - SR-IOV network operator.
 - SriovNetworkNodePolicy and SriovNetwork CRDs.
 - Proper configuration in network devices to match the SR-IOV resources definition.
 - Performance Profile (Hugepages, CPU Isolation, etc.)
+
+This deployment has usually been validated in a multi-node cluster, with at least 3 worker nodes. But it is suitable for SNO deployments too if just testing the workload deployment (but not valid for upgrade or draining scenarios, where at least two worker nodes are needed to move workloads between nodes). Anyway, note that the documentation will always refer to the multi-node case.
 
 ## How operators are created
 

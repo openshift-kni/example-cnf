@@ -88,6 +88,12 @@ spec:
                 enum:
                 - 0
                 - 1
+              deploymentType:
+                description: Deployment type for single-node or multi-node clusters
+                type: string
+                enum:
+                - single-node
+                - multi-node
               runtime_class_name:
                 description: Optional RuntimeClass to use for the pod
                 type: string

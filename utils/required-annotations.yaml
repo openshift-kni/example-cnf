@@ -7,4 +7,4 @@ metadata:
     features.operators.openshift.io/token-auth-aws: "false"
     features.operators.openshift.io/token-auth-azure: "false"
     features.operators.openshift.io/token-auth-gcp: "false"
-    olm.skipRange: ">=0.2.2 <=0.2.30"
+    olm.skipRange: ">=0.2.3 <=0.2.31"

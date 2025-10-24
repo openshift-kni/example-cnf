@@ -1,6 +1,6 @@
 DATE           ?= $(shell date --utc +%Y%m%d%H%M)
 SHA            ?= $(shell git rev-parse --short HEAD)
-VERSION        := 0.3.9
+VERSION        := 0.3.10
 TAG            := $(VERSION)-$(DATE).$(SHA)
 REGISTRY       ?= quay.io
 ORG            ?= rh-nfv-int
