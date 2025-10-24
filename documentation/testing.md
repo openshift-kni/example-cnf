@@ -702,20 +702,20 @@ grcli -f /usr/local/bin/example-cnf/run/grout.init -s /usr/local/bin/example-cnf
 
 # check the config file to be applied
 sh-4.4$ cat /usr/local/bin/example-cnf/run/grout.init
-add interface port p0 devargs 0000:86:02.1 rxqs 2
-add interface port p1 devargs 0000:86:03.3 rxqs 2
+interface add port p0 devargs 0000:86:02.1 rxqs 2
+interface add port p1 devargs 0000:86:03.3 rxqs 2
 
-add ip address 172.16.16.60/24 iface p0
-add ip address 172.16.21.60/24 iface p1
+address add 172.16.16.60/24 iface p0
+address add 172.16.21.60/24 iface p1
 
 # run the script
 sh-4.4$ sudo /usr/local/bin/example-cnf/run/config-grout
 
 # clear statistics
-sh-4.4$ sudo grcli -s /usr/local/bin/example-cnf/run/grout.sock clear stats
+sh-4.4$ sudo grcli -s /usr/local/bin/example-cnf/run/grout.sock stats reset
 
 # print statistics
-sh-4.4$ sudo grcli -s /usr/local/bin/example-cnf/run/grout.sock show stats software
+sh-4.4$ sudo grcli -s /usr/local/bin/example-cnf/run/grout.sock stats show software
 NODE                            CALLS  PACKETS  PKTS/CALL  CYCLES/CALL     CYCLES/PKT
 port_rx                  109805489408     2104        0.0         49.2   2567088141.0
 control_input            109805489408       39        0.0         22.6  63637321574.4

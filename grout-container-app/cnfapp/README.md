@@ -30,11 +30,11 @@ This is an example of what we could find in that config file:
 
 ```
 sh-4.4$ cat /usr/local/bin/example-cnf/run/grout.init
-add interface port p0 devargs 0000:86:02.1 rxqs 2
-add interface port p1 devargs 0000:86:03.3 rxqs 2
+interface add port p0 devargs 0000:86:02.1 rxqs 2
+interface add port p1 devargs 0000:86:03.3 rxqs 2
 
-add ip address 172.16.16.60/24 iface p0
-add ip address 172.16.21.60/24 iface p1
+address add 172.16.16.60/24 iface p0
+address add 172.16.21.60/24 iface p1
 ```
 
 The file created by the automation to launch the Grout configuration is saved under `/usr/local/bin/example-cnf/run/grout.sock`, and it has the following content:
@@ -52,10 +52,10 @@ For example, we can print statistics in the following way:
 
 ```
 # clear statistics
-$ sudo grcli -s /usr/local/bin/example-cnf/run/grout.sock clear stats
+$ sudo grcli -s /usr/local/bin/example-cnf/run/grout.sock stats reset
 
 # print statistics
-$ sudo grcli -s /usr/local/bin/example-cnf/run/grout.sock show stats software
+$ sudo grcli -s /usr/local/bin/example-cnf/run/grout.sock stats show software
 NODE                            CALLS  PACKETS  PKTS/CALL  CYCLES/CALL     CYCLES/PKT
 port_rx                  109805489408     2104        0.0         49.2   2567088141.0
 control_input            109805489408       39        0.0         22.6  63637321574.4
@@ -91,15 +91,14 @@ Also, you can trace the traffic received by Grout with the following configurati
 
 > Note trace should not be used during performance testing, since it impacts performance. Just use it for troubleshooting purposes.
 
-
 ```
 # enter in grout CLI
 $ grcli -s /usr/local/bin/example-cnf/run/grout.sock
-grout# set trace all
+grout# trace enable all
 
 # if you get the latest N traces of traffic managed by Grout, you
 # will be able to see traffic details.
-grout# show trace count 50
+grout# trace show count 50
 ...
 --------- 08:25:08.558489191 cpu 2 ---------
 port_rx: port=0 queue=1
@@ -111,10 +110,10 @@ eth_output: 00:11:22:33:00:02 > 20:04:0f:f1:89:02 type=IP(0x0800) iface=p1
 port_tx: port=1 queue=1
 
 # you can clear the trace in this way
-grout# clear trace
+grout# trace clear
 
 # you can remove the trace in this way
-grout# del trace all
+grout# trace disable all
 ```
 
 ## What to update if bumping container version
