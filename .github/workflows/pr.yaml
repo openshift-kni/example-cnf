@@ -32,13 +32,6 @@ jobs:
           password: ${{ secrets.QUAY_TOKEN }}
           registry: ${{ env.QUAY_REGISTRY }}
 
-      - name: Log in to registry.redhat.io
-        uses: redhat-actions/podman-login@v1
-        with:
-          username: ${{ secrets.RH_REGISTRY_USER }}
-          password: ${{ secrets.RH_REGISTRY_TOKEN }}
-          registry: ${{ env.RH_REGISTRY }}
-
       - name: Build All
         run: |
           env
