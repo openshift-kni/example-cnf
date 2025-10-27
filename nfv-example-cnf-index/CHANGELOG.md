@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.3.10] - 2025-10-27
+
+- Include support for SNO
+
 ## [0.3.9] - 2025-04-22
 
 - Remove reference to cnf-app-mac-operator

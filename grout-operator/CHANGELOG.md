@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] -
 
+## [0.2.3] - 2025-10-27
+
+- Include support for SNO
+
 ## [0.2.2] - 2025-08-13
 
 - No functional changes to operator logic.

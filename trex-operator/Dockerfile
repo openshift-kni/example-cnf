@@ -3,8 +3,8 @@ FROM quay.io/operator-framework/ansible-operator:v1.39.0
 LABEL name="NFV Example CNF TRex Operator" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.30" \
-      release="v0.2.30" \
+      version="v0.2.31" \
+      release="v0.2.31" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 
