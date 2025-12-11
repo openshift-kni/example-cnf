@@ -17,7 +17,7 @@ targets:
 	@awk -F: '/^.PHONY/ {print $$2}' Makefile | column -t -s '#'
 
 .PHONY: all # Build and push all images
-all: build-all push-all
+all: build-all push-all rmi-all
 
 .PHONY: server-dependencies # Include dependencies for server
 server-dependencies:
@@ -63,6 +63,23 @@ push-app: build-app
 	$(CONTAINER_CLI) push "$(REGISTRY)/$(ORG)/trex-container-$(@:push-%=%):v$(TAG)"
 	if [ -n "$(RELEASE)" ]; then \
 	$(CONTAINER_CLI) push "$(REGISTRY)/$(ORG)/trex-container-$(@:push-%=%):v$(VERSION)"; \
+	fi
+
+.PHONY: rmi-all # Remove ALL images locally
+rmi-all: rmi-server rmi-app
+
+.PHONY: rmi-server # Remove TRex Server image from local storage
+rmi-server: push-server
+	$(CONTAINER_CLI) rmi -f "$(REGISTRY)/$(ORG)/trex-container-$(@:rmi-%=%):v$(TAG)"
+	if [ -n "$(RELEASE)" ]; then \
+	$(CONTAINER_CLI) rmi -f "$(REGISTRY)/$(ORG)/trex-container-$(@:rmi-%=%):v$(VERSION)"; \
+	fi
+
+.PHONY: rmi-app # Remove TRex App image from local storage
+rmi-app: push-app
+	$(CONTAINER_CLI) rmi -f "$(REGISTRY)/$(ORG)/trex-container-$(@:rmi-%=%):v$(TAG)" 
+	if [ -n "$(RELEASE)" ]; then \
+	$(CONTAINER_CLI) rmi -f "$(REGISTRY)/$(ORG)/trex-container-$(@:rmi-%=%):v$(VERSION)"; \
 	fi
 
 .PHONY: version # Display the version

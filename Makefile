@@ -1,6 +1,6 @@
 SHELL           := /bin/bash
 
-DIRS            := testpmd-container-app trex-container-app grout-container-app testpmd-operator trex-operator grout-operator nfv-example-cnf-index
+DIRS            := trex-container-app testpmd-container-app grout-container-app trex-operator testpmd-operator grout-operator nfv-example-cnf-index
 
 OPERATOR_SDK_VER:= 1.41.1
 

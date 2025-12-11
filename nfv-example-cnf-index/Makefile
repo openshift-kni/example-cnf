@@ -17,11 +17,21 @@ ARCH           := $(shell uname -m | sed 's/x86_64/amd64/')
 OPERATORS_LIST := operators.cfg
 SHELL          := /bin/bash
 
-all: index-build index-push
+all: index-build index-push rmi-all
 
 build-all: index-build
 
 push-all: index-push
+
+.PHONY: rmi-all # Remove ALL images locally
+rmi-all: rmi-index
+
+.PHONY: rmi-index # Remove index image from local storage
+rmi-index: index-push
+	$(CONTAINER_CLI) rmi -f $(INDEX_IMG)
+	if [ -n "$(RELEASE)" ]; then \
+	$(CONTAINER_CLI) rmi -f $(REL_INDEX_IMG); \
+	fi
 
 # Clean up
 clean:
