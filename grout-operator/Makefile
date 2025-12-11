@@ -73,13 +73,31 @@ REL_IMG ?= $(IMAGE_TAG_BASE):v$(VERSION)
 # Our general, custom tasks
 
 .PHONY: all
-all: operator-all bundle-all
+all: operator-all bundle-all rmi-all
 
 .PHONY: build-all
 build-all: operator-build bundle-build
 
 .PHONY: push-all
 push-all: operator-push bundle-push
+
+.PHONY: rmi-all
+rmi-all: operator-rmi bundle-rmi
+
+.PHONY: operator-rmi
+operator-rmi: operator-push
+	$(CONTAINER_CLI) rmi -f ${IMG}
+	if [ -n "$(RELEASE)" ]; then \
+	$(CONTAINER_CLI) rmi -f ${REL_IMG}; \
+	fi
+
+.PHONY: bundle-rmi
+bundle-rmi: bundle-push
+	$(CONTAINER_CLI) rmi -f $(BUNDLE_IMG)
+	if [ -n "$(RELEASE)" ]; then \
+	$(CONTAINER_CLI) rmi -f $(REL_BUNDLE_IMG); \
+	fi
+	$(CONTAINER_CLI) rmi -f bundle
 
 # Operator build and push
 .PHONY: operator-all

@@ -17,7 +17,7 @@ targets:
 	@awk -F: '/^.PHONY/ {print $$2}' Makefile | column -t -s '#'
 
 .PHONY: all # Build and push all images
-all: build-all push-all
+all: build-all push-all rmi-all
 
 .PHONY: cnfapp-dependencies # Get dependencies for cnfapp
 cnfapp-dependencies:
@@ -43,6 +43,16 @@ push-cnfapp: build-cnfapp
 	$(CONTAINER_CLI) push "$(REGISTRY)/$(ORG)/grout-container-app-$(@:push-%=%):v$(TAG)"
 	if [ -n "$(RELEASE)" ]; then \
 	$(CONTAINER_CLI) push "$(REGISTRY)/$(ORG)/grout-container-app-$(@:push-%=%):v$(VERSION)"; \
+	fi
+
+.PHONY: rmi-all # Remove ALL images locally
+rmi-all: rmi-cnfapp
+
+.PHONY: rmi-cnfapp # Remove cnfapp image from local storage
+rmi-cnfapp: push-cnfapp
+	$(CONTAINER_CLI) rmi -f "$(REGISTRY)/$(ORG)/grout-container-app-$(@:rmi-%=%):v$(TAG)"
+	if [ -n "$(RELEASE)" ]; then \
+	$(CONTAINER_CLI) rmi -f "$(REGISTRY)/$(ORG)/grout-container-app-$(@:rmi-%=%):v$(VERSION)"; \
 	fi
 
 .PHONY: version # Display the version
