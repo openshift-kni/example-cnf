@@ -10,12 +10,12 @@ fi
 VERSIONS="$1"
 EXTRA="$2"
 
-DIRS="testpmd-container-app trex-container-app grout-container-app testpmd-operator trex-operator grout-operator nfv-example-cnf-index"
+DIRS="trex-container-app testpmd-container-app grout-container-app trex-operator testpmd-operator grout-operator nfv-example-cnf-index"
 
 FILES="$(git diff --name-only -r origin/${GITHUB_BASE_REF:-main}:|grep -Fv /.git || :)"
 
-TESTPMD_APP=false
 TREX_APP=false
+TESTPMD_APP=false
 GROUT_APP=false
 
 echo "declare -A VERSIONS" > "$VERSIONS"
@@ -26,13 +26,13 @@ for d in $DIRS; do
     # Force to build the operators if the corresponding app is built
     force=false
     case "$d" in
-        testpmd-operator)
-            if [ "$TESTPMD_APP" == true ]; then
+        trex-operator)
+            if [ "$TREX_APP" == true ]; then
                 force=true
             fi
             ;;
-        trex-operator)
-            if [ "$TREX_APP" == true ]; then
+        testpmd-operator)
+            if [ "$TESTPMD_APP" == true ]; then
                 force=true
             fi
             ;;
@@ -49,11 +49,11 @@ for d in $DIRS; do
         echo "VERSIONS[$d]=$vers-$EXTRA" >> "$VERSIONS"
         echo "$d"
         count=$((count + 1))
-        if [ "$d" == testpmd-container-app ]; then
-            TESTPMD_APP=true
-        fi
         if [ "$d" == trex-container-app ]; then
             TREX_APP=true
+        fi
+        if [ "$d" == testpmd-container-app ]; then
+            TESTPMD_APP=true
         fi
         if [ "$d" == grout-container-app ]; then
             GROUT_APP=true
