@@ -30,7 +30,7 @@ rmi-all: rmi-index
 rmi-index: index-push
 	$(CONTAINER_CLI) rmi -f $(INDEX_IMG)
 	if [ -n "$(RELEASE)" ]; then \
-	$(CONTAINER_CLI) rmi -f $(REL_INDEX_IMG) \
+	$(CONTAINER_CLI) rmi -f $(REL_INDEX_IMG); \
 	fi
 
 # Clean up
