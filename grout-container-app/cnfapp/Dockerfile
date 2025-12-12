@@ -12,14 +12,14 @@ FROM quay.io/rh-nfv-int/ubi9-base-grout:v0.0.1
 LABEL name="NFV Example CNF Grout Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.3" \
-      release="v0.2.3" \
+      version="v0.2.4" \
+      release="v0.2.4" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 
 COPY licenses /licenses
 
-ENV GROUT_VER v0.14.1
+ENV GROUT_VER v0.14.2
 ENV GROUT_RPM https://github.com/DPDK/grout/releases/download/${GROUT_VER}/grout.x86_64.rpm
 
 # check latest release from https://github.com/DPDK/grout/releases
