@@ -7,7 +7,7 @@ RUN go mod init webserver.go
 RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
 
 ## grout image
-FROM quay.io/rh-nfv-int/ubi9-base-grout:v0.0.1
+FROM quay.io/rh-nfv-int/ubi10-base-grout:v0.0.1
 
 LABEL name="NFV Example CNF Grout Application" \
       maintainer="telcoci" \
