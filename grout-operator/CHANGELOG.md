@@ -2,7 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] -
+## [0.2.4] - 2026-04-16
+
+- Updated Operator SDK to v1.42.2
+- Updated Ansible operator base image and plugin binary to v1.42.2
 
 ## [0.2.3] - 2025-10-27
 
