@@ -76,6 +76,8 @@ spec:
 {% else %}
           capabilities:
             add: ["IPC_LOCK", "NET_ADMIN", "AUDIT_WRITE"]
+          seLinuxOptions:
+            type: spc_t
 {% endif %}
         resources:
           limits:
@@ -105,7 +107,6 @@ spec:
           mountPath: /tmp
         - name: tun
           mountPath: /dev/net/tun
-          readOnly: true
         env:
         - name: NETWORK_NAME_LIST
           value: "{{ network_resources.keys()|list|join(',') }}"
