@@ -63,6 +63,8 @@ spec:
         ports:
         - name: "http-probe"
           containerPort: 8095
+        - name: "tcp-gr-svc"
+          containerPort: 9111
         image: "{{ image_grout }}"
         imagePullPolicy: "{{ image_pull_policy }}"
         securityContext:
