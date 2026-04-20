@@ -107,6 +107,8 @@ spec:
           mountPath: /var/run/dpdk
         - name: tmp
           mountPath: /tmp
+        - name: tun
+          mountPath: /dev/net/tun
         env:
         - name: NETWORK_NAME_LIST
           value: "{{ network_resources.keys()|list|join(',') }}"
@@ -169,4 +171,5 @@ spec:
         emptyDir: {}
       - name: tmp
         emptyDir: {}
-
+      - name: tun
+        emptyDir: {}
