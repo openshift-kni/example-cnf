@@ -172,4 +172,6 @@ spec:
       - name: tmp
         emptyDir: {}
       - name: tun
-        emptyDir: {}
+        hostPath:
+          path: /dev/net/tun
+          type: CharDevice
