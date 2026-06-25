@@ -1,17 +1,17 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:1.24 as build
+FROM registry.access.redhat.com/ubi10/go-toolset:1.26 as build
 
 WORKDIR /opt/app-root/src
 COPY utils/webserver.go .
 RUN go mod init webserver.go
 RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
 
-FROM registry.access.redhat.com/ubi8/python-311:latest
+FROM registry.access.redhat.com/ubi9/python-314:latest
 
 LABEL name="NFV Example TRexApp Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.19" \
-      release="v0.2.19" \
+      version="v0.2.21" \
+      release="v0.2.21" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 

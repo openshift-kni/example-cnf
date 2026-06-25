@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/go-toolset:1.24 as build
+FROM registry.access.redhat.com/ubi10/go-toolset:1.26 as build
 
 WORKDIR /opt/app-root/src
 COPY utils/webserver.go .
@@ -11,8 +11,8 @@ FROM quay.io/rh-nfv-int/ubi8-base-trex:v0.0.1
 LABEL name="NFV Example TRexServer Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.20" \
-      release="v0.2.20" \
+      version="v0.2.21" \
+      release="v0.2.21" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 
