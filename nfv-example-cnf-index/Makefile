@@ -5,6 +5,7 @@ TAG            := $(VERSION)-$(DATE).$(SHA)
 REGISTRY       ?= quay.io
 ORG            ?= rh-nfv-int
 CONTAINER_CLI  ?= podman
+export CONTAINERS_REGISTRIES_CONF ?= /dev/null
 CLUSTER_CLI    ?= oc
 INDEX_NAME     := nfv-example-cnf-catalog
 INDEX_IMG      ?= $(REGISTRY)/$(ORG)/$(INDEX_NAME):v$(TAG)
