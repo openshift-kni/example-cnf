@@ -2,7 +2,7 @@ SHELL           := /bin/bash
 
 DATE            ?= $(shell date --utc +%Y%m%d%H%M)
 SHA             ?= $(shell git rev-parse --short HEAD)
-VERSION         ?= 0.2.19
+VERSION         ?= 0.2.20
 REGISTRY        ?= quay.io
 ORG             ?= rh-nfv-int
 CONTAINER_CLI   ?= podman
