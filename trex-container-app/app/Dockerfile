@@ -5,7 +5,7 @@ COPY utils/webserver.go .
 RUN go mod init webserver.go
 RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
 
-FROM registry.access.redhat.com/ubi9/python-314:latest
+FROM registry.access.redhat.com/ubi8/python-311:latest
 
 LABEL name="NFV Example TRexApp Application" \
       maintainer="telcoci" \
