@@ -18,6 +18,7 @@ REGISTRY                    ?= quay.io
 ORG                         ?= rh-nfv-int
 DEFAULT_CHANNEL             ?= alpha
 CONTAINER_CLI               ?= podman
+export CONTAINERS_REGISTRIES_CONF ?= /dev/null
 CLUSTER_CLI                 ?= oc
 OPERATOR_NAME               := grout-operator
 KUSTOMIZE_VER               := 5.6.0
@@ -138,7 +139,7 @@ undeploy:
 # Ensure proper digests for grout-container-app-cnfapp
 .PHONY: ensure_digests
 ensure_digests:
-	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/grout-container-app-cnfapp:$(GROUT_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/grout-container-app-cnfapp@.*/grout-container-app-cnfapp@$${DIGEST}\"   # $(GROUT_VER)/" roles/grout/defaults/main.yml
+	DIGEST=$$(skopeo inspect --no-tags docker://quay.io/rh-nfv-int/grout-container-app-cnfapp:$(GROUT_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/grout-container-app-cnfapp@.*/grout-container-app-cnfapp@$${DIGEST}\"   # $(GROUT_VER)/" roles/grout/defaults/main.yml
 
 # Build the operator image
 .PHONY: operator-build
@@ -241,9 +242,9 @@ bundle: kustomize operator-sdk yq ## Generate bundle manifests and metadata, the
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle $(BUNDLE_GEN_FLAGS)
 	$(YQ) eval-all '. as $$item ireduce ({}; . * $$item )' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml ../utils/required-annotations.yaml > tmp_csv.yaml
 	mv tmp_csv.yaml bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
-	DIGEST=$$(skopeo inspect docker://$(IMG) | jq -r '.Digest') && [ -n "$${DIGEST}" ] && sed -i -e 's/\(\s*image: .*\):v'$(TAG)'/\1@'$${DIGEST}'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
+	DIGEST=$$(skopeo inspect --no-tags docker://$(IMG) | jq -r '.Digest') && [ -n "$${DIGEST}" ] && sed -i -e 's/\(\s*image: .*\):v'$(TAG)'/\1@'$${DIGEST}'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	sed -i -e '/^# Copy.*/i LABEL com.redhat.openshift.versions="v4.6"\nLABEL com.redhat.delivery.backport=false\nLABEL com.redhat.delivery.operator.bundle=true' bundle.Dockerfile
-	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/grout-container-app-cnfapp:$(GROUT_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/grout-container-app-cnfapp@.*/grout-container-app-cnfapp@$${DIGEST}\"   # $(GROUT_VER)/" relatedImages.yaml
+	DIGEST=$$(skopeo inspect --no-tags docker://quay.io/rh-nfv-int/grout-container-app-cnfapp:$(GROUT_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/grout-container-app-cnfapp@.*/grout-container-app-cnfapp@$${DIGEST}\"   # $(GROUT_VER)/" relatedImages.yaml
 	cat relatedImages.yaml >> bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	$(OPERATOR_SDK) bundle validate ./bundle
 
