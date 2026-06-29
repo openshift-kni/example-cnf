@@ -52,7 +52,7 @@ index-build: opm
 		operator_bundle=$${OPERATOR/:*}-bundle ;\
 		operator_version=$${OPERATOR/*:} ;\
 		operator_name=$${OPERATOR/:*} ;\
-		operator_manifest=$$(skopeo inspect docker://$(REGISTRY)/$(ORG)/$${operator_bundle}:$${operator_version}) ;\
+		operator_manifest=$$(skopeo inspect --no-tags docker://$(REGISTRY)/$(ORG)/$${operator_bundle}:$${operator_version}) ;\
 		operator_digest=$$(jq -r '.Digest' <<< $${operator_manifest}) ;\
 		bundle_digest=$(REGISTRY)/$(ORG)/$${operator_bundle}@$${operator_digest} ;\
 		echo "operator=$${operator_name} operator_version=$${operator_version} operator_digest=$${operator_digest}" ;\

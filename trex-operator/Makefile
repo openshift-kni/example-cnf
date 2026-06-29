@@ -18,6 +18,7 @@ REGISTRY                    ?= quay.io
 ORG                         ?= rh-nfv-int
 DEFAULT_CHANNEL             ?= alpha
 CONTAINER_CLI               ?= podman
+export CONTAINERS_REGISTRIES_CONF ?= /dev/null
 CLUSTER_CLI                 ?= oc
 OPERATOR_NAME               := trex-operator
 KUSTOMIZE_VER               := 5.6.0
@@ -136,8 +137,8 @@ undeploy:
 # Ensure proper digests for trex-container-app and trex-container-server
 .PHONY: ensure_digests
 ensure_digests:
-	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/trexapp/defaults/main.yml
-	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-server:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-server@.*/trex-container-server@$${DIGEST}\"   # $(TREX_VER)/" roles/trexconfig/defaults/main.yml
+	DIGEST=$$(skopeo inspect --no-tags docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" roles/trexapp/defaults/main.yml
+	DIGEST=$$(skopeo inspect --no-tags docker://quay.io/rh-nfv-int/trex-container-server:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-server@.*/trex-container-server@$${DIGEST}\"   # $(TREX_VER)/" roles/trexconfig/defaults/main.yml
 
 # Build the operator image
 .PHONY: operator-build
@@ -242,10 +243,10 @@ bundle: kustomize operator-sdk yq
 	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle $(BUNDLE_GEN_FLAGS)
 	$(YQ) eval-all '. as $$item ireduce ({}; . * $$item )' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml ../utils/required-annotations.yaml > tmp_csv.yaml
 	mv tmp_csv.yaml bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml	
-	DIGEST=$$(skopeo inspect docker://$(IMG) | jq -r '.Digest') && sed -i -e 's/\(\s*image: .*\):v'$(TAG)'/\1@'$${DIGEST}'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
+	DIGEST=$$(skopeo inspect --no-tags docker://$(IMG) | jq -r '.Digest') && sed -i -e 's/\(\s*image: .*\):v'$(TAG)'/\1@'$${DIGEST}'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	sed -i -e '/^# Copy.*/i LABEL com.redhat.openshift.versions="v4.12"\nLABEL com.redhat.delivery.backport=false\nLABEL com.redhat.delivery.operator.bundle=true' bundle.Dockerfile
-	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-server:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-server@.*/trex-container-server@$${DIGEST}\"   # $(TREX_VER)/" relatedImages.yaml
-	DIGEST=$$(skopeo inspect docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" relatedImages.yaml
+	DIGEST=$$(skopeo inspect --no-tags docker://quay.io/rh-nfv-int/trex-container-server:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-server@.*/trex-container-server@$${DIGEST}\"   # $(TREX_VER)/" relatedImages.yaml
+	DIGEST=$$(skopeo inspect --no-tags docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" relatedImages.yaml
 	cat relatedImages.yaml >> bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	$(OPERATOR_SDK) bundle validate ./bundle
 	echo "bundle image=$(IMG)"
