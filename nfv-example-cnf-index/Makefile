@@ -1,6 +1,6 @@
 DATE           ?= $(shell date --utc +%Y%m%d%H%M)
 SHA            ?= $(shell git rev-parse --short HEAD)
-VERSION        := 0.3.10
+VERSION        := 0.3.11
 TAG            := $(VERSION)-$(DATE).$(SHA)
 REGISTRY       ?= quay.io
 ORG            ?= rh-nfv-int
@@ -44,7 +44,7 @@ index-build: opm
 	set -e ;\
 	mkdir -p $(BUILD_PATH)/$(INDEX_NAME) ;\
 	rm -f $(BUILD_PATH)/$(INDEX_NAME)/index.yml ;\
-	cp "$(INDEX_NAME).Dockerfile" $(BUILD_PATH)/ ;\
+	cp "$(INDEX_NAME).Containerfile" $(BUILD_PATH)/ ;\
 	./generate-operators-cfg.sh ./$(OPERATORS_LIST) ;\
 	cat ./$(OPERATORS_LIST);\
 	source ./$(OPERATORS_LIST) ;\
@@ -68,9 +68,9 @@ index-build: opm
 	echo "validating the catalog" ;\
 	$(OPM) validate $(BUILD_PATH)/$(INDEX_NAME) ;\
 	if [ -n "$(RELEASE)" ]; then \
-	BUILDAH_FORMAT=docker podman build $(BUILD_PATH) -f $(BUILD_PATH)/$(INDEX_NAME).Dockerfile -t $(INDEX_IMG) -t $(REL_INDEX_IMG) ;\
+	BUILDAH_FORMAT=docker podman build $(BUILD_PATH) -f $(BUILD_PATH)/$(INDEX_NAME).Containerfile -t $(INDEX_IMG) -t $(REL_INDEX_IMG) ;\
 	else \
-	BUILDAH_FORMAT=docker podman build $(BUILD_PATH) -f $(BUILD_PATH)/$(INDEX_NAME).Dockerfile --label quay.expires-after=1w -t $(INDEX_IMG) ;\
+	BUILDAH_FORMAT=docker podman build $(BUILD_PATH) -f $(BUILD_PATH)/$(INDEX_NAME).Containerfile --label quay.expires-after=1w -t $(INDEX_IMG) ;\
 	fi; \
 	rm -rf $(BUILD_PATH) ;\
 	}

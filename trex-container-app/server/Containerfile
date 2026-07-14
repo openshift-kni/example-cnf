@@ -6,19 +6,21 @@ RUN go mod init webserver.go
 RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
 
 ## trex image
-FROM quay.io/rh-nfv-int/ubi8-base-trex:v0.0.1
+FROM quay.io/rh-nfv-int/ubi10-base-trex:v0.0.1
 
 LABEL name="NFV Example TRexServer Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.21" \
-      release="v0.2.21" \
+      version="v0.2.23" \
+      release="v0.2.23" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 
 COPY licenses /licenses
 
-ENV TREX_VER v3.06
+# No TRex v3.0.8 is available in Github, latest one is v3.0.7
+# Anyway, master branch is currently pointing to v3.0.8
+ENV TREX_VER master
 ENV TREX_REPO https://github.com/cisco-system-traffic-generator/trex-core.git
 ENV TRAFFICGEN_REPO https://github.com/perftool-incubator/bench-trafficgen
 
@@ -39,7 +41,8 @@ RUN dnf install -y \
     unzip \
     xorg-x11-xauth \
     yum-utils \
-    python39 \
+    python3 \
+    python3-pip \
     iproute \
     zlib-devel \
     binutils \

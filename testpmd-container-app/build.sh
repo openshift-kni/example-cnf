@@ -2,7 +2,7 @@
 
 set -e
 
-TAG=${TAG:-"v0.2.20"}
+TAG=${TAG:-"v0.2.21"}
 
 CLI=${CLI:="podman"}
 ORG=${ORG:="rh-nfv-int"}
@@ -21,6 +21,6 @@ fi
 
 for item in ${LIST}; do
     IMAGE="${REGISTRY}/testpmd-container-app-${item}:${TAG}"
-    $CLI build ${item} -f ${item}/Dockerfile -t $IMAGE $EXTRA
+    $CLI build ${item} -f ${item}/Containerfile -t $IMAGE $EXTRA
     $CLI push $IMAGE
 done

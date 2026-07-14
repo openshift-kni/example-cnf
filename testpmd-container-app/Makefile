@@ -2,7 +2,7 @@ SHELL           := /bin/bash
 
 DATE            ?= $(shell date --utc +%Y%m%d%H%M)
 SHA             ?= $(shell git rev-parse --short HEAD)
-VERSION         ?= 0.2.20
+VERSION         ?= 0.2.21
 REGISTRY        ?= quay.io
 ORG             ?= rh-nfv-int
 CONTAINER_CLI   ?= podman
@@ -30,9 +30,9 @@ build-all: build-cnfapp
 .PHONY: build-cnfapp # Build cnfapp
 build-cnfapp: cnfapp-dependencies
 	if [ -n "$(RELEASE)" ]; then \
-	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(VERSION)" $(CONTAINER_ARGS); \
+	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Containerfile -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(VERSION)" $(CONTAINER_ARGS); \
 	else \
-	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile --label quay.expires-after=1w -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" $(CONTAINER_ARGS); \
+	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Containerfile --label quay.expires-after=1w -t "$(REGISTRY)/$(ORG)/testpmd-container-app-$(@:build-%=%):v$(TAG)" $(CONTAINER_ARGS); \
 	fi
 
 .PHONY: push-all # Push ALL images

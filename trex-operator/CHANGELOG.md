@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.33] - 2026-07-14
+
+- Updated Operator SDK to v1.42.3
+- Updated Ansible operator base image and plugin binary to v1.42.3
+- Updated trex-container-server to ubi10-base-trex
+- Updated trex-container-app to ubi10/python-312-minimal with Python 3.12 compatibility shims for TRex
+- Renamed Dockerfile to Containerfile
+
 ## [0.2.32] - 2026-04-17
 
 - Updated Operator SDK to v1.42.2
