@@ -18,11 +18,16 @@ LABEL name="NFV Example TRexServer Application" \
 
 COPY licenses /licenses
 
-# No TRex v3.0.8 is available in Github, latest one is v3.0.7
+# No TRex v3.0.8 is available in Github, latest tag is v3.0.7
 # Anyway, master branch is currently pointing to v3.0.8
-ENV TREX_VER master
+ENV TREX_BRANCH master
 ENV TREX_REPO https://github.com/cisco-system-traffic-generator/trex-core.git
 ENV TRAFFICGEN_REPO https://github.com/perftool-incubator/bench-trafficgen
+
+# Install of building TRex from source, download the tar.gz
+# with all the binaries and extract it
+ENV TREX_VER v3.08
+ENV TREX_TAR https://trex-tgn.cisco.com/trex/release/${TREX_VER}.tar.gz
 
 # Install prerequisite packages from UBI repos
 RUN dnf install -y \
@@ -50,11 +55,8 @@ RUN dnf install -y \
     && dnf clean all
 
 # Install TRex
-RUN mkdir -p /opt/trex && cd /opt/trex && git clone --branch ${TREX_VER} ${TREX_REPO}
-RUN cd /opt/trex/trex-core/linux_dpdk && \
-    ./b configure --no-bnxt --new-memory && \
-    ./b build
-
+RUN mkdir -p /opt/trex && cd /opt/trex && git clone --branch ${TREX_BRANCH} ${TREX_REPO}
+RUN cd /opt/trex && wget --no-cache --no-check-certificate ${TREX_TAR} && tar -xzvf ${TREX_VER}.tar.gz
 RUN cd /opt && git clone ${TRAFFICGEN_REPO} && mv bench-trafficgen/trafficgen . && rm -rf bench-trafficgen
 RUN pip3 install kubernetes
 
