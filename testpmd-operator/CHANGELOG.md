@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.31] - 2026-07-14
+
+- Updated Operator SDK to v1.42.3
+- Updated Ansible operator base image and plugin binary to v1.42.3
+- Renamed Dockerfile to Containerfile
+
 ## [0.2.30] - 2026-04-17
 
 - Updated Operator SDK to v1.42.2

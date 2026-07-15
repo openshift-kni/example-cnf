@@ -16,7 +16,7 @@ You have more details about testing this feature in the [testing docs](../../doc
 
 Apart from the modifications you have to do, you also need to update the container version in these files:
 
-- [Dockerfile](Dockerfile).
+- [Containerfile](Containerfile).
 - [build.sh](../build.sh) (from parent folder).
 - [Makefile](../Makefile) (from parent folder).
 

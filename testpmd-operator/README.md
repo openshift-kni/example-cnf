@@ -1,5 +1,8 @@
 # testpmd-operator
 
+> **:warning: Deprecation Notice:**  
+> The `testpmd-operator` is deprecated and will no longer receive improvements. For the latest updates, enhancements, and ongoing support with regards to the CNF Application of Example CNF, please use the [grout-operator](../grout-operator/README.md) instead.
+
 ![Operator behavior](../documentation/testpmd-operator.png)
 
 Final application, also known as CNF Application, which is a standard TestPMD instance using the default MAC forwarding module. It uses two components:
@@ -28,15 +31,15 @@ Apart from the modifications you have to do, you also need to update the operato
 
 - [CHANGELOG.md](CHANGELOG.md).
 - [Makefile](Makefile).
-- [Dockerfile](Dockerfile).
+- [Containerfile](Containerfile).
 
 Also, make sure that the operator version is within the interval defined in [required-annotations.yaml](../utils/required-annotations.yaml) file for `olm.skipRange` annotation, else update that file to modify the current range.
 
 A common change is the update of Operator SDK version used in the operator. Here's an [example](https://github.com/openshift-kni/example-cnf/pull/108) where this is done. The step-by-step migration plan typically implies the following tasks:
 
-1. Update Operator SDK version in Makefile and Dockerfile
+1. Update Operator SDK version in Makefile and Containerfile
 2. Simplify Makefile by updating custom variables
 3. Add modern operator-sdk download targets
-4. Update Dockerfile to use newer base image
+4. Update Containerfile to use newer base image
 5. Test the operator to ensure compatibility
 6. Update any CI/CD that depends on the old Makefile targets

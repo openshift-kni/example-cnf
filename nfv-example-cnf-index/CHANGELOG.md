@@ -2,7 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] -
+## [0.3.11] - 2026-07-14
+
+- Renamed nfv-example-cnf-catalog.Dockerfile to Containerfile
 
 ## [0.3.10] - 2025-10-27
 

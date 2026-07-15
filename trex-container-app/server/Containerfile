@@ -6,21 +6,28 @@ RUN go mod init webserver.go
 RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
 
 ## trex image
-FROM quay.io/rh-nfv-int/ubi8-base-trex:v0.0.1
+FROM quay.io/rh-nfv-int/ubi10-base-trex:v0.0.1
 
 LABEL name="NFV Example TRexServer Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.21" \
-      release="v0.2.21" \
+      version="v0.2.22" \
+      release="v0.2.22" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 
 COPY licenses /licenses
 
-ENV TREX_VER v3.06
+# No TRex v3.0.8 is available in Github, latest tag is v3.0.7
+# Anyway, master branch is currently pointing to v3.0.8
+ENV TREX_BRANCH master
 ENV TREX_REPO https://github.com/cisco-system-traffic-generator/trex-core.git
 ENV TRAFFICGEN_REPO https://github.com/perftool-incubator/bench-trafficgen
+
+# Install of building TRex from source, download the tar.gz
+# with all the binaries and extract it
+ENV TREX_VER v3.08
+ENV TREX_TAR https://trex-tgn.cisco.com/trex/release/${TREX_VER}.tar.gz
 
 # Install prerequisite packages from UBI repos
 RUN dnf install -y \
@@ -39,7 +46,8 @@ RUN dnf install -y \
     unzip \
     xorg-x11-xauth \
     yum-utils \
-    python39 \
+    python3 \
+    python3-pip \
     iproute \
     zlib-devel \
     binutils \
@@ -47,11 +55,10 @@ RUN dnf install -y \
     && dnf clean all
 
 # Install TRex
-RUN mkdir -p /opt/trex && cd /opt/trex && git clone --branch ${TREX_VER} ${TREX_REPO}
-RUN cd /opt/trex/trex-core/linux_dpdk && \
-    ./b configure --no-bnxt --new-memory && \
-    ./b build
-
+RUN mkdir -p /opt/trex && cd /opt/trex && git clone --branch ${TREX_BRANCH} ${TREX_REPO}
+RUN cd /tmp && wget --no-cache --no-check-certificate ${TREX_TAR} && tar -xzvf ${TREX_VER}.tar.gz && rm ${TREX_VER}.tar.gz
+## Replace /opt/trex/trex-core/scripts with the one from the tar.gz, which includes the binaries to be launched
+RUN rm -rf /opt/trex/trex-core/scripts && mv /tmp/${TREX_VER} /opt/trex/trex-core/scripts
 RUN cd /opt && git clone ${TRAFFICGEN_REPO} && mv bench-trafficgen/trafficgen . && rm -rf bench-trafficgen
 RUN pip3 install kubernetes
 

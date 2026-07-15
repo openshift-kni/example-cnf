@@ -3,11 +3,11 @@
 # To re-generate a bundle for another specific version without changing the standard setup, you can:
 # - use the VERSION as arg of the bundle target (e.g make bundle VERSION=0.0.2)
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
-VERSION ?= 0.2.32
+VERSION ?= 0.2.33
 
 # Set the Operator SDK version to use. By default, what is installed on the system is used.
 # This is useful for CI or a project to utilize a specific version of the operator-sdk toolkit.
-OPERATOR_SDK_VER ?= 1.42.2
+OPERATOR_SDK_VER ?= 1.42.3
 
 # Other custom variables
 SHELL                       := /bin/bash
@@ -23,7 +23,7 @@ CLUSTER_CLI                 ?= oc
 OPERATOR_NAME               := trex-operator
 KUSTOMIZE_VER               := 5.6.0
 OPM_VER                     := 1.55.0
-ANSIBLE_OPERATOR_PLUGIN_VER := 1.42.2
+ANSIBLE_OPERATOR_PLUGIN_VER := 1.42.3
 TREX_VER                    ?= v$(shell bash -c '. ../versions.cfg; echo "$${VERSIONS[trex-container-app]}"')
 
 # CHANNELS define the bundle channels used in the bundle.
@@ -245,6 +245,7 @@ bundle: kustomize operator-sdk yq
 	mv tmp_csv.yaml bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml	
 	DIGEST=$$(skopeo inspect --no-tags docker://$(IMG) | jq -r '.Digest') && sed -i -e 's/\(\s*image: .*\):v'$(TAG)'/\1@'$${DIGEST}'/' bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
 	sed -i -e '/^# Copy.*/i LABEL com.redhat.openshift.versions="v4.12"\nLABEL com.redhat.delivery.backport=false\nLABEL com.redhat.delivery.operator.bundle=true' bundle.Dockerfile
+	mv bundle.Dockerfile bundle.Containerfile
 	DIGEST=$$(skopeo inspect --no-tags docker://quay.io/rh-nfv-int/trex-container-server:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-server@.*/trex-container-server@$${DIGEST}\"   # $(TREX_VER)/" relatedImages.yaml
 	DIGEST=$$(skopeo inspect --no-tags docker://quay.io/rh-nfv-int/trex-container-app:$(TREX_VER)|jq -r .Digest) && [ -n "$${DIGEST}" ] && sed -i -e "s/trex-container-app@.*/trex-container-app@$${DIGEST}\"   # $(TREX_VER)/" relatedImages.yaml
 	cat relatedImages.yaml >> bundle/manifests/$(OPERATOR_NAME).clusterserviceversion.yaml
@@ -255,10 +256,10 @@ bundle: kustomize operator-sdk yq
 .PHONY: bundle-build
 bundle-build: bundle
 	if [ -n "$(RELEASE)" ]; then \
-	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Dockerfile \
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Containerfile \
 		-t bundle . ; \
 	else \
-	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Dockerfile --label quay.expires-after=1w \
+	BUILDAH_FORMAT=docker ${CONTAINER_CLI} build -f bundle.Containerfile --label quay.expires-after=1w \
 		-t bundle . ; \
 	fi
 

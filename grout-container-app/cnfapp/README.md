@@ -33,8 +33,8 @@ sh-4.4$ cat /usr/local/bin/example-cnf/run/grout.init
 interface add port p0 devargs 0000:86:02.1 rxqs 2
 interface add port p1 devargs 0000:86:03.3 rxqs 2
 
-address add 172.16.16.60/24 iface p0
-address add 172.16.21.60/24 iface p1
+address add 192.168.16.60/26 iface p0
+address add 192.168.16.100/26 iface p1
 ```
 
 The file created by the automation to launch the Grout configuration is saved under `/usr/local/bin/example-cnf/run/grout.sock`, and it has the following content:
@@ -120,7 +120,7 @@ grout# trace disable all
 
 Apart from the modifications you have to do, you also need to update the container version in these files:
 
-- [Dockerfile](Dockerfile).
+- [Containerfile](Containerfile).
 - [build.sh](../build.sh) (from parent folder).
 - [Makefile](../Makefile) (from parent folder).
 

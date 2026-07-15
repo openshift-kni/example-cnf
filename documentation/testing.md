@@ -183,17 +183,17 @@ ecd_network_config:
   cnfapp:
     net1:
       mac: 80:04:0f:f1:89:01
-      ip: 172.16.16.60/24
+      ip: 192.168.16.60/26
     net2:
       mac: 80:04:0f:f1:89:02
-      ip: 172.16.21.60/24
+      ip: 192.168.16.100/26
   trex:
     net1:
       mac: 20:04:0f:f1:89:01
-      ip: 172.16.16.61/24
+      ip: 192.168.16.61/26
     net2:
       mac: 20:04:0f:f1:89:02
-      ip: 172.16.21.61/24
+      ip: 192.168.16.101/26
 ```
 
 - With nfv-example-cnf-index DCI component, we will refer to the software to be used to download Example CNF-related images from Quay.io. Here, we are using the latest version currently available, since we're not pinning the version to use. Here's an example of a [nfv-example-cnf-index DCI component](https://www.distributed-ci.io/topics/b8454f14-ff58-41ad-b31c-00f9e84eff3c/components/fb503d17-57da-4e54-9095-6d2bdd858f24). The `Data` field contains the URL to reach the registry where the images are defined, and the image version is the same that the one used in the component (for this example, v0.3.7-202501202232.2eb6d6d).
@@ -705,8 +705,8 @@ sh-4.4$ cat /usr/local/bin/example-cnf/run/grout.init
 interface add port p0 devargs 0000:86:02.1 rxqs 2
 interface add port p1 devargs 0000:86:03.3 rxqs 2
 
-address add 172.16.16.60/24 iface p0
-address add 172.16.21.60/24 iface p1
+address add 192.168.16.60/26 iface p0
+address add 192.168.16.100/26 iface p1
 
 # run the script
 sh-4.4$ sudo /usr/local/bin/example-cnf/run/config-grout
@@ -868,7 +868,7 @@ Acquiring ports [0, 1]:                                      [SUCCESS]
 
 Server Info:
 
-Server version:   v3.06 @ STL
+Server version:   v3.08 @ STL
 Server mode:      Stateless
 Server CPU:       4 x Intel(R) Xeon(R) Gold 6248R CPU @ 3.00GHz
 Ports count:      2 x 10.0Gbps @ Unknown	
@@ -1041,8 +1041,8 @@ spec:
   - `trexIps` and `cnfappIps`, to specify the IP addresses to be used by TRex and the CNFApp. Remember this is mandatory for Grout, and optional for TRex. You have to include the two IP addresses for each component in an array, line in this example:
 
 ```yaml
-  trexIps: ["172.16.16.61/24", "172.16.21.61/24"]
-  cnfappIps: ["172.16.16.60/24", "172.16.21.60/24"]
+  trexIps: ["192.168.16.61/26", "192.168.16.101/26"]
+  cnfappIps: ["192.168.16.60/26", "192.168.16.100/26"]
 ```
 
   - `arpResolution: 1`: this is for TRex to resolve IP-MAC association by sending an ARP request to each IP address of the CNFApp. This is required for Grout.
@@ -1067,8 +1067,8 @@ spec:
   runtime_class_name: performance-blueprint-profile
 
   # L3-related configuration
-  trexIps: ["172.16.16.61/24", "172.16.21.61/24"]
-  cnfappIps: ["172.16.16.60/24", "172.16.21.60/24"]
+  trexIps: ["192.168.16.61/26", "192.168.16.101/26"]
+  cnfappIps: ["192.168.16.60/26", "192.168.16.100/26"]
   arpResolution: 1
 ```
 

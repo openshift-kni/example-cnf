@@ -2,7 +2,7 @@ SHELL           := /bin/bash
 
 DATE            ?= $(shell date --utc +%Y%m%d%H%M)
 SHA             ?= $(shell git rev-parse --short HEAD)
-VERSION         ?= 0.2.21
+VERSION         ?= 0.2.22
 REGISTRY        ?= quay.io
 ORG             ?= rh-nfv-int
 CONTAINER_CLI   ?= podman
@@ -35,17 +35,17 @@ build-all: build-server build-app
 .PHONY: build-server # Build TRex Server
 build-server: server-dependencies
 	if [ -n "$(RELEASE)" ]; then \
-	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(TAG)" -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(VERSION)" $(CONTAINER_ARGS); \
+	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Containerfile -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(TAG)" -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(VERSION)" $(CONTAINER_ARGS); \
 	else \
-	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile --label quay.expires-after=1w  -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(TAG)" $(CONTAINER_ARGS); \
+	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Containerfile --label quay.expires-after=1w  -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(TAG)" $(CONTAINER_ARGS); \
 	fi
 
 .PHONY: build-app # Build TRex App
 build-app: app-dependencies
 	if [ -n "$(RELEASE)" ]; then \
-	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(TAG)" -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(VERSION)" $(CONTAINER_ARGS); \
+	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Containerfile -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(TAG)" -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(VERSION)" $(CONTAINER_ARGS); \
 	else \
-	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Dockerfile --label quay.expires-after=1w  -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(TAG)" $(CONTAINER_ARGS); \
+	$(CONTAINER_CLI) build $(@:build-%=%) -f $(@:build-%=%)/Containerfile --label quay.expires-after=1w  -t "$(REGISTRY)/$(ORG)/trex-container-$(@:build-%=%):v$(TAG)" $(CONTAINER_ARGS); \
 	fi
 
 .PHONY: push-all # Push ALL images
