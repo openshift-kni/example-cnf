@@ -19,7 +19,7 @@ COPY licenses /licenses
 
 # No TRex v3.0.8 is available in Github, latest tag is v3.0.7
 # Anyway, master branch is currently pointing to v3.0.8
-ENV TREX_VER master
+ENV TREX_BRANCH master
 ENV TREX_REPO https://github.com/cisco-system-traffic-generator/trex-core.git
 ENV TRAFFICGEN_REPO https://github.com/perftool-incubator/bench-trafficgen
 
