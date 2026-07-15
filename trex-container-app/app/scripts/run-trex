@@ -57,7 +57,7 @@ class STLS1(object):
             ip_port_1=self.trex_ip_list[1]
 
         # Followed the philosophy of this example:
-        # https://github.com/cisco-system-traffic-generator/trex-core/blob/v3.06/scripts/stl/udp_1pkt_simple_bdir.py
+        # https://github.com/cisco-system-traffic-generator/trex-core/blob/master/scripts/stl/udp_1pkt_simple_bdir.py
         if (direction == 0):
             src = ip_port_0
             dst = ip_port_1
@@ -133,7 +133,7 @@ class STLS1(object):
             gw_port_1=self.cnfapp_ip_list[1]
 
         # Followed the philosophy of this example:
-        # https://github.com/cisco-system-traffic-generator/trex-core/blob/v3.06/scripts/stl/udp_1pkt_simple_bdir.py
+        # https://github.com/cisco-system-traffic-generator/trex-core/blob/master/scripts/stl/udp_1pkt_simple_bdir.py
         if (direction == 0):
             src = ip_port_0
             gw = gw_port_0

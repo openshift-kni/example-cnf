@@ -1,4 +1,4 @@
-"""Compatibility shims for TRex v3.06 on Python 3.12+."""
+"""Compatibility shims for TRex v3.08 on Python 3.12+."""
 
 import importlib
 import sys

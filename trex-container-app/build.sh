@@ -18,7 +18,7 @@ if [[ "$1" == "-h" ]] ; then
     exit 0
 fi
 
-TAG="${TAG:-v0.2.23}"
+TAG="${TAG:-v0.2.22}"
 
 CLI=${CLI:="podman"}
 ORG=${ORG:="rh-nfv-int"}
