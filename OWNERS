@@ -1,0 +1,57 @@
+# See the OWNERS docs at https://go.k8s.io/owners
+filters:
+  ".*":
+    approvers:
+      - betoredhat
+      - fredericlepied
+      - manurodriguez
+      - rajchiluveru
+      - ramperher
+      - tonyskapunk
+    reviewers:
+      - fredericlepied
+      - ramperher
+
+  "^documentation/.*":
+    reviewers:
+      - betoredhat
+      - tonyskapunk
+
+  "^nfv-example-cnf-index/.*":
+    reviewers:
+      - betoredhat
+      - tonyskapunk
+
+  "^testpmd-operator/.*":
+    reviewers:
+      - betoredhat
+      - manurodriguez
+
+  "^testpmd-container-app/.*":
+    reviewers:
+      - betoredhat
+      - manurodriguez
+
+  "^trex-operator/.*":
+    reviewers:
+      - manurodriguez
+      - rajchiluveru
+
+  "^trex-container-app/.*":
+    reviewers:
+      - manurodriguez
+      - rajchiluveru
+
+  "^grout-operator/.*":
+    reviewers:
+      - manurodriguez
+      - rajchiluveru
+
+  "^grout-container-app/.*":
+    reviewers:
+      - manurodriguez
+      - rajchiluveru
+
+  "^utils/.*":
+    reviewers:
+      - tonyskapunk
