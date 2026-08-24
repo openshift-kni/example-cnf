@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.6] - 2026-08-24
+
+- Add certsuite.redhat.com/non-tls-ports annotation in pods under test to be compliant with networking-unsecured-container-ports' certsuite test
+
 ## [0.2.5] - 2026-07-14
 
 - Updated Operator SDK to v1.42.3

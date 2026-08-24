@@ -25,6 +25,7 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: manager
+        certsuite.redhat.com/non-tls-ports: "5050,8080,8443,8888,6789"
       labels:
         control-plane: controller-manager
         example-cnf-type: trex-operator
