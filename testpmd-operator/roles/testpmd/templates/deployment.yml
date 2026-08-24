@@ -13,6 +13,7 @@ spec:
     metadata:
 {% if not skip_annot|bool %}
       annotations:
+        certsuite.redhat.com/non-tls-ports: "8095"
 {% if runtime_class_name is defined and runtime_class_name | length %}
         irq-load-balancing.crio.io: "disable"
         cpu-load-balancing.crio.io: "disable"
