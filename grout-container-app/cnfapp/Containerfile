@@ -12,8 +12,8 @@ FROM quay.io/rh-nfv-int/ubi10-base-grout:v0.0.1
 LABEL name="NFV Example CNF Grout Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.12" \
-      release="v0.2.12" \
+      version="v0.2.13" \
+      release="v0.2.13" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 
