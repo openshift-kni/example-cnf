@@ -80,7 +80,7 @@ spec:
         volumeMounts:
         - name: grout-cfg
           mountPath: /run/grout/cfg
-        - name: podnetinfo
+        - name: grout-podnetinfo
           mountPath: /etc/podnetinfo
           readOnly: true
         env:
@@ -294,3 +294,11 @@ spec:
         hostPath:
           path: /dev/net/tun
           type: CharDevice
+      # Not named podnetinfo: the SR-IOV Network Resources Injector adds its own
+      # volume with that name, and a second one makes the Pod invalid.
+      - name: grout-podnetinfo
+        downwardAPI:
+          items:
+          - path: annotations
+            fieldRef:
+              fieldPath: metadata.annotations
