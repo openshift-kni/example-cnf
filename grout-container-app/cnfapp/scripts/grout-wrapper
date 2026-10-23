@@ -6,13 +6,8 @@ set -ex
 echo "Welcome to grout-wrapper script!"
 
 RUN_DEPLOYMENT=${run_deployment:=1}
-
 LOG_DIR=/var/log/grout
-GROUT_LOG_FILE="$LOG_DIR/app.log"
-touch $GROUT_LOG_FILE
-
 GROUT_INIT=/etc/grout.init
-
 : ${GROUT_SOCK_PATH:=/run/grout/api.sock}
 export GROUT_SOCK_PATH
 
@@ -140,6 +135,8 @@ grout)
         grcli stats reset
 
         # Print statistics every $STAT_PERIOD seconds
+        GROUT_LOG_FILE="$LOG_DIR/app.log"
+        touch $GROUT_LOG_FILE
         set +ex
         STATS_PERIOD=${stats_period:=1}
         while true; do
