@@ -18,6 +18,7 @@ spec:
         irq-load-balancing.crio.io: "disable"
         cpu-load-balancing.crio.io: "disable"
 {% endif %}
+        # TODO: Probably to be readapted once we use multiple pods for load-balancing
         k8s.v1.cni.cncf.io/networks: '[
 {% for network in networks %}
 {% set outer_loop = loop %}
@@ -59,29 +60,55 @@ spec:
 {% if runtime_class_name is defined and runtime_class_name | length %}
       runtimeClassName: "{{ runtime_class_name }}"
 {% endif %}
-      containers:
-      - name: grout
-        ports:
-        - name: "http-probe"
-          containerPort: 8095
-        - name: "tcp-gr-svc"
-          containerPort: 9111
+      initContainers:
+      - name: grout-init
+        args: ["generate-grout-config"]
+        image: "{{ image_grout }}"
+        imagePullPolicy: "{{ image_pull_policy }}"
+        resources:
+          requests:
+{% for key, value in network_resources.items() %}
+            {{ key }}: {{ value }}
+{% endfor %}
+          limits:
+{% for key, value in network_resources.items() %}
+            {{ key }}: {{ value }}
+{% endfor %}
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 56560
+        volumeMounts:
+        - name: grout-cfg
+          mountPath: /run/grout/cfg
+        - name: grout-podnetinfo
+          mountPath: /etc/podnetinfo
+          readOnly: true
+        env:
+        - name: NETWORK_NAME_LIST
+          value: "{{ network_resources.keys()|list|join(',') }}"
+          # "openshift.io/example_cnf_res1,openshift.io/example_cnf_res2"
+        - name: rx_queues
+          value: "{{ rx_queues }}"
+      - name: frr-init
+        args: ["generate-frr-config"]
         image: "{{ image_grout }}"
         imagePullPolicy: "{{ image_pull_policy }}"
         securityContext:
           runAsNonRoot: true
           runAsUser: 56560
-{% if run_deployment is defined and run_deployment == 1 %}
-          readOnlyRootFilesystem: true
-{% endif %}
-{% if privileged %}
-          privileged: true
-{% else %}
-          capabilities:
-            add: ["IPC_LOCK", "NET_ADMIN", "AUDIT_WRITE"]
-          seLinuxOptions:
-            type: spc_t
-{% endif %}
+        volumeMounts:
+        - name: frr-cfg
+          mountPath: /run/frr/cfg
+      containers:
+      - name: grout
+        args: ["grout"]
+        image: "{{ image_grout }}"
+        imagePullPolicy: "{{ image_pull_policy }}"
+        ports:
+        - name: "http-probe"
+          containerPort: 8095
+        - name: "tcp-gr-svc"
+          containerPort: 9111
         resources:
           limits:
             hugepages-1Gi: {{ hugepage_1gb_count }}
@@ -97,33 +124,40 @@ spec:
 {% for key, value in network_resources.items() %}
             {{ key }}: {{ value }}
 {% endfor %}
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 56560
+{% if run_deployment is defined and run_deployment == 1 %}
+          readOnlyRootFilesystem: true
+{% endif %}
+          privileged: true
         volumeMounts:
         - name: hugepage
           mountPath: /dev/hugepages
         - name: log-dir
           mountPath: /var/log/grout
-        - name: exec-dir
-          mountPath: /usr/local/bin/example-cnf/run
+        - name: grout-run
+          mountPath: /run/grout
+        - name: grout-cfg
+          mountPath: /etc/grout.init
+          subPath: grout.init
         - name: dpdk-dir
-          mountPath: /var/run/dpdk
+          mountPath: /run/dpdk
         - name: tmp
           mountPath: /tmp
         - name: tun
           mountPath: /dev/net/tun
         env:
-        - name: NETWORK_NAME_LIST
-          value: "{{ network_resources.keys()|list|join(',') }}"
-          # "openshift.io/example_cnf_res1,openshift.io/example_cnf_res2"
-        - name: GROUT_CPU_COUNT
-          value: "{{ cpu }}"
+        - name: GROUT_SOCK_PATH
+          value: "/run/grout/api.sock"
+        - name: GROUT_OVERRIDE_DEFAULT_ROUTE
+          value: "true"
+        - name: GROUT_OVERRIDE_RP_FILTER
+          value: "true"
         - name: NODE_NAME
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        - name: CR_NAME
-          value: "{{ ansible_operator_meta.name }}"
-        - name: rx_queues
-          value: "{{ rx_queues }}"
 {% if run_deployment is defined %}
         - name: run_deployment
           value: "{{ run_deployment }}"
@@ -136,7 +170,80 @@ spec:
         lifecycle:
           postStart:
             exec:
-              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
+              command: ["/grout-wrapper", "poststart-grout"]
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8095
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8095
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /startz
+            port: 8095
+          initialDelaySeconds: 30
+          periodSeconds: 10
+{% endif %}
+        terminationMessagePolicy: FallbackToLogsOnError
+      - name: frr
+        args: ["frr"]
+        image: "{{ image_grout }}"
+        imagePullPolicy: "{{ image_pull_policy }}"
+        resources:
+          limits:
+            memory: {{ memory }}
+            cpu: {{ cpu }}
+          requests:
+            memory: {{ memory }}
+            cpu: {{ cpu }}
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 56560
+{% if run_deployment is defined and run_deployment == 1 %}
+          readOnlyRootFilesystem: true
+{% endif %}
+{% if privileged %}
+          privileged: true
+{% else %}
+          capabilities:
+            add: ["NET_ADMIN", "AUDIT_WRITE", "NET_RAW", "NET_BIND_SERVICE", "SYS_ADMIN"]
+          seLinuxOptions:
+            type: spc_t
+{% endif %}
+        volumeMounts:
+        - name: log-dir
+          mountPath: /var/log/grout
+        - name: log-tmp-dir-frr
+          mountPath: /var/tmp/frr
+        - name: frr-cfg
+          mountPath: /etc/frr/daemons
+          subPath: daemons
+        - name: frr-cfg
+          mountPath: /etc/frr/frr.conf
+          subPath: frr.conf
+        - name: run-dir-frr
+          mountPath: /run/frr
+        - name: grout-run
+          mountPath: /run/grout
+        - name: tmp
+          mountPath: /tmp
+        env:
+        - name: GROUT_SOCK_PATH
+          value: "/run/grout/api.sock"
+{% if run_deployment is defined and run_deployment == 1 %}
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/grout-wrapper", "poststart-frr"]
           preStop:
             exec:
               command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
@@ -166,7 +273,15 @@ spec:
           medium: HugePages
       - name: log-dir
         emptyDir: {}
-      - name: exec-dir
+      - name: log-tmp-dir-frr
+        emptyDir: {}
+      - name: run-dir-frr
+        emptyDir: {}
+      - name: grout-run
+        emptyDir: {}
+      - name: grout-cfg
+        emptyDir: {}
+      - name: frr-cfg
         emptyDir: {}
       - name: dpdk-dir
         emptyDir: {}
@@ -176,3 +291,11 @@ spec:
         hostPath:
           path: /dev/net/tun
           type: CharDevice
+      # Not named podnetinfo: the SR-IOV Network Resources Injector adds its own
+      # volume with that name, and a second one makes the Pod invalid.
+      - name: grout-podnetinfo
+        downwardAPI:
+          items:
+          - path: annotations
+            fieldRef:
+              fieldPath: metadata.annotations

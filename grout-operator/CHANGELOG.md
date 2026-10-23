@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.7] - 2026-10-23
+
+- Update grout-container-app to Grout v0.19.3
+- Include FRR container in the app deployment
+- Include a placeholder in grout-container-app for further FRR configuration, just doing the basics now
+- Refactor grout-container-app project to follow good practices applied in grout-config's internal testing
+
 ## [0.2.6] - 2026-08-24
 
 - Add certsuite.redhat.com/non-tls-ports annotation in pods under test to be compliant with networking-unsecured-container-ports' certsuite test
