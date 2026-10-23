@@ -13,7 +13,7 @@ spec:
     metadata:
 {% if not skip_annot|bool %}
       annotations:
-        certsuite.redhat.com/non-tls-ports: "8095,8096,9111"
+        certsuite.redhat.com/non-tls-ports: "8095,9111"
 {% if runtime_class_name is defined and runtime_class_name | length %}
         irq-load-balancing.crio.io: "disable"
         cpu-load-balancing.crio.io: "disable"
@@ -198,9 +198,6 @@ spec:
         args: ["frr"]
         image: "{{ image_grout }}"
         imagePullPolicy: "{{ image_pull_policy }}"
-        ports:
-        - name: "http-probe"
-          containerPort: 8096
         resources:
           limits:
             memory: {{ memory }}
@@ -253,19 +250,19 @@ spec:
         livenessProbe:
           httpGet:
             path: /healthz
-            port: 8096
+            port: 8095
           initialDelaySeconds: 15
           periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /readyz
-            port: 8096
+            port: 8095
           initialDelaySeconds: 5
           periodSeconds: 10
         startupProbe:
           httpGet:
             path: /startz
-            port: 8096
+            port: 8095
           initialDelaySeconds: 30
           periodSeconds: 10
 {% endif %}

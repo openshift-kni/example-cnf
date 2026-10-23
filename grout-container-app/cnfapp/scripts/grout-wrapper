@@ -153,8 +153,6 @@ grout)
     fi
     ;;
 frr)
-    # Start lifecycle webserver in background
-    /usr/local/bin/webserver 8096 &
     wait_for_socket
     # Launch FRR daemons. Requires privileges
     exec sudo /bin/bash -c "export GROUT_SOCK_PATH=$(printf '%q' "$GROUT_SOCK_PATH"); . /usr/libexec/frr/frrcommon.sh; daemon_list daemons; exec /usr/libexec/frr/watchfrr \$daemons"

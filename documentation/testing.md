@@ -253,7 +253,7 @@ trexconfig-5865745c74-qstk6                                1/1     Running     0
 ```
 $ oc get pods -n example-cnf
 NAME                                                       READY   STATUS      RESTARTS   AGE
-grout-app-66f65bf475-4897b                                 1/1     Running     0          119m
+grout-app-66f65bf475-4897b                                 2/2     Running     0          119m
 grout-operator-controller-manager-6488b4c774-hctzp         1/1     Running     0          157m
 grout-operator-controller-manager-6488b4c774-zjhtw         1/1     Running     0          156m
 job-trex-app-fcs5j                                         0/1     Completed   0          152m
@@ -441,7 +441,7 @@ All these logs are gathered in a file called `example-cnf-results.log`. This als
 
 ## Troubleshooting mode scenario
 
-The baseline scenario is a good option to be able to launch Example CNF operators and deploy TRex automatically, being suitable for a CI system loop where the tests are executed N times and then we can extract [conclusions](https://www.distributed-ci.io/analytics/keyvalues?query=%28tags+in+%5Bdaily%5D%29+and+%28%28status%3Dsuccess%29+and+%28name%3Dexample-cnf%29%29&range=last90Days&after=2024-11-12&before=2025-02-10&graphs=%255B%257B%2522keys%2522%253A%255B%257B%2522key%2522%253A%2522packet_loss_total_perc%2522%252C%2522color%2522%253A%2522%2523a3a3a3%2522%252C%2522axis%2522%253A%2522left%2522%257D%255D%252C%2522graphType%2522%253A%2522line%2522%257D%255D) from all the results obtained. However, we cannot really interact with either CNFApp or TRex.
+The baseline scenario is a good option to be able to launch Example CNF operators and deploy TRex automatically, being suitable for a CI system loop where the tests are executed N times and then we can extract [conclusions](https://www.distributed-ci.io/analytics/keyvalues?query=%28tags+in+%5B%27daily%27%5D%29+and+%28%28status%3D+%27success%27%29+and+%28name+%3D+%27example-cnf%27%29%29&range=last7Days&after=2026-10-16&before=2026-10-23&limit=200&offset=0&graphs=%255B%257B%2522group_by%2522%253A%2522%2522%252C%2522keys%2522%253A%255B%257B%2522key%2522%253A%2522packet_loss_total_perc%2522%252C%2522color%2522%253A%2522%2523876fd4%2522%252C%2522axis%2522%253A%2522left%2522%257D%255D%252C%2522graphType%2522%253A%2522line%2522%252C%2522name%2522%253A%2522Key%2520value%2520graph%2522%257D%255D) from all the results obtained. However, we cannot really interact with either CNFApp or TRex.
 
 To achieve this goal, we can run Example CNF in troubleshooting mode by just providing some extra parameters to `dci-pipeline-schedule` call. In this way, all Example CNF operators will be created and all pods will keep up and running with all scripts prepared for being launched, but the automation will not take care of launching the test scripts and creating the TRex job, so that we can interact with both CNFApp and TRex to check on-line the behavior and results.
 
@@ -478,7 +478,7 @@ trexconfig-589577d85-69m5x                                 1/1     Running   0  
 ```
 $ oc get pods -n example-cnf
 NAME                                                       READY   STATUS    RESTARTS   AGE
-grout-app-b8f599d5f-hdhjt                                  1/1     Running   0          2m50s
+grout-app-b8f599d5f-hdhjt                                  2/2     Running   0          2m50s
 grout-operator-controller-manager-6488b4c774-b6cv7         1/1     Running   0          4m8s
 grout-operator-controller-manager-6488b4c774-g888r         1/1     Running   0          4m20s
 trex-operator-controller-manager-6cdd46d4cd-9fntz          1/1     Running   0          3m16s
@@ -495,7 +495,7 @@ Basically, the scripts that are launched are the same than in the baseline scena
 So, with this, you can access to the pods and check that the scripts to be used during troubleshooting have been created:
 
 - (when using TestPMD) `testpmd-app`: two scripts are created: `/usr/local/bin/example-cnf/run/testpmd-run` (same script that in the baseline scenario), and `/usr/local/bin/example-cnf/run/testpmd-interactive` (which launches `testpmd` in interactive mode instead of using auto-start mode). We would use `testpmd-interactive` for troubleshooting mode, since we can use TestPMD in interactive mode, and we can control the start/stop of this tool, the retrieval of statistics, etc.
-- (when using Grout) `grout-app`: the script to be used is in `/usr/local/bin/example-cnf/run/config-grout` (same script that in the baseline scenario).
+- (when using Grout) `grout-app`: the script to be used is `/grout-wrapper poststart-grout` in the grout container, just to apply the Grout configuration provided by the grout init container. The frr container keeps in the same status.
 - `trexconfig`: the script to be used is in `/usr/local/bin/example-cnf/trex-server-run` (same script that in the baseline scenario).
 
 ### Start the traffic generation manually and check how it goes
