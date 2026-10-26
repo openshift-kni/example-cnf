@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.2.7] - 2026-10-23
+## [0.2.7] - 2026-10-28
 
 - Update grout-container-app to Grout v0.19.3
 - Include FRR container in the app deployment

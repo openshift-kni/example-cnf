@@ -15,7 +15,7 @@ networks: []
 
 # Image pull policy for the Grout container (Always, IfNotPresent, or Never).
 image_pull_policy: IfNotPresent
-# Whether to run the container in privileged mode.
+# Whether to run the frr container in privileged mode (grout already runs in privileged mode).
 privileged: false
 # Amount of 1Gi hugepages to allocate.
 hugepage_1gb_count: 4Gi

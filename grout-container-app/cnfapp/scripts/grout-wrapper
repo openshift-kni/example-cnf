@@ -95,7 +95,6 @@ generate_frr_config() {
     # Configure FRR daemons configuration file
     echo "Configuring FRR daemons..."
     tee $FRR_CFG_TMP/daemons > /dev/null << EOF
-bgpd=yes
 vtysh_enable=yes
 zebra_options="--limit-fds 100000 -F traditional -A 127.0.0.1 -s 90000000 --log file:$LOG_DIR/frr-zebra.log -M dplane_grout"
 mgmtd_options="--limit-fds 100000 -F traditional -A 127.0.0.1 --log file:$LOG_DIR/frr-mgmtd.log"
