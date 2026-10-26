@@ -198,6 +198,13 @@ spec:
         args: ["frr"]
         image: "{{ image_grout }}"
         imagePullPolicy: "{{ image_pull_policy }}"
+        ports:
+        - name: "tcp-frr-zebra"
+          containerPort: 2601
+        - name: "tcp-frr-staticd"
+          containerPort: 2616
+        - name: "tcp-frr-mgmtd"
+          containerPort: 2623
         resources:
           limits:
             memory: {{ memory }}
