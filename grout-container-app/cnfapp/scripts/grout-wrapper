@@ -45,6 +45,42 @@ wait_for_frr() {
     done
 }
 
+# TREX_MAC_LIST and TREX_IP_LIST come from the Grout CR (trexMaclist, trexIplist),
+# in the same order as the local interfaces. Append a static nexthop and a host
+# route for each peer. A learned ARP entry is not usable: Grout 0.17+ ages it
+# immediately, and TRex leaves service mode before the stream.
+append_trex_peers() {
+    outfile=$1
+    iface_count=$2
+    if [ -z "${TREX_MAC_LIST:-}" ] || [ -z "${TREX_IP_LIST:-}" ]; then
+        echo "error: TREX_MAC_LIST and TREX_IP_LIST are required" >&2
+        exit 1
+    fi
+    IFS=',' read -r -a macs <<< "$TREX_MAC_LIST"
+    IFS=',' read -r -a ips <<< "$TREX_IP_LIST"
+    if [ "${#macs[@]}" -ne "$iface_count" ] || [ "${#ips[@]}" -ne "$iface_count" ]; then
+        echo "error: TRex peer lists (${#macs[@]} macs, ${#ips[@]} ips) do not match ${iface_count} interfaces" >&2
+        exit 1
+    fi
+    i=0
+    while [ "$i" -lt "$iface_count" ]; do
+        mac=${macs[$i]// /}
+        ipcidr=${ips[$i]// /}
+        if [ -z "$mac" ] || [ -z "$ipcidr" ]; then
+            echo "error: TRex peer ${i} is missing a mac or ip" >&2
+            exit 1
+        fi
+        addr=${ipcidr%/*}
+        case "$addr" in
+        *:*) prefix=128 ;;
+        *) prefix=32 ;;
+        esac
+        echo "nexthop add l3 iface p${i} address ${addr} mac ${mac}" >> "$outfile"
+        echo "route add ${addr}/${prefix} via ${addr}" >> "$outfile"
+        i=$((i + 1))
+    done
+}
+
 generate_grout_config() {
     if [ -z "$NETWORK_NAME_LIST" ]; then
         echo "error: NETWORK_NAME_LIST is required" >&2
@@ -73,7 +109,10 @@ generate_grout_config() {
         done
     done
 
-    # Define IP configuration to use
+    # Define IP configuration to use, then pin each TRex peer so forwarding
+    # does not depend on a learned ARP entry. Grout 0.17+ ages a newly learned
+    # neighbor immediately (last_reply stays unset), and TRex leaves service
+    # mode before the stream, so it will not answer the probes that follow.
     annotations=/etc/podnetinfo/annotations
     if [ -f "$annotations" ]; then
         port_index=0
@@ -82,6 +121,7 @@ generate_grout_config() {
             echo "address add ${ip} iface p${port_index}" >> "$GROUT_INIT_TMP"
             port_index=$((port_index + 1))
         done
+        append_trex_peers "$GROUT_INIT_TMP" "$port_index"
     fi
 
     # Print Grout config file

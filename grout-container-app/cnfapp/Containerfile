@@ -12,8 +12,8 @@ FROM registry.access.redhat.com/ubi10/ubi:latest
 LABEL name="NFV Example CNF Grout Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.13" \
-      release="v0.2.13" \
+      version="v0.2.14" \
+      release="v0.2.14" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 

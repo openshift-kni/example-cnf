@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.8] - 2026-10-28
+
+- Update grout-container-app to v0.2.14
+- Pin each TRex peer in grout.init with a static nexthop and host route, using trexMaclist and trexIplist from the Grout CR
+
 ## [0.2.7] - 2026-10-28
 
 - Update grout-container-app to Grout v0.19.3

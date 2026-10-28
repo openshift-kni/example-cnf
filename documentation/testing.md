@@ -708,6 +708,10 @@ interface add port p0 devargs 0000:86:02.1 rxqs 2
 interface add port p1 devargs 0000:86:03.3 rxqs 2
 address add 192.168.16.60/26 iface p0
 address add 192.168.16.100/26 iface p1
+nexthop add l3 iface p0 address 192.168.16.61 mac 20:04:0f:f1:89:01
+route add 192.168.16.61/32 via 192.168.16.61
+nexthop add l3 iface p1 address 192.168.16.101 mac 20:04:0f:f1:89:02
+route add 192.168.16.101/32 via 192.168.16.101
 
 # apply the config file
 sh-4.4$ /grout-wrapper poststart-grout

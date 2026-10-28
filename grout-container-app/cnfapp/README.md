@@ -8,7 +8,7 @@ The same container image is used for the `grout` and `frr` containers and for th
 
 ### grout-init
 
-`generate-grout-config` writes `/run/grout/cfg/grout.init`, later mounted in the `grout` container at `/etc/grout.init`. It needs `NETWORK_NAME_LIST` and reads `rx_queues`. PCI addresses come from the `PCIDEVICE_OPENSHIFT_IO_*` variables injected for those resources. IP addresses come from the pod network annotations at `/etc/podnetinfo/annotations`.
+`generate-grout-config` writes `/run/grout/cfg/grout.init`, later mounted in the `grout` container at `/etc/grout.init`. It needs `NETWORK_NAME_LIST` and reads `rx_queues`. PCI addresses come from the `PCIDEVICE_OPENSHIFT_IO_*` variables injected for those resources. IP addresses come from the pod network annotations at `/etc/podnetinfo/annotations`. `TREX_MAC_LIST` and `TREX_IP_LIST` come from the Grout CR (`trexMaclist`, `trexIplist`), in the same order as the local interfaces. For each one it adds a static L3 nexthop and a host route.
 
 ### frr-init
 
@@ -37,6 +37,11 @@ The config file to be used to inject the network information is saved under `/et
 
 - The PCI addresses to be used for each interface. The MAC addresses are automatically injected by Grout once you create the interface.
 - The IP address to be used per interface. These are retrieved from the pod annotations saved in the container's context.
+- A static nexthop and a host route for each TRex peer. The MAC and IP come from `TREX_MAC_LIST` and `TREX_IP_LIST`, set from the Grout CR fields `trexMaclist` and `trexIplist`.
+
+Those two lines per interface are there because of a nexthop change that shipped in Grout v0.17.0 and is present in v0.17.1 and later. Through v0.16.3, the ARP reply TRex sends before the stream created a neighbor that stayed `REACHABLE`, and the dataplane forwarded on it. The v0.17 change (`nexthop: expose ARP/NDP learned nexthops to the API`) still records the MAC and marks the new neighbor `REACHABLE`, but it leaves `last_reply` at 0. Ageing runs only on learned nexthops and treats that zero timestamp as already past the reachable lifetime, so the entry moves to `STALE` and then `FAILED` within about a second. TRex has left service mode by then and does not answer the ARP probes that follow. The dataplane forwards only through a `REACHABLE` nexthop, so packets for the TRex address fall through the connected route, get punted to the control plane, and are dropped once that queue fills. Ping to Grout's own address still succeeds, because that traffic is delivered locally and never looks up the TRex neighbor.
+
+`nexthop add` installs a static L3 nexthop, which ageing does not touch. It has to come before `route add`: the nexthop command does not insert a route itself, and a route added first creates an unresolved nexthop for that address, which the later `nexthop add` cannot replace. The host route (`/32`, or `/128` for IPv6) makes the lookup return the static nexthop instead of the connected one.
 
 This is an example of what we could find in that config file:
 
@@ -46,6 +51,10 @@ interface add port p0 devargs 0000:86:02.1 rxqs 2
 interface add port p1 devargs 0000:86:03.3 rxqs 2
 address add 192.168.16.60/26 iface p0
 address add 192.168.16.100/26 iface p1
+nexthop add l3 iface p0 address 192.168.16.61 mac 20:04:0f:f1:89:01
+route add 192.168.16.61/32 via 192.168.16.61
+nexthop add l3 iface p1 address 192.168.16.101 mac 20:04:0f:f1:89:02
+route add 192.168.16.101/32 via 192.168.16.101
 ```
 
 To deploy that config, we use the `grcli` command. If using `-f` argument, we will run all the commands that are defined in the file. This is handled in fact by `/grout-wrapper` command with `poststart-grout` argument.
