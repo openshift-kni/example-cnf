@@ -21,6 +21,8 @@ The following variables are defined in [`defaults/main.yml`](defaults/main.yml):
 | `resources`           | []                                                                                                                    | List of additional resources to be used.                                                                    |
 | `environments`        | {}                                                                                                                    | Environment variables to set in the container.                                                              |
 | `rx_queues`           | 2                                                                                                                     | Number of RX queues.                                                                                        |
+| `trex_maclist`        | []                                                                                                                    | TRex MAC address for each local interface, in the same order as `networks`. CR field `trexMaclist`.         |
+| `trex_iplist`         | []                                                                                                                    | TRex IP address (with prefix) for each local interface, same order. CR field `trexIplist`.                  |
 
 ### Example `networks` Variable Structure
 
@@ -92,7 +94,7 @@ Each pod runs two init containers, then two application containers, all from `im
 
 ### Init containers
 
-- **`grout-init`** (`generate-grout-config`): Builds `grout.init` from the SR-IOV PCI devices and the pod network annotations. It requests the same network resources as the dataplane container so those devices are visible, and reads `NETWORK_NAME_LIST` and `rx_queues`. The annotations come from a downward API volume (`grout-podnetinfo`). The generated file is written to the `grout-cfg` volume and later mounted at `/etc/grout.init`.
+- **`grout-init`** (`generate-grout-config`): Builds `grout.init` from the SR-IOV PCI devices and the pod network annotations. It requests the same network resources as the dataplane container so those devices are visible, and reads `NETWORK_NAME_LIST` and `rx_queues`. The annotations come from a downward API volume (`grout-podnetinfo`). `TREX_MAC_LIST` and `TREX_IP_LIST` are the CR fields `trexMaclist` and `trexIplist`. For each local interface, in that same order, it writes a static nexthop and a host route for the TRex peer. The generated file is written to the `grout-cfg` volume and later mounted at `/etc/grout.init`.
 - **`frr-init`** (`generate-frr-config`): Writes the FRR daemon list (`daemons`) and `frr.conf` into the `frr-cfg` volume. The `frr` container mounts those files at `/etc/frr/daemons` and `/etc/frr/frr.conf`.
 
 ### Application containers

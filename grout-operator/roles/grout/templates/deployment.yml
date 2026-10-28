@@ -89,6 +89,10 @@ spec:
           # "openshift.io/example_cnf_res1,openshift.io/example_cnf_res2"
         - name: rx_queues
           value: "{{ rx_queues }}"
+        - name: TREX_MAC_LIST
+          value: "{{ trex_maclist | join(',') }}"
+        - name: TREX_IP_LIST
+          value: "{{ trex_iplist | join(',') }}"
       - name: frr-init
         args: ["generate-frr-config"]
         image: "{{ image_grout }}"

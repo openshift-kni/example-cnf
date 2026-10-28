@@ -33,3 +33,8 @@ environments: {}
 
 # Number of RX queues.
 rx_queues: 2
+
+# TRex peer MAC and IP addresses, one entry per local interface, in the same order.
+# CR fields trexMaclist and trexIplist. IPs include the prefix (for example 192.168.36.61/26).
+trex_maclist: []
+trex_iplist: []

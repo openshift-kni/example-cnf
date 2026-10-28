@@ -71,6 +71,16 @@ spec:
                       type: array
                       items:
                         type: string
+              trexMaclist:
+                description: TRex MAC address for each local interface, in the same order as networks
+                type: array
+                items:
+                  type: string
+              trexIplist:
+                description: TRex IP address for each local interface, in the same order as networks. Include the prefix, for example 192.168.36.61/26
+                type: array
+                items:
+                  type: string
               runDeployment:
                 description: Whether to run the deployment automation (0 to disable, 1 to enable)
                 type: integer
