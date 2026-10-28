@@ -6,21 +6,21 @@ This Ansible role (`grout`) is designed to deploy and manage the Grout applicati
 
 The following variables are defined in [`defaults/main.yml`](defaults/main.yml):
 
-| Variable              | Default Value                                                                                                    | Description                                                                                                 |
-|-----------------------|------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| Variable              | Default Value                                                                                                         | Description                                                                                                 |
+|-----------------------|------------------------------------------------------------------------------------------------------------------     |-------------------------------------------------------------------------------------------------------------|
 | `image_grout`         | quay.io/rh-nfv-int/grout-container-app-cnfapp@sha256:112bed772707280de16a64eb4fb3c3c0ec027fa030372dff05927d105bc822fd | Container image for the Grout application.                                                                  |
-| `size`                | 1                                                                                                                | Number of replicas for the Grout deployment.                                                                |
-| `skip_annot`          | false                                                                                                            | Whether to skip annotation steps.                                                                           |
-| `networks`            | []                                                                                                               | List of network definitions (see below for structure).                                                      |
-| `image_pull_policy`   | IfNotPresent                                                                                                     | Image pull policy for the Grout container (`Always`, `IfNotPresent`, or `Never`).                           |
-| `privileged`          | false                                                                                                            | Whether to run the container in privileged mode.                                                            |
-| `hugepage_1gb_count`  | 4Gi                                                                                                              | Amount of 1Gi hugepages to allocate.                                                                        |
-| `memory`              | 1000Mi                                                                                                           | Memory request for the Grout container.                                                                     |
-| `cpu`                 | 4                                                                                                                | CPU request for the Grout container.                                                                        |
-| `network_resources`   | {}                                                                                                               | Internal variable for tracking network resource usage.                                                      |
-| `resources`           | []                                                                                                               | List of additional resources to be used.                                                                    |
-| `environments`        | {}                                                                                                               | Environment variables to set in the container.                                                              |
-| `rx_queues`           | 2                                                                                                                | Number of RX queues.                                                                                        |
+| `size`                | 1                                                                                                                     | Number of replicas for the Grout deployment.                                                                |
+| `skip_annot`          | false                                                                                                                 | Whether to skip annotation steps.                                                                           |
+| `networks`            | []                                                                                                                    | List of network definitions (see below for structure).                                                      |
+| `image_pull_policy`   | IfNotPresent                                                                                                          | Image pull policy for the Grout container (`Always`, `IfNotPresent`, or `Never`).                           |
+| `privileged`          | false                                                                                                                 | Whether to run the frr container in privileged mode (grout already runs in privileged mode).                |
+| `hugepage_1gb_count`  | 4Gi                                                                                                                   | Amount of 1Gi hugepages to allocate.                                                                        |
+| `memory`              | 1000Mi                                                                                                                | Memory request for the Grout container.                                                                     |
+| `cpu`                 | 4                                                                                                                     | CPU request for the Grout container.                                                                        |
+| `network_resources`   | {}                                                                                                                    | Internal variable for tracking network resource usage.                                                      |
+| `resources`           | []                                                                                                                    | List of additional resources to be used.                                                                    |
+| `environments`        | {}                                                                                                                    | Environment variables to set in the container.                                                              |
+| `rx_queues`           | 2                                                                                                                     | Number of RX queues.                                                                                        |
 
 ### Example `networks` Variable Structure
 
@@ -86,16 +86,25 @@ These tasks ensure that the Grout application is deployed with the correct netwo
 
 ## Deployment Details
 
-The Grout role creates a Kubernetes `Deployment` resource to manage the lifecycle of the Grout application pods. This deployment is defined using a Jinja2 template (`deployment.yml`) and is rendered with the variables you provide to the role. The deployment includes the following key features:
+The Grout role creates a Kubernetes `Deployment` resource to manage the lifecycle of the Grout application pods. This deployment is defined using a Jinja2 template (`deployment.yml`) and is rendered with the variables you provide to the role.
+
+Each pod runs two init containers, then two application containers, all from `image_grout` (`image_pull_policy` sets the pull policy). The same image covers every role; the container argument selects which one runs. See the cnfapp [README](../../../grout-container-app/cnfapp/README.md#what-is-it-executed). The pod runs as non-root (`runAsUser` 56560) under the `grout-account` ServiceAccount. The init containers write configuration into shared `emptyDir` volumes that the application containers mount.
+
+### Init containers
+
+- **`grout-init`** (`generate-grout-config`): Builds `grout.init` from the SR-IOV PCI devices and the pod network annotations. It requests the same network resources as the dataplane container so those devices are visible, and reads `NETWORK_NAME_LIST` and `rx_queues`. The annotations come from a downward API volume (`grout-podnetinfo`). The generated file is written to the `grout-cfg` volume and later mounted at `/etc/grout.init`.
+- **`frr-init`** (`generate-frr-config`): Writes the FRR daemon list (`daemons`) and `frr.conf` into the `frr-cfg` volume. The `frr` container mounts those files at `/etc/frr/daemons` and `/etc/frr/frr.conf`.
+
+### Application containers
+
+- **`grout`**: Runs the Grout dataplane. It requests CPU (`cpu`), memory (`memory`), 1Gi hugepages (`hugepage_1gb_count`), and the network resources derived from `networks` or `resources`. It always runs privileged, because Grout itself writes per-interface sysctls under `/proc/sys` when it creates each control-plane TAP: `rp_filter=2` when `GROUT_OVERRIDE_RP_FILTER` is set, and `keep_addr_on_down=1` so IPv6 addresses survive an admin-down. The default container `/proc/sys` mount is read-only, so those writes fail with `Read-only file system` and kernel ping and BGP break. Making the image root writable does not unmask `/proc/sys`. Unmasking it with `procMount: Unmasked` requires `hostUsers: false`, and that user namespace cannot idmap the `/dev/net/tun` hostPath Grout needs for the TAPs. Privileged mode is what leaves `/proc/sys` writable. The `privileged` role variable does not apply to this container. It exposes port 8095 (HTTP probes) and port 9111 (Grout API), and mounts hugepages, the DPDK runtime directory, `/dev/net/tun`, and the generated `grout.init`. Custom environment variables from `environments` are injected here. The container publishes the API socket at `/run/grout/api.sock` on the shared `grout-run` volume. `GROUT_OVERRIDE_DEFAULT_ROUTE` and `GROUT_OVERRIDE_RP_FILTER` are set to `true` so kernel traffic uses the Grout VRF loopback and replies are not dropped by strict reverse-path filtering.
+- **`frr`**: Runs FRR, including zebra with the Grout dataplane plugin. It requests CPU and memory, and mounts the config produced by `frr-init` plus the shared `grout-run` volume so it can reach the Grout socket. When `privileged` is `true`, this container runs privileged. Otherwise it adds `NET_ADMIN`, `AUDIT_WRITE`, `NET_RAW`, `NET_BIND_SERVICE`, and `SYS_ADMIN`, and uses the `spc_t` SELinux type.
+
+When `run_deployment` is `1`, both application containers use a read-only root filesystem, startup, readiness, and liveness probes on port 8095, and `postStart` hooks. The Grout hook applies `grout.init` through `grcli`. The FRR hook waits until the Grout socket and the FRR daemons are ready.
+
+### Other pod settings
 
 - **Replica Count**: The number of pod replicas is controlled by the `size` variable.
-- **Container Image**: The Grout container image is specified by the `image_grout` variable, with the pull policy set by `image_pull_policy`.
-- **Network Attachments**: The deployment attaches the specified networks to the pods using the `networks` variable, enabling SR-IOV or other CNI-based networking as required.
-- **Resource Requests and Limits**: CPU, memory, and hugepage resources are set according to the role defaults or your overrides.
-- **Security Context**: The pod can be run in privileged mode if `privileged` is set to `true`.
-- **RuntimeClass**: If a high-performance runtime is specified (via `runtime_class_name`), it is set on the pod for advanced scheduling or isolation.
-- **Environment Variables**: Any custom environment variables can be injected using the `environments` variable.
-- **Service Account**: The deployment uses a dedicated ServiceAccount created by the role to ensure proper permissions.
+- **Network Attachments**: Unless `skip_annot` is `true`, the pod annotation `k8s.v1.cni.cncf.io/networks` attaches the networks from the `networks` variable, including optional MAC addresses and IPs.
+- **RuntimeClass**: If `runtime_class_name` is set, it is applied to the pod, and CRI-O IRQ and CPU load-balancing annotations are disabled.
 - **PodDisruptionBudget**: A PodDisruptionBudget is also created to help maintain pod availability during node drains or upgrades.
-
-This deployment ensures that the Grout application is robustly managed by Kubernetes, with flexible configuration for networking, resources, and security to suit a variety of CNF (Cloud-Native Network Function) scenarios.

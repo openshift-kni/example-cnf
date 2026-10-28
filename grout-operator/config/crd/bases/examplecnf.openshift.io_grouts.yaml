@@ -34,7 +34,7 @@ spec:
             type: object
             properties:
               privileged:
-                description: Run the container in privileged mode
+                description: Whether to run the frr container in privileged mode (grout already runs in privileged mode)
                 type: boolean
               imagePullPolicy:
                 description: Image pull policy for the Grout container

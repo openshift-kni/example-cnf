@@ -253,7 +253,7 @@ trexconfig-5865745c74-qstk6                                1/1     Running     0
 ```
 $ oc get pods -n example-cnf
 NAME                                                       READY   STATUS      RESTARTS   AGE
-grout-app-66f65bf475-4897b                                 1/1     Running     0          119m
+grout-app-66f65bf475-4897b                                 2/2     Running     0          119m
 grout-operator-controller-manager-6488b4c774-hctzp         1/1     Running     0          157m
 grout-operator-controller-manager-6488b4c774-zjhtw         1/1     Running     0          156m
 job-trex-app-fcs5j                                         0/1     Completed   0          152m
@@ -266,7 +266,7 @@ We can see these pods:
 
 - Controller manager pods (they're replicated for ensuring high availability) for each operator that is deployed in this scenario.
 - (when using TestPMD) `testpmd-app` pod, which corresponds to TestPMD. This launches TestPMD tool, configure and start it automatically, printing statistics every second.
-- (when using Grout) `grout-app` pod, which corresponds to Grout. This launches Grout tool, configure and start it automatically, printing statistics every second.
+- (when using Grout) `grout-app` pod, which corresponds to Grout + FRR. This launches two containers: (1) grout, running the Grout tool, configuring and starting it automatically, printing statistics every second, and (2) frr, which enables FRR for control-plane capabilities (right now, it's not used in the automation).
 - `trexconfig` pod, which corresponds to TRexServer. This configures TRex to start listening to incoming requests to send traffic to a given target. It also prints statistics regularly.
 - `job-trex-app` pod, which corresponds to TRexApp, and it's launched from a Job resource. This provides a data profile to TRex, which then starts sending traffic to the configured destination (i.e. CNFApp), and also prints statistics at the end of the execution, printing the packet loss.
 
@@ -441,7 +441,7 @@ All these logs are gathered in a file called `example-cnf-results.log`. This als
 
 ## Troubleshooting mode scenario
 
-The baseline scenario is a good option to be able to launch Example CNF operators and deploy TRex automatically, being suitable for a CI system loop where the tests are executed N times and then we can extract [conclusions](https://www.distributed-ci.io/analytics/keyvalues?query=%28tags+in+%5Bdaily%5D%29+and+%28%28status%3Dsuccess%29+and+%28name%3Dexample-cnf%29%29&range=last90Days&after=2024-11-12&before=2025-02-10&graphs=%255B%257B%2522keys%2522%253A%255B%257B%2522key%2522%253A%2522packet_loss_total_perc%2522%252C%2522color%2522%253A%2522%2523a3a3a3%2522%252C%2522axis%2522%253A%2522left%2522%257D%255D%252C%2522graphType%2522%253A%2522line%2522%257D%255D) from all the results obtained. However, we cannot really interact with either CNFApp or TRex.
+The baseline scenario is a good option to be able to launch Example CNF operators and deploy TRex automatically, being suitable for a CI system loop where the tests are executed N times and then we can extract [conclusions](https://www.distributed-ci.io/analytics/keyvalues?query=%28tags+in+%5B%27daily%27%5D%29+and+%28%28status%3D+%27success%27%29+and+%28name+%3D+%27example-cnf%27%29%29&range=last7Days&after=2026-10-16&before=2026-10-23&limit=200&offset=0&graphs=%255B%257B%2522group_by%2522%253A%2522%2522%252C%2522keys%2522%253A%255B%257B%2522key%2522%253A%2522packet_loss_total_perc%2522%252C%2522color%2522%253A%2522%2523876fd4%2522%252C%2522axis%2522%253A%2522left%2522%257D%255D%252C%2522graphType%2522%253A%2522line%2522%252C%2522name%2522%253A%2522Key%2520value%2520graph%2522%257D%255D) from all the results obtained. However, we cannot really interact with either CNFApp or TRex.
 
 To achieve this goal, we can run Example CNF in troubleshooting mode by just providing some extra parameters to `dci-pipeline-schedule` call. In this way, all Example CNF operators will be created and all pods will keep up and running with all scripts prepared for being launched, but the automation will not take care of launching the test scripts and creating the TRex job, so that we can interact with both CNFApp and TRex to check on-line the behavior and results.
 
@@ -478,7 +478,7 @@ trexconfig-589577d85-69m5x                                 1/1     Running   0  
 ```
 $ oc get pods -n example-cnf
 NAME                                                       READY   STATUS    RESTARTS   AGE
-grout-app-b8f599d5f-hdhjt                                  1/1     Running   0          2m50s
+grout-app-b8f599d5f-hdhjt                                  2/2     Running   0          2m50s
 grout-operator-controller-manager-6488b4c774-b6cv7         1/1     Running   0          4m8s
 grout-operator-controller-manager-6488b4c774-g888r         1/1     Running   0          4m20s
 trex-operator-controller-manager-6cdd46d4cd-9fntz          1/1     Running   0          3m16s
@@ -495,7 +495,7 @@ Basically, the scripts that are launched are the same than in the baseline scena
 So, with this, you can access to the pods and check that the scripts to be used during troubleshooting have been created:
 
 - (when using TestPMD) `testpmd-app`: two scripts are created: `/usr/local/bin/example-cnf/run/testpmd-run` (same script that in the baseline scenario), and `/usr/local/bin/example-cnf/run/testpmd-interactive` (which launches `testpmd` in interactive mode instead of using auto-start mode). We would use `testpmd-interactive` for troubleshooting mode, since we can use TestPMD in interactive mode, and we can control the start/stop of this tool, the retrieval of statistics, etc.
-- (when using Grout) `grout-app`: the script to be used is in `/usr/local/bin/example-cnf/run/config-grout` (same script that in the baseline scenario).
+- (when using Grout) `grout-app`: the script to be used is `/grout-wrapper poststart-grout` in the grout container, just to apply the Grout configuration provided by the grout init container. The frr container keeps in the same status.
 - `trexconfig`: the script to be used is in `/usr/local/bin/example-cnf/trex-server-run` (same script that in the baseline scenario).
 
 ### Start the traffic generation manually and check how it goes
@@ -694,28 +694,42 @@ testpmd> start
 
 ```
 # open a session in the grout-app pod
-$ oc rsh -n example-cnf deployment/grout-app
+$ oc rsh -n example-cnf -c grout deployment/grout-app
 
-# check the script that has been created by the automation
-sh-4.4$ cat /usr/local/bin/example-cnf/run/config-grout
-grcli -f /usr/local/bin/example-cnf/run/grout.init -s /usr/local/bin/example-cnf/run/grout.sock 2>&1 | tee /var/log/grout/app.log
+# check grout is up and running
+$ grcli
+Welcome to the graph router CLI version 0.19.3-0.g3869a208.el10.
+Use ? for help and <tab> for command completion.
+grout#
 
 # check the config file to be applied
-sh-4.4$ cat /usr/local/bin/example-cnf/run/grout.init
+sh-4.4$ cat /etc/grout.init
 interface add port p0 devargs 0000:86:02.1 rxqs 2
 interface add port p1 devargs 0000:86:03.3 rxqs 2
-
 address add 192.168.16.60/26 iface p0
 address add 192.168.16.100/26 iface p1
 
-# run the script
-sh-4.4$ sudo /usr/local/bin/example-cnf/run/config-grout
+# apply the config file
+sh-4.4$ /grout-wrapper poststart-grout
+
+# check that resources have been applied
+$ grcli interface show
+NAME  ID  FLAGS                MODE  DOMAIN  TYPE  INFO
+main   1  up running           VRF   main    vrf   ip4 routes=65536 tbl8=256 ip6 routes=65536 tbl8=262144
+p0     2  up running allmulti  VRF   main    port  devargs=0000:86:02.1 mac=80:04:0f:f1:89:01
+p1     3  up running allmulti  VRF   main    port  devargs=0000:86:03.3 mac=80:04:0f:f1:89:02
+$ grcli address show
+IFACE  FAMILY  ADDRESS                      EXPOSED
+p0     ipv4    192.168.16.60/26
+p1     ipv4    192.168.16.100/26
+p0     ipv6    fe80::8203:fff:fef1:8901/64
+p1     ipv6    fe80::8203:fff:fef1:8902/64
 
 # clear statistics
-sh-4.4$ sudo grcli -s /usr/local/bin/example-cnf/run/grout.sock stats reset
+sh-4.4$ grcli stats reset
 
 # print statistics
-sh-4.4$ sudo grcli -s /usr/local/bin/example-cnf/run/grout.sock stats show software
+sh-4.4$ grcli stats show software
 NODE                            CALLS  PACKETS  PKTS/CALL  CYCLES/CALL     CYCLES/PKT
 port_rx                  109805489408     2104        0.0         49.2   2567088141.0
 control_input            109805489408       39        0.0         22.6  63637321574.4
@@ -755,7 +769,7 @@ $ oc rsh -n example-cnf deployment/trexconfig
 
 # check the TRex config file to use, that was generated by trex-wrapper script:
 ## this is for L2 configuration
-sh-4.4$ cat /usr/local/bin/example-cnf/trex_cfg.yaml 
+sh-4.4$ cat /usr/local/bin/example-cnf/trex_cfg.yaml
 - c: 4
   interfaces:
   - '86:02.2'
@@ -804,7 +818,7 @@ sh-4.4$ cat /usr/local/bin/example-cnf/trex_cfg.yaml
   version: 2
 
 # check trex-server-run script. Argument (4) means the number of cores used by TRex
-sh-4.4$ cat /usr/local/bin/example-cnf/trex-server-run 
+sh-4.4$ cat /usr/local/bin/example-cnf/trex-server-run
 /usr/local/bin/trex-server 4
 
 # launch TRexServer, this calls _t-rex-64 binary in interactive mode (it uses -i argument)
@@ -871,7 +885,7 @@ Server Info:
 Server version:   v3.08 @ STL
 Server mode:      Stateless
 Server CPU:       4 x Intel(R) Xeon(R) Gold 6248R CPU @ 3.00GHz
-Ports count:      2 x 10.0Gbps @ Unknown	
+Ports count:      2 x 10.0Gbps @ Unknown
 
 -=TRex Console v3.0=-
 

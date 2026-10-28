@@ -1,109 +1,178 @@
 #!/bin/bash
+# SPDX-License-Identifier: BSD-3-Clause
 
 set -ex
-
-# Start lifecycle webserver in background
-/usr/local/bin/webserver 8095 &
 
 echo "Welcome to grout-wrapper script!"
 
 RUN_DEPLOYMENT=${run_deployment:=1}
+LOG_DIR=/var/log/grout
+GROUT_INIT=/etc/grout.init
+: ${GROUT_SOCK_PATH:=/run/grout/api.sock}
+export GROUT_SOCK_PATH
 
-LOG_DIR="/var/log/grout"
-[ -d $LOG_DIR ] || mkdir -p $LOG_DIR
-rm -rf $LOG_DIR/*
-GROUT_LOG_FILE="$LOG_DIR/app.log"
-touch $GROUT_LOG_FILE
+wait_for_socket() {
+    timeout=30
+    while ! grcli -e < /dev/null >/dev/null 2>&1; do
+        timeout=$((timeout - 1))
+        if [ "$timeout" -le 0 ]; then
+            grcli -e < /dev/null || true
+            echo "error: $GROUT_SOCK_PATH did not appear in time" >&2
+            exit 1
+        fi
+        sleep 1
+    done
+}
 
-if [ -z ${NETWORK_NAME_LIST} ]; then
-    echo "ERROR: NETWORK_NAME_LIST is required."
-    exit 1
-fi
+# postStart runs in parallel with "frrinit.sh start", so status may not be ready
+# on the first try. The main process also waits up to 30s for the Grout socket
+# before it starts FRR.
+wait_for_frr() {
+    timeout=60
+    while true; do
+        # Requires privileges if not using privileged mode.
+        if output=$(sudo /usr/libexec/frr/frrinit.sh status 2>&1); then
+            printf '%s\n' "$output"
+            return 0
+        fi
+        timeout=$((timeout - 1))
+        if [ "$timeout" -le 0 ]; then
+            printf '%s\n' "$output" >&2
+            echo "error: FRR daemons did not become ready in time" >&2
+            exit 1
+        fi
+        sleep 1
+    done
+}
 
-# Create Grout config file, which will be built on this script.
-GROUT_CONF_FILE="/usr/local/bin/example-cnf/run/grout.init"
-touch $GROUT_CONF_FILE
-
-# Define interfaces to be used, with PCI address and Rx queue
-# CPU affinity is configured by default, we don't need to configure it here
-PORT_INDEX=0
-RXQ=${rx_queues:=1}
-
-IFS=',' read -r -a NETWORK_ARRAY <<< "$NETWORK_NAME_LIST"
-
-for item in "${NETWORK_ARRAY[@]}"; do
-    IFS='/' read -r -a RES_ARRAY <<< "$item"
-    NAME="PCIDEVICE_OPENSHIFT_IO_${RES_ARRAY[1]^^}"
-    if [ -z ${!NAME} ]; then
-        echo "Could not find ${NAME} with PCI address, exiting"
+generate_grout_config() {
+    if [ -z "$NETWORK_NAME_LIST" ]; then
+        echo "error: NETWORK_NAME_LIST is required" >&2
         exit 1
     fi
-    IFS=',' read -r -a PCI_ARRAY <<< "${!NAME}"
-    for pci_item in "${PCI_ARRAY[@]}"; do
-        echo "interface add port p${PORT_INDEX} devargs ${pci_item} rxqs ${RXQ}" >> $GROUT_CONF_FILE
-        PORT_INDEX=$((PORT_INDEX+1))
+    GROUT_INIT_TMP=/run/grout/cfg/grout.init
+
+    # Create a temporary file to store the Grout configuration
+    : > "$GROUT_INIT_TMP"
+
+    # Define interfaces to be used, with PCI address and Rx queue
+    # CPU affinity is configured by default, we don't need to configure it here
+    port_index=0
+    rxq=${rx_queues:-1}
+
+    for item in ${NETWORK_NAME_LIST//,/ }; do
+        res_name=$(echo "$item" | sed 's|.*/||' | tr '[:lower:]' '[:upper:]')
+        eval pci_val=\$PCIDEVICE_OPENSHIFT_IO_${res_name}
+        if [ -z "$pci_val" ]; then
+            echo "error: PCIDEVICE_OPENSHIFT_IO_${res_name} not set" >&2
+            exit 1
+        fi
+        for pci_addr in ${pci_val//,/ }; do
+            echo "interface add port p${port_index} devargs ${pci_addr} rxqs ${rxq}" >> "$GROUT_INIT_TMP"
+            port_index=$((port_index + 1))
+        done
     done
-done
 
-# Define IP configuration to use
-/usr/local/bin/example-cnf/retrieve-grout-ip-addresses
+    # Define IP configuration to use
+    annotations=/etc/podnetinfo/annotations
+    if [ -f "$annotations" ]; then
+        port_index=0
+        value=$(sed -n 's/^k8s.v1.cni.cncf.io\/networks=//p' "$annotations")
+        for ip in $(printf '%s' "$value" | jq -r 'fromjson | .[].ips[0]'); do
+            echo "address add ${ip} iface p${port_index}" >> "$GROUT_INIT_TMP"
+            port_index=$((port_index + 1))
+        done
+    fi
 
-# Print Grout config file
-echo "Content of Grout config file:"
-echo
-cat $GROUT_CONF_FILE
-
-# Start Grout on background
-## Since v0.9.1, no socket is required, it's created as an abstract socket, available as grout.sock
-## However, on v0.10.2, there are permission issues because the socket is located on /run/grout.sock,
-## since we normally use a read-only filesystem, there are problems when creating it.
-## Switching to the usage of a custom grout.sock file instead, to better control it.
-GROUT_SOCKET_FILE="/usr/local/bin/example-cnf/run/grout.sock"
-echo "Starting Grout"
-sudo grout -v -s $GROUT_SOCKET_FILE &
-#sudo grout -v &
-
-# Wait a couple of seconds, so that we ensure Grout is running before starting configuring it
-sleep 5
-
-echo "Building Grout config script"
-# Build script to apply Grout configuration
-RUN="/usr/local/bin/example-cnf/run/config-grout"
-CMD="grcli -f $GROUT_CONF_FILE -s $GROUT_SOCKET_FILE"
-CMD="${CMD} 2>&1 | tee $GROUT_LOG_FILE"
-echo "${CMD}" > $RUN
-chmod +x "$RUN"
-
-function sig_term() {
-    echo $(date +"%F %T,%3N") > /var/log/grout/sigterm-received.log
-    # kill grout application
-    kill -9 $(ps aux | grep -w stats-period | grep -v grep | awk '{print $2}')
-    exit
+    # Print Grout config file
+    echo "generated $GROUT_INIT_TMP:"
+    cat "$GROUT_INIT_TMP"
 }
-trap sig_term SIGTERM
 
-if [[ $RUN_DEPLOYMENT == "1" ]]; then
+# TODO: add IGP protocol configuration, currently omitted
+generate_frr_config() {
+    FRR_CFG_TMP="/run/frr/cfg"
+    # Configure FRR daemons configuration file
+    echo "Configuring FRR daemons..."
+    tee $FRR_CFG_TMP/daemons > /dev/null << EOF
+vtysh_enable=yes
+zebra_options="--limit-fds 100000 -F traditional -A 127.0.0.1 -s 90000000 --log file:$LOG_DIR/frr-zebra.log -M dplane_grout"
+mgmtd_options="--limit-fds 100000 -F traditional -A 127.0.0.1 --log file:$LOG_DIR/frr-mgmtd.log"
+staticd_options="--limit-fds 100000 -F traditional -A 127.0.0.1 --log file:$LOG_DIR/frr-staticd.log"
+EOF
 
-    echo "Running Grout config script"
+    # Configure FRR configuration file
+    echo "Configuring FRR configuration..."
+    tee $FRR_CFG_TMP/frr.conf > /dev/null << EOF
+frr defaults traditional
+!
+vrf main
+exit-vrf
+!
+EOF
 
-    # Configure Grout
-    sudo /usr/local/bin/example-cnf/run/config-grout
+    # Update ownership of the created files. Requires privileges
+    sudo chown frr:frr $FRR_CFG_TMP/*
+}
 
-    # Clear statistics
-    sudo grcli -s $GROUT_SOCKET_FILE stats reset
+case "${1:-grout}" in
+grout)
+    # Start lifecycle webserver in background
+    /usr/local/bin/webserver 8095 &
+    # Required in containers so kernel ping(8) reaches grout instead of eth0,
+    # and ICMP replies delivered on control-plane TAPs are not dropped by rp_filter.
+    export GROUT_OVERRIDE_DEFAULT_ROUTE="${GROUT_OVERRIDE_DEFAULT_ROUTE:-true}"
+    export GROUT_OVERRIDE_RP_FILTER="${GROUT_OVERRIDE_RP_FILTER:-true}"
 
-    # Print statistics every $STAT_PERIOD seconds
-    set +ex
-    STATS_PERIOD=${stats_period:=1}
-    while true; do
-        echo "*******************************************" 2>&1 | tee -a $GROUT_LOG_FILE
-        date 2>&1 | tee -a $GROUT_LOG_FILE
-        echo "*******************************************" 2>&1 | tee -a $GROUT_LOG_FILE
-        sudo grcli -s $GROUT_SOCKET_FILE stats show software 2>&1 | tee -a $GROUT_LOG_FILE
-        echo "" 2>&1 | tee -a $GROUT_LOG_FILE
-        sleep $STATS_PERIOD
-    done
-else
-    # Do not configure Grout and go to sleep. It will be configured manually
-    sleep infinity
-fi
+    
+    if [[ $RUN_DEPLOYMENT == "1" ]]; then
+        # Start Grout in background and print statistics every second once the socket is ready.
+        /usr/bin/grout -m 660 -v &
+        wait_for_socket
+        
+        # Clear statistics
+        grcli stats reset
+
+        # Print statistics every $STAT_PERIOD seconds
+        GROUT_LOG_FILE="$LOG_DIR/app.log"
+        touch $GROUT_LOG_FILE
+        set +ex
+        STATS_PERIOD=${stats_period:=1}
+        while true; do
+            echo "*******************************************" 2>&1 | tee -a $GROUT_LOG_FILE
+            date 2>&1 | tee -a $GROUT_LOG_FILE
+            echo "*******************************************" 2>&1 | tee -a $GROUT_LOG_FILE
+            grcli stats show software 2>&1 | tee -a $GROUT_LOG_FILE
+            echo "" 2>&1 | tee -a $GROUT_LOG_FILE
+            sleep $STATS_PERIOD
+        done
+    else
+        # Just start Grout in foreground.
+        exec /usr/bin/grout -m 660 -v
+    fi
+    ;;
+frr)
+    wait_for_socket
+    # Launch FRR daemons. Requires privileges
+    exec sudo /bin/bash -c "export GROUT_SOCK_PATH=$(printf '%q' "$GROUT_SOCK_PATH"); . /usr/libexec/frr/frrcommon.sh; daemon_list daemons; exec /usr/libexec/frr/watchfrr \$daemons"
+    ;;
+generate-grout-config)
+    generate_grout_config
+    ;;
+generate-frr-config)
+    generate_frr_config
+    ;;
+poststart-grout)
+    wait_for_socket
+    # Apply Grout configuration
+    exec grcli -xef "$GROUT_INIT"
+    ;;
+poststart-frr)
+    wait_for_socket
+    wait_for_frr
+    ;;
+*)
+    echo "usage: grout-wrapper {grout|frr|generate-grout-config|generate-frr-config|poststart-grout|poststart-frr}" >&2
+    exit 1
+    ;;
+esac
