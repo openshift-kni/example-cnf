@@ -17,9 +17,13 @@ The following variables are defined in [`defaults/main.yml`](defaults/main.yml):
 | `privileged`          | false                                                                                                            | Whether to run the container in privileged mode.                                                            |
 | `hugepage_1gb_count`  | 4Gi                                                                                                              | Amount of 1Gi hugepages to allocate.                                                                        |
 | `memory`              | 1000Mi                                                                                                           | Memory request for the TRex server container.                                                               |
-| `cpu`                 | 6                                                                                                                | CPU request for the TRex server container.                                                                  |
+| `cpu`                 | 6                                                                                                                | CPU request for the TRex server container. Injected as `TREX_CPU`. `c` in the generated config is this value minus 2. |
 | `network_resources`   | {}                                                                                                               | Internal variable for tracking network resource usage.                                                      |
-| `environments`        | {}                                                                                                               | Environment variables to set in the container (e.g., trexCoreCount).                                        |
+| `environments`        | {}                                                                                                               | Extra environment variables. `trex_core_count` overrides `c` from the generated config.                     |
+| `run_deployment`      | Not set (the image defaults to `1`)                                                                              | `1` starts TRex after writing the config. `0` writes the config and sleeps.                                |
+| `deployment_type`     | Not set                                                                                                          | `multi-node` adds a pod anti-affinity so the server is not scheduled on the same node as the CNF app.       |
+| `runtime_class_name`  | Not set                                                                                                          | Optional RuntimeClass. When set, CPU and IRQ load-balancing annotations are disabled.                       |
+| `numa_aware_topology` | Not set                                                                                                          | Optional scheduler name for NUMA-aware placement.                                                           |
 
 
 ### Example `networks` Variable Structure
@@ -92,16 +96,19 @@ The `trexconfig` role provides a robust, automated way to deploy TRex in a Kuber
 
 ## Deployment Details
 
-The TRex deployment is defined using a Jinja2-based Kubernetes Deployment template (`templates/deployment.yml`). This template is rendered dynamically by Ansible, incorporating the variables and network definitions provided by the user. Below are the key aspects of the deployment:
+The role creates one `Deployment`. The pod runs a single `trex-server` container from `image_server`, as uid 56560, with args `trex`. PID 1 is `catatonit`, which runs `/trex-wrapper`. See the server [README](../../../trex-container-app/server/README.md#what-is-it-executed).
 
-- **Replicas:** The number of TRex server pods is controlled by the `size` variable.
-- **Metadata:** The deployment and pod metadata include labels and annotations. Notably, the pod annotations are used to attach multiple networks using the `k8s.v1.cni.cncf.io/networks` key, which is constructed from the `networks` variable. If `runtime_class_name` is set, additional annotations are added to disable CPU and IRQ load balancing.
-- **Pod Specification:**  
-  - **Affinity:** Pod anti-affinity rules ensure that TRex pods are not scheduled on the same node as CNF application pods, improving resource isolation.
-  - **Security Context:** The pod runs as a non-root user by default, with the option to enable privileged mode via the `privileged` variable.
-  - **Service Account:** The pod uses a dedicated ServiceAccount for permissions.
-  - **Resource Requests:** CPU, memory, and hugepage allocations are set according to the variables `cpu`, `memory`, and `hugepage_1gb_count`.
-  - **Environment Variables:** Any custom environment variables can be injected via the `environments` variable.
-- **Network Attachments:** The template supports attaching multiple SR-IOV or CNI networks to the pod. Each network can specify the number of interfaces, MAC addresses, and (optionally) static IP addresses. The template logic ensures that the correct number of interfaces and their properties are rendered in the pod annotations.
-- **Image and Pull Policy:** The TRex container image and pull policy are configurable via `image_server` and `image_pull_policy`.
-- **Extensibility:** The deployment template is designed to be flexible, allowing users to override or extend its behavior by adjusting the variables in their playbook or inventory.
+The wrapper reads this container's CPU list and writes `/tmp/trex/trex_cfg.yaml` on the `trex-cfg` emptyDir. Hugepages are mounted at `/dev/hugepages` and the DPDK runtime directory at `/var/run/dpdk`. `NETWORK_NAME_LIST` is the SR-IOV resource names from `network_resources`, so `/trex-cfg-configure` can read the `PCIDEVICE_OPENSHIFT_IO_*` variables. `TREX_CPU` is `cpu`.
+
+When `run_deployment` is `1`, the root filesystem is read-only and probes hit port 8096. The wrapper starts `_t-rex-64` with the generated file. `postStart` runs `/trex-wrapper poststart-trex` and waits until port 4500 accepts connections. When `run_deployment` is `0`, the config file is still written and the process sleeps, so TRex can be started by hand.
+
+Other pod settings:
+
+- **Replicas:** `size`.
+- **Network attachments:** Unless `skip_annot` is true, `k8s.v1.cni.cncf.io/networks` is built from `networks`, including optional MAC addresses and IPs.
+- **Affinity:** When `deployment_type` is `multi-node`, the pod is kept off nodes that already run a `cnf-app` pod.
+- **RuntimeClass:** `runtime_class_name`, when set, is applied and CRI-O IRQ and CPU load-balancing annotations are disabled.
+- **Scheduler:** `numa_aware_topology`, when set, is the pod scheduler name.
+- **Privileged mode:** `privileged` selects a privileged container. Otherwise the container adds `IPC_LOCK`, `NET_ADMIN`, and `AUDIT_WRITE`.
+- **Service:** A `trex-server` Service exposes TCP 4500 and 4501.
+- **PodDisruptionBudget:** Created for the server pod.

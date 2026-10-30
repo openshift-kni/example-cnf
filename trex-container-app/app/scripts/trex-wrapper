@@ -1,29 +1,31 @@
 #!/bin/bash
+# SPDX-License-Identifier: BSD-3-Clause
+
+# This is a one-shot script to start the TRex application and the lifecycle webserver
 
 set -ex
 
-# Start lifecycle webserver in background
-/usr/local/bin/webserver 8095 &
+echo "Welcome to trex-wrapper script!"
+
+RUN_DEPLOYMENT=${run_deployment:=1}
+SERVER=${TREX_SERVER_URL:="0.0.0.0"}
+LOG_DIR="/var/log/trex"
 
 # Define the function to add timestamp to log entries
 echo_ts() {
   echo "$(date -u +"%Y-%m-%dT%H:%M:%S%z") $@"
 }
 
-RUN_DEPLOYMENT=${run_deployment:=1}
-SERVER=${TREX_SERVER_URL:="0.0.0.0"}
-
-LOG_DIR="/var/log/trex"
-[ -d $LOG_DIR ] || mkdir -p $LOG_DIR
-rm -rf /var/log/trex/*
+# Start lifecycle webserver in background
+/usr/local/bin/webserver 8095 &
 
 # wait for trex server to be ready
-count=120
-while [[ ${count} -gt 0 ]]; do
+timeout=120
+while [[ ${timeout} -gt 0 ]]; do
     nc -z ${SERVER} 4500 && break || sleep 2
-    ((count--))
+    ((timeout--))
 done
-if [[ ${count} -gt 0 ]]; then
+if [[ ${timeout} -gt 0 ]]; then
     echo_ts "trex-server is ready"
 else
     echo_ts "ERROR: trex-server could not start properly, exiting... "
@@ -50,7 +52,7 @@ if [[ $RUN_DEPLOYMENT == "1" ]]; then
     # leave the server running for 10s before starting application
     sleep 10
     echo_ts "Running TRex"
-    /usr/local/bin/run-trex
+    /run-trex
 else
     echo_ts "Skipping TRex run, waiting ..."
     sleep infinity

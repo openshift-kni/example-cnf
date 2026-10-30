@@ -55,7 +55,7 @@ RUN usermod -a -G example-cnf frr
 RUN echo -e "example-cnf\tALL=(ALL)\tNOPASSWD: ALL" > /etc/sudoers.d/example-cnf
 
 # Copy scripts
-COPY --chmod=550 --from=build /opt/app-root/src/webserver /usr/local/bin/webserver
+COPY --chmod=755 --from=build /opt/app-root/src/webserver /usr/local/bin/webserver
 COPY --chmod=755 scripts/grout-wrapper /grout-wrapper
 
 # Move to the custom user
