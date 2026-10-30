@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.35] - 2026-11-04
+
+- Update TRex container images and Ansible templates to follow best practices already introduced in Grout.
+
 ## [0.2.34] - 2026-08-24
 
 - Add certsuite.redhat.com/non-tls-ports annotation in pods under test to be compliant with networking-unsecured-container-ports' certsuite test

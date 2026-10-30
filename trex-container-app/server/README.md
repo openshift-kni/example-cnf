@@ -1,19 +1,27 @@
 # server
 
-Container image that allows you to configure TRex in a container and prepare it to launch it.
+Container image that configures TRex and launches it.
 
 ## What is it executed?
 
-This container runs `/usr/local/bin/trex-wrapper`. [This script](scripts/trex-wrapper) takes also some context information to build a config file for TRex.
+PID 1 is `catatonit`, which runs [`/trex-wrapper`](scripts/trex-wrapper). The container argument selects the command. The default is `trex`.
 
-This is an example of TRex configuration file for L2 configuration:
+`trex` starts the HTTP probe server on port 8096, then builds the TRex config. [`/trex-cfg-configure`](scripts/trex-cfg-configure) reads the CPU list of this container (`taskset -pc 1`) and writes `/tmp/trex/trex_cfg.yaml`. The file is written here, in the server container: the CPU manager pins this container to the `cpu` exclusive CPUs, and an init container would be pinned to a different set. `c` in the file is that list minus the master and latency threads. `TREX_CPU`, set from the `cpu` request, must equal `c + 2`. An optional `trex_core_count` environment variable overrides `c` after the file is written.
+
+When `run_deployment` is `1` (the default), the wrapper starts TRex:
 
 ```
-sh-4.4$ pwd
-/usr/local/bin/example-cnf
-sh-4.4$ ls
-trex-server-run  trex_cfg.yaml
-sh-4.4$ cat trex_cfg.yaml 
+sudo -E /opt/trex/trex-core/scripts/_t-rex-64 --cfg /tmp/trex/trex_cfg.yaml --no-ofed-check -i --no-hw-flow-stat -c <c>
+```
+
+`-i` is interactive mode. The server accepts traffic profiles from the TRexApp job and prints statistics. It does not generate the traffic. `poststart-trex` waits until port 4500 accepts connections.
+
+When `run_deployment` is `0`, the config file is still written and the process sleeps. Start TRex later with the command above. The `-c` argument is the `c` value in the yaml.
+
+This is an example of a TRex configuration file for L2 configuration:
+
+```
+sh-4.4$ cat /tmp/trex/trex_cfg.yaml 
 - c: 4
   interfaces:
   - '86:02.3'
@@ -39,14 +47,13 @@ sh-4.4$ cat trex_cfg.yaml
 You can see it saves in the config file the following information, among others:
 
 - PCI addresses to use.
-- Number of sockets.
-- CPUs to be used.
-- Pair of destination-source MAC addresses for each port.
+- NUMA socket and the CPU list for the master thread, the latency thread, and the worker threads.
+- Pair of destination and source MAC addresses for each port. L3 adds the local IP and the gateway.
 
-And here, you have a TRex configuration file for L3 configuration, where it's added the IP address of both TRex and the endpoint for each port:
+And here, you have a TRex configuration file for L3 configuration, where the IP address of both TRex and the endpoint is added for each port:
 
 ```
-sh-4.4$ cat trex_cfg.yaml 
+sh-4.4$ cat /tmp/trex/trex_cfg.yaml 
 - c: 4
   interfaces:
   - '37:02.6'
@@ -73,14 +80,7 @@ sh-4.4$ cat trex_cfg.yaml
   version: 2
 ```
 
-Then, it builds a script file, placed in `/usr/local/bin/example-cnf/trex-server-run`, with the following content:
-
-```
-sh-4.4$ cat /usr/local/bin/example-cnf/trex-server-run
-/usr/local/bin/trex-server 4
-```
-
-This calls to [trex-server](scripts/trex-server) script, passing 4 as argument which represents the number of coures to use, which launches `_t-rex-64` binary using the generated config file (`--cfg` argument), using interactive mode (`-i` argument), which allows to print statistics regularly. This does not launch the traffic generation, since this is done with the TRexApp job.
+`c: 4` is the value passed to `_t-rex-64 -c`. Traffic generation is done by the TRexApp job, not by this container.
 
 You have more details about testing this feature in the [testing docs](../../documentation/testing.md).
 

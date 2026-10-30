@@ -27,6 +27,13 @@ spec:
       - name: trex-app
         image: "{{ image_app }}"
         imagePullPolicy: "{{ image_pull_policy }}"
+        resources:
+          limits:
+            cpu: "{{ cpu }}"
+            memory: "{{ memory }}"
+          requests:
+            cpu: "{{ cpu }}"
+            memory: "{{ memory }}"
         securityContext:
           runAsNonRoot: true
           runAsUser: 56560
@@ -47,8 +54,6 @@ spec:
           mountPath: /opt/trexprofile
 {% endif %}
         env:
-        - name: MODE
-          value: "direct"
         - name: CR_NAME
           value: "{{ ansible_operator_meta.name }}"
         - name: NODE_NAME
@@ -120,13 +125,6 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 10
 {% endif %}
-        resources:
-          limits:
-            cpu: "{{ cpu }}"
-            memory: "{{ memory }}"
-          requests:
-            cpu: "{{ cpu }}"
-            memory: "{{ memory }}"
         terminationMessagePolicy: FallbackToLogsOnError
       volumes:
       - name: varlog

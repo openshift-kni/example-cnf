@@ -6,13 +6,13 @@ RUN go mod init webserver.go
 RUN GOOS=linux CGO_ENABLED=0 go build -a -o webserver .
 
 ## trex image
-FROM quay.io/rh-nfv-int/ubi10-base-trex:v0.0.1
+FROM registry.access.redhat.com/ubi10/ubi:latest
 
 LABEL name="NFV Example TRexServer Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.22" \
-      release="v0.2.22" \
+      version="v0.2.23" \
+      release="v0.2.23" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 
@@ -29,30 +29,63 @@ ENV TRAFFICGEN_REPO https://github.com/perftool-incubator/bench-trafficgen
 ENV TREX_VER v3.08
 ENV TREX_TAR https://trex-tgn.cisco.com/trex/release/${TREX_VER}.tar.gz
 
-# Install prerequisite packages from UBI repos
-RUN dnf install -y \
-    wget \
-    make \
-    cmake \
-    git \
-    wget \
-    gcc \
-    gcc-c++ \
-    kernel-headers \
-    glibc-devel \
-    net-tools \
-    glibc-headers \
-    pciutils \
-    unzip \
-    xorg-x11-xauth \
-    yum-utils \
-    python3 \
-    python3-pip \
-    iproute \
-    zlib-devel \
-    binutils \
-    vim \
-    && dnf clean all
+# numactl-devel, rdma-core, nfs-utils, and perf are in RHEL BaseOS or AppStream,
+# but not in the UBI subset. EPEL does not rebuild packages RHEL already ships,
+# so enabling it does not help on an unsubscribed runner such as GitHub Actions.
+# CentOS Stream has the same packages. nfs-utils and perf pull libraries UBI
+# also omits (nfs idmap, rpcbind, gssproxy and its ding-libs, quota, libev,
+# libtraceevent, slang, and the LLVM 22 libs perf links against). The repos
+# are removed after install. RHEL 10 rejects the CentOS GPG key because it is SHA-1.
+RUN printf '%s\n' \
+      '[centos-stream-baseos]' \
+      'name=CentOS Stream 10 BaseOS (packages missing from UBI)' \
+      'baseurl=https://mirror.stream.centos.org/10-stream/BaseOS/\$basearch/os/' \
+      'enabled=1' \
+      'gpgcheck=0' \
+      'includepkgs=e2fsprogs-libs gssproxy libbasicobjects libcollection libev libini_config libnfsidmap libpath_utils libref_array libtraceevent libverto-libev nfs-utils quota quota-nls rdma-core rpcbind slang' \
+      '' \
+      '[centos-stream-appstream]' \
+      'name=CentOS Stream 10 AppStream (packages missing from UBI)' \
+      'baseurl=https://mirror.stream.centos.org/10-stream/AppStream/\$basearch/os/' \
+      'enabled=1' \
+      'gpgcheck=0' \
+      'includepkgs=llvm-filesystem llvm-libs numactl-devel perf' \
+      > /etc/yum.repos.d/centos-stream-trex.repo && \
+    dnf install -y \
+      numactl \
+      numactl-devel \
+      rdma-core \
+      rdma-core-devel \
+      nfs-utils \
+      perf \
+      tcpdump \
+      nmap-ncat \
+      sudo \
+      make \
+      cmake \
+      git \
+      wget \
+      gcc \
+      gcc-c++ \
+      kernel-headers \
+      glibc-devel \
+      net-tools \
+      glibc-headers \
+      pciutils \
+      unzip \
+      xorg-x11-xauth \
+      yum-utils \
+      python3 \
+      python3-pip \
+      iproute \
+      zlib-devel \
+      binutils \
+      vim \
+      catatonit \
+      jq \
+      iputils && \
+    rm -f /etc/yum.repos.d/centos-stream-trex.repo && \
+    dnf clean all
 
 # Install TRex
 RUN mkdir -p /opt/trex && cd /opt/trex && git clone --branch ${TREX_BRANCH} ${TREX_REPO}
@@ -70,27 +103,17 @@ ENV TRAFFICGEN_DIR="/opt/trafficgen"
 # Create custom user to avoid using root account
 RUN useradd example-cnf -u 56560
 
-# This is to be able to manage some files that belong to root account
-RUN usermod -a -G root example-cnf
-
 # Allow example-cnf to use sudo permissions without asking for password
 RUN echo -e "example-cnf\tALL=(ALL)\tNOPASSWD: ALL" > /etc/sudoers.d/example-cnf
 
-# Create a folder managed by the custom user to place the config files to launch
-RUN mkdir -p /usr/local/bin/example-cnf
-RUN chmod 750 /usr/local/bin/example-cnf
-RUN chown example-cnf /usr/local/bin/example-cnf
-
-# Make sure trex_cfg.yaml is present in the proper folder and with proper permissions
-RUN touch /usr/local/bin/example-cnf/trex_cfg.yaml
-RUN chmod 664 /usr/local/bin/example-cnf/trex_cfg.yaml
-
 # Copy scripts
-COPY --chmod=550 scripts /usr/local/bin
-COPY --chmod=550 --from=build /opt/app-root/src/webserver /usr/local/bin/webserver
+COPY --chmod=755 --from=build /opt/app-root/src/webserver /usr/local/bin/webserver
+COPY --chmod=755 scripts /
 
 # Move to the custom user
 USER example-cnf
 
 # Prepare entrypoint
-ENTRYPOINT ["/usr/local/bin/trex-wrapper"]
+STOPSIGNAL SIGRTMIN+3
+ENTRYPOINT ["/usr/libexec/catatonit/catatonit", "--", "/trex-wrapper"]
+CMD ["trex"]

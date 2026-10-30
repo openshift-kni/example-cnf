@@ -164,7 +164,6 @@ grout)
     export GROUT_OVERRIDE_DEFAULT_ROUTE="${GROUT_OVERRIDE_DEFAULT_ROUTE:-true}"
     export GROUT_OVERRIDE_RP_FILTER="${GROUT_OVERRIDE_RP_FILTER:-true}"
 
-    
     if [[ $RUN_DEPLOYMENT == "1" ]]; then
         # Start Grout in background and print statistics every second once the socket is ready.
         /usr/bin/grout -m 660 -v &
