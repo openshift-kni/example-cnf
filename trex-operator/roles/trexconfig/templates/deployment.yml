@@ -65,6 +65,9 @@ spec:
 {% endif %}
       containers:
       - name: trex-server
+        args: ["trex"]
+        image: "{{ image_server }}"
+        imagePullPolicy: "{{ image_pull_policy }}"
         ports:
         - name: "tcp-trex-one"
           containerPort: 4500
@@ -72,20 +75,6 @@ spec:
           containerPort: 4501
         - name: "http-probe"
           containerPort: 8096
-        image: "{{ image_server }}"
-        imagePullPolicy: "{{ image_pull_policy }}"
-        securityContext:
-          runAsNonRoot: true
-          runAsUser: 56560
-{% if run_deployment is defined and run_deployment == 1 %}
-          readOnlyRootFilesystem: true
-{% endif %}
-{% if privileged %}
-          privileged: true
-{% else %}
-          capabilities:
-            add: ["IPC_LOCK", "NET_ADMIN", "AUDIT_WRITE"]
-{% endif %}
         resources:
           limits:
             hugepages-1Gi: {{ hugepage_1gb_count }}
@@ -101,20 +90,30 @@ spec:
 {% for key, value in network_resources.items() %}
             {{ key }}: {{ value }}
 {% endfor %}
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 56560
+{% if run_deployment is defined and run_deployment == 1 %}
+          readOnlyRootFilesystem: true
+{% endif %}
+{% if privileged %}
+          privileged: true
+{% else %}
+          capabilities:
+            add: ["IPC_LOCK", "NET_ADMIN", "AUDIT_WRITE"]
+{% endif %}
         volumeMounts:
         - name: hugepage
           mountPath: /dev/hugepages
-        - name: config-dir
-          mountPath: /usr/local/bin/example-cnf
         - name: dpdk-dir
           mountPath: /var/run/dpdk
+        - name: trex-cfg
+          mountPath: /tmp/trex
         env:
         - name: NETWORK_NAME_LIST
           value: "{{ network_resources.keys()|list|join(',') }}"
         - name: TREX_CPU
           value: "{{ cpu }}"
-        - name: MODE
-          value: "direct"
         - name: NODE_NAME
           valueFrom:
             fieldRef:
@@ -131,7 +130,7 @@ spec:
         lifecycle:
           postStart:
             exec:
-              command: ["/bin/sh", "-c", "echo Hello from the postStart handler"]
+              command: ["/trex-wrapper", "poststart-trex"]
           preStop:
             exec:
               command: ["/bin/sh", "-c", "echo Hello from the preStop handler"]
@@ -159,7 +158,7 @@ spec:
       - name: hugepage
         emptyDir:
           medium: HugePages
-      - name: config-dir
-        emptyDir: {}
       - name: dpdk-dir
+        emptyDir: {}
+      - name: trex-cfg
         emptyDir: {}

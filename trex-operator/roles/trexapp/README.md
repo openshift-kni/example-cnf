@@ -37,7 +37,7 @@ The following variables are defined in [`defaults/main.yml`](defaults/main.yml):
 
 1. **Job Template Rendering**
    - The role uses a Jinja2-based Kubernetes Job template (`templates/job.yml`).
-   - Variables are injected to customize the job's command, environment, resources, and mounted volumes.
+   - The container entrypoint is `/trex-wrapper`. It waits for the TRex server, then runs `/run-trex`. See the app [README](../../../trex-container-app/app/README.md#what-is-it-executed).
 
 2. **Profile and Environment Injection**
    - If `trex_profile_config_map` is set, the specified ConfigMap is mounted and the selected profile is used.
@@ -48,19 +48,20 @@ The following variables are defined in [`defaults/main.yml`](defaults/main.yml):
    - Lists like `trex_ip_list` and `cnfapp_ip_list` are passed as comma-separated strings.
 
 4. **Lifecycle and Probes**
-   - If `run_deployment` is set to `1`, lifecycle hooks (`postStart`, `preStop`) and health probes (`livenessProbe`, `readinessProbe`, `startupProbe`) are enabled for the job pod.
+   - If `run_deployment` is `1`, the job enables startup, readiness, and liveness probes on port 8095.
+   - If `run_deployment` is `0`, `/trex-wrapper` still waits for the server, then sleeps. Run `/run-trex` to start the profile.
 
 5. **Resource Management**
    - CPU and memory requests/limits are set according to the `resources` variable.
 
 ## Deployment Details
 
-- **Job Specification:** The role creates a Kubernetes Job with a single pod running the TRex application. The pod mounts necessary volumes, sets environment variables, and can optionally mount a ConfigMap with TRex profiles.
+- **Job Specification:** The role creates a Kubernetes Job. The container runs as uid 56560. `/trex-wrapper` waits for `TREX_SERVER_URL` port 4500, then `/run-trex` sends the profile. A ConfigMap with TRex profiles can be mounted.
 - **Volumes:**  
   - `/var/log/trex`, `/tmp`, `/var/run/dpdk` are mounted as emptyDirs.
   - If a profile ConfigMap is specified, it is mounted at `/opt/trexprofile`.
 - **Environment Variables:**  
-  - Standard variables such as `MODE`, `CR_NAME`, `NODE_NAME`, and `TREX_SERVER_URL` are set.
+  - Standard variables such as `CR_NAME`, `NODE_NAME`, and `TREX_SERVER_URL` are set.
   - User-specified variables from `environments` and runtime parameters are injected.
 - **Lifecycle and Probes:**  
   - Optional lifecycle hooks and health probes are included if `run_deployment` is enabled.
@@ -73,4 +74,4 @@ The following variables are defined in [`defaults/main.yml`](defaults/main.yml):
 - **Environment Variables:** Use the `environments` variable to inject any additional environment variables required by your workload.
 - **Runtime Parameters:** Set `duration`, `packet_size`, `packet_rate`, and other parameters to control the TRex job's behavior.
 - **Resource Tuning:** Adjust CPU and memory requests/limits as needed for your environment.
-- **Health Probes and Lifecycle:** Enable or disable lifecycle hooks and health probes via the `run_deployment` variable.
+- **Health Probes:** `run_deployment: 1` enables probes on port 8095. `run_deployment: 0` leaves the container sleeping after the server is ready, so you can run `/run-trex` yourself.

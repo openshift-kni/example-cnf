@@ -10,8 +10,8 @@ FROM registry.access.redhat.com/ubi10/python-312-minimal:latest
 LABEL name="NFV Example TRexApp Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.22" \
-      release="v0.2.22" \
+      version="v0.2.23" \
+      release="v0.2.23" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 
@@ -25,7 +25,7 @@ ENV TRAFFICGEN_REPO https://github.com/perftool-incubator/bench-trafficgen
 
 USER 0
 
-RUN microdnf install -y git nmap-ncat shadow-utils && microdnf clean all
+RUN microdnf install -y git nmap-ncat shadow-utils catatonit jq && microdnf clean all
 RUN mkdir -p /opt/trex && cd /opt/trex && git clone --branch ${TREX_BRANCH} ${TREX_REPO}
 RUN cd /opt && git clone ${TRAFFICGEN_REPO} && mv bench-trafficgen/trafficgen . && rm -rf bench-trafficgen
 RUN /opt/app-root/bin/pip install pyyaml kubernetes
@@ -37,21 +37,14 @@ ENV TRAFFICGEN_DIR="/opt/trafficgen"
 # Create custom user to avoid using root account
 RUN useradd example-cnf -u 56560
 
-# This is to be able to manage some files that belong to root account
-RUN usermod -a -G root example-cnf
-
-# Create some support folders that will be needed during execution
-RUN mkdir -p /var/log/trex
-RUN chmod 750 /var/log/trex
-RUN chown example-cnf:example-cnf /var/log/trex
-
 # Copy scripts
-COPY --chmod=550 scripts /usr/local/bin/
-COPY --chmod=550 --from=build /opt/app-root/src/webserver /usr/local/bin/webserver
-COPY --chmod=550 pyfiles /opt/pyfiles/
+COPY --chmod=755 --from=build /opt/app-root/src/webserver /usr/local/bin/webserver
+COPY --chmod=755 pyfiles /opt/pyfiles/
+COPY --chmod=755 scripts /
 
 # Move to the custom user
 USER example-cnf
 
 # Prepare entrypoint
-ENTRYPOINT ["/usr/local/bin/trex-wrapper"]
+STOPSIGNAL SIGRTMIN+3
+ENTRYPOINT ["/usr/libexec/catatonit/catatonit", "--", "/trex-wrapper"]

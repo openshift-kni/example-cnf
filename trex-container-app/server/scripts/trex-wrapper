@@ -1,49 +1,74 @@
 #!/bin/bash
+# SPDX-License-Identifier: BSD-3-Clause
 
-set -e
+# This is a one-shot script to start the TRex server and the lifecycle webserver
 
-# Start lifecycle webserver in background
-/usr/local/bin/webserver 8096 &
+set -ex
+
+echo "Welcome to trex-wrapper script!"
+
+RUN_DEPLOYMENT=${run_deployment:=1}
 
 # Define the function to add timestamp to log entries
 echo_ts() {
   echo "$(date -u +"%Y-%m-%dT%H:%M:%S%z") $@"
 }
 
-# environments
-RUN_DEPLOYMENT=${run_deployment:=1}
-RUN_DELAY=${run_delay:=1}
+wait_for_socket() {
+    timeout=120
+    while [[ ${timeout} -gt 0 ]]; do
+        nc -z localhost 4500 && break || sleep 2
+        ((timeout--))
+    done
+    if [[ ${timeout} -gt 0 ]]; then
+        echo_ts "trex-server is ready"
+    else
+        echo_ts "ERROR: trex-server could not start properly, exiting... "
+        exit 1
+    fi
+}
 
-CORES=$(taskset -pc 1 | cut -d: -f2)
+generate_trex_config() {
+    CORES=$(taskset -pc 1 | cut -d: -f2)
 
-# Write TRex cfg file
-/usr/local/bin/trex-cfg-configure $CORES
+    # Write TRex cfg file
+    /trex-cfg-configure $CORES
 
-# Read the number of cores from the trex cfg
-# It is required as input via -c arg (for binary_search scripts of trafficgen)
-CORE_COUNT_CFG=$(grep ' c: ' /usr/local/bin/example-cnf/trex_cfg.yaml | cut -d: -f2 | xargs)
-CORE_COUNT=${trex_core_count:=$CORE_COUNT_CFG}
-# TREX_CPU env will be set on the pod spec with number of required cores
-if [[ $((CORE_COUNT_CFG + 2)) != $TREX_CPU ]]; then
-    # TEMP
-    echo_ts "CORES=$((CORE_COUNT + 2))"
-    echo_ts "TREX_CPU=$TREX_CPU"
+    # Read the number of cores from the trex cfg
+    # It is required as input via -c arg (for binary_search scripts of trafficgen)
+    CORE_COUNT_CFG=$(grep ' c: ' /tmp/trex/trex_cfg.yaml | cut -d: -f2 | xargs)
+    CORE_COUNT=${trex_core_count:=$CORE_COUNT_CFG}
+    # TREX_CPU env will be set on the pod spec with number of required cores
+    if [[ $((CORE_COUNT_CFG + 2)) != $TREX_CPU ]]; then
+        echo_ts "CORES=$((CORE_COUNT + 2))"
+        echo_ts "TREX_CPU=$TREX_CPU"
+        exit 1
+    fi
+}
+
+case "${1:-trex}" in
+trex)
+    # Start lifecycle webserver in background
+    /usr/local/bin/webserver 8096 &
+
+    # Generate the TRex configuration file
+    # We cannot do this in an init container because the CPUs assigned to the
+    # container are not the same than the ones assigned to the main container
+    generate_trex_config
+
+    if [[ $RUN_DEPLOYMENT == "1" ]]; then
+        echo_ts "Starting TRex server ..."
+        sudo -E /opt/trex/trex-core/scripts/_t-rex-64 --cfg /tmp/trex/trex_cfg.yaml --no-ofed-check -i --no-hw-flow-stat -c $CORE_COUNT
+    else
+        echo_ts "Skipping TRex server start, waiting ..."
+        sleep infinity
+    fi
+    ;;
+poststart-trex)
+    wait_for_socket
+    ;;
+*)
+    echo "usage: trex-wrapper {trex|poststart-trex}" >&2
     exit 1
-fi
-
-RUN="/usr/local/bin/example-cnf/trex-server-run"
-CMD="/usr/local/bin/trex-server"
-CMD="${CMD} $CORE_COUNT"
-echo "${CMD}" > $RUN
-chmod +x $RUN
-
-if [[ $RUN_DEPLOYMENT == "1" ]]; then
-    sleep $RUN_DELAY
-    #echo_ts "Starting TRex daemon server ..."
-    #./trex_daemon_server start
-    echo_ts "Starting TRex server ..."
-    sudo -E /usr/local/bin/example-cnf/trex-server-run
-else
-    echo_ts "Skipping TRex server start, waiting ..."
-    sleep infinity
-fi
+    ;;
+esac

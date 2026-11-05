@@ -23,26 +23,16 @@ COPY licenses /licenses
 ENV GROUT_VER v0.19.3
 ENV GROUT_RPMS_URL https://github.com/DPDK/grout/releases/download/${GROUT_VER}
 
-# frr needs libyang.so.2. That library is in RHEL AppStream, but not in the UBI
-# subset. EPEL does not rebuild packages RHEL already ships, so enabling it does
-# not help on an unsubscribed runner such as GitHub Actions. CentOS Stream
-# AppStream has the same libyang the Grout RPMs are built against. The repo is
-# removed after install; RHEL 10 rejects the CentOS GPG key because it is SHA-1.
-RUN printf '%s\n' \
-      '[centos-stream-libyang]' \
-      'name=CentOS Stream 10 AppStream (libyang only)' \
-      'baseurl=https://mirror.stream.centos.org/10-stream/AppStream/\$basearch/os/' \
-      'enabled=1' \
-      'gpgcheck=0' \
-      'includepkgs=libyang' \
-      > /etc/yum.repos.d/centos-stream-libyang.repo && \
+# Install packages from CentOS Stream 10 BaseOS and AppStream
+RUN dnf install \
+      --repofrompath=temp-cs10,https://mirror.stream.centos.org/10-stream/BaseOS/\$basearch/os/ \
+      --nogpgcheck -y centos-gpg-keys centos-stream-repos && \
     dnf -y install --nodocs --setopt=install_weak_deps=0 \
       libyang \
       ${GROUT_RPMS_URL}/frr.x86_64.rpm \
       ${GROUT_RPMS_URL}/grout-frr.x86_64.rpm \
       ${GROUT_RPMS_URL}/grout.x86_64.rpm \
       catatonit jq sudo iputils && \
-    rm -f /etc/yum.repos.d/centos-stream-libyang.repo && \
     dnf clean all
 
 # Create custom user to avoid using root account
@@ -55,7 +45,7 @@ RUN usermod -a -G example-cnf frr
 RUN echo -e "example-cnf\tALL=(ALL)\tNOPASSWD: ALL" > /etc/sudoers.d/example-cnf
 
 # Copy scripts
-COPY --chmod=550 --from=build /opt/app-root/src/webserver /usr/local/bin/webserver
+COPY --chmod=755 --from=build /opt/app-root/src/webserver /usr/local/bin/webserver
 COPY --chmod=755 scripts/grout-wrapper /grout-wrapper
 
 # Move to the custom user
