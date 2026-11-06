@@ -12,15 +12,15 @@ FROM registry.access.redhat.com/ubi10/ubi:latest
 LABEL name="NFV Example CNF Grout Application" \
       maintainer="telcoci" \
       vendor="fredco" \
-      version="v0.2.14" \
-      release="v0.2.14" \
+      version="v0.2.15" \
+      release="v0.2.15" \
       summary="An example CNF for platform validation" \
       description="An example CNF for platform validation"
 
 COPY licenses /licenses
 
 # check latest release from https://github.com/DPDK/grout/releases
-ENV GROUT_VER v0.19.3
+ENV GROUT_VER v0.20.0
 ENV GROUT_RPMS_URL https://github.com/DPDK/grout/releases/download/${GROUT_VER}
 
 # Install packages from CentOS Stream 10 BaseOS and AppStream
