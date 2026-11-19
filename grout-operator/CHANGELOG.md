@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.10] - 2026-11-19
+
+- Update grout-container-app to v0.2.16 (Grout v0.20.1)
+
 ## [0.2.9] - 2026-11-06
 
 - Update grout-container-app to v0.2.15 (Grout v0.20.0)
