@@ -698,7 +698,7 @@ $ oc rsh -n example-cnf -c grout deployment/grout-app
 
 # check grout is up and running
 $ grcli
-Welcome to the graph router CLI version 0.20.0-0.g5d267740.el10.
+Welcome to the graph router CLI version 0.20.1-0.gfbf33b53.el10.
 Use ? for help and <tab> for command completion.
 grout#
 
